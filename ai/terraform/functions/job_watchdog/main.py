@@ -1,4 +1,4 @@
-"""Cancel Cloud Run job executions that run too long or overspend.
+"""Cancel Cloud Run job executions that run too long, overspend or hog GPUs.
 
 Cloud Scheduler calls this every 15 minutes. It cancels:
 
@@ -10,6 +10,12 @@ Cloud Scheduler calls this every 15 minutes. It cancels:
   credits don't hide spending. The export lags real use by hours to a day,
   so this is a backstop, not a precise cap. It doesn't stop new launches;
   each later run cancels again until the budget is raised or the month ends.
+- executions that put a person over MAX_GPUS_PER_USER GPUs at once, or the
+  project over MAX_GPUS. The client caps what `wildhat launch` asks for, but
+  anyone can edit it or call gcloud directly, so this is the real check.
+  Executions are grouped by their creator, which Cloud Run sets and the
+  launcher can't change. Older executions keep their GPUs; the newest ones
+  over the cap are cancelled.
 
 Manual kill switch: a mentor can call it with ?max_minutes=0 to cancel every
 running execution now. Only callers with run.invoker (mentors, and the
@@ -29,6 +35,8 @@ REGION = os.environ["REGION"]
 MAX_RUNTIME_HOURS = float(os.environ["MAX_RUNTIME_HOURS"])
 BUDGET_USD = float(os.environ["BUDGET_USD"])
 BILLING_TABLE = os.environ["BILLING_TABLE"]
+MAX_GPUS_PER_USER = int(os.environ["MAX_GPUS_PER_USER"])
+MAX_GPUS = int(os.environ["MAX_GPUS"])
 RUN_API = "https://run.googleapis.com/v2"
 BIGQUERY_API = "https://bigquery.googleapis.com/bigquery/v2"
 METADATA_TOKEN = (
@@ -81,6 +89,49 @@ def overdue_executions(executions: list[dict], limit: datetime.timedelta, now) -
         if started and now - parse_time(started) > limit:
             overdue.append(execution["name"])
     return overdue
+
+
+def gpu_demand(execution: dict) -> int:
+    """How many GPUs an unfinished execution can hold at once.
+
+    Counts tasks that haven't finished yet, not just running ones, so an
+    oversized launch is caught before its tasks start. Parallelism 0 (or
+    unset) means no limit beyond the task count.
+    """
+    if execution.get("completionTime"):
+        return 0
+    per_task = sum(
+        int(container.get("resources", {}).get("limits", {}).get("nvidia.com/gpu", 0))
+        for container in execution.get("template", {}).get("containers", [])
+    )
+    if not per_task:
+        return 0
+    tasks = execution.get("taskCount", 1)
+    finished = sum(execution.get(f, 0) for f in ("succeededCount", "failedCount", "cancelledCount"))
+    parallel = execution.get("parallelism") or tasks
+    return per_task * max(0, min(parallel, tasks - finished))
+
+
+def over_gpu_cap(executions: list[dict], per_user: int, total: int) -> list[str]:
+    """Names of executions to cancel to keep everyone under the GPU caps.
+
+    Oldest first: an execution keeps its GPUs if it fits under both caps
+    alongside the ones before it.
+    """
+    used_by: dict[str, int] = {}
+    used = 0
+    over = []
+    for execution in sorted(executions, key=lambda e: e.get("createTime", "")):
+        gpus = gpu_demand(execution)
+        if not gpus:
+            continue
+        creator = execution.get("creator", "")
+        if used_by.get(creator, 0) + gpus > per_user or used + gpus > total:
+            over.append(execution["name"])
+            continue
+        used_by[creator] = used_by.get(creator, 0) + gpus
+        used += gpus
+    return over
 
 
 # Billing months follow the billing account's time zone, US Pacific.
@@ -154,9 +205,18 @@ def check_jobs(request):
     for job in list_all(token, f"{RUN_API}/projects/{PROJECT}/locations/{REGION}/jobs", "jobs"):
         executions += list_all(token, f"{RUN_API}/{job['name']}/executions", "executions")
 
-    cancelled = overdue_executions(executions, limit, now)
-    for name in cancelled:
+    overdue = overdue_executions(executions, limit, now)
+    for name in overdue:
         print(f"Running longer than {limit}; cancelling {name}")
         call(token, "POST", f"{RUN_API}/{name}:cancel")
+    remaining = [e for e in executions if e["name"] not in overdue]
+    over_cap = over_gpu_cap(remaining, MAX_GPUS_PER_USER, MAX_GPUS)
+    for name in over_cap:
+        print(
+            f"Over the GPU cap ({MAX_GPUS_PER_USER} per person, {MAX_GPUS} in all); "
+            f"cancelling {name}"
+        )
+        call(token, "POST", f"{RUN_API}/{name}:cancel")
+    cancelled = overdue + over_cap
     print(f"Checked {len(executions)} executions; cancelled {len(cancelled)}.")
     return {"month_cost": cost, "checked": len(executions), "cancelled": cancelled}

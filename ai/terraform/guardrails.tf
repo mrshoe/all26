@@ -1,7 +1,12 @@
 # Cost guardrails from ../INFRA.md, apart from the budget (billing.tf). Still
-# to come with `wildhat launch`: a GPU quota cap (today's quota is 0; Cloud Run
-# grants 3 L4s on the first GPU job), and a timeout and launched-by label on
-# every job definition.
+# to come with `wildhat launch`: a timeout and launched-by label on every job
+# definition.
+#
+# GPU quota: today it's 0 L4s, and Google won't take an increase request
+# ("not enough usage history"). Cloud Run grants 3 L4s with the first GPU job;
+# once Google allows it, request max_gpus (and keep RTX Pro 6000 at 0). The
+# watchdog enforces its own caps below either way; until the quota reaches
+# max_gpus, the quota is the tighter of the two project limits.
 #
 # INFRA.md planned for the budget to trigger job cancellation through Pub/Sub.
 # The organization's domain-restriction policy blocks that: the budget can't be
@@ -12,9 +17,12 @@
 
 locals {
   max_job_runtime_hours = 8
+  # GPUs one person's executions may hold at once, and the whole project.
+  max_gpus_per_user = 5
+  max_gpus          = 10
 }
 
-# --- Cancel executions that run too long, or once over budget ------------
+# --- Cancel executions that run too long, overspend or hog GPUs ----------
 
 resource "google_service_account" "job_watchdog" {
   account_id   = "job-watchdog"
@@ -57,8 +65,8 @@ resource "google_cloud_run_service_iam_member" "job_watchdog_invoke" {
 }
 
 resource "google_cloud_scheduler_job" "job_watchdog" {
-  name     = "job-watchdog"
-  region   = local.region
+  name   = "job-watchdog"
+  region = local.region
   # Every minute while we test it; back to "*/15 * * * *" afterwards.
   schedule = "* * * * *"
 
@@ -150,6 +158,8 @@ resource "google_cloudfunctions2_function" "job_watchdog" {
       REGION            = local.region
       MAX_RUNTIME_HOURS = local.max_job_runtime_hours
       BUDGET_USD        = local.monthly_budget_usd
+      MAX_GPUS_PER_USER = local.max_gpus_per_user
+      MAX_GPUS          = local.max_gpus
       # The standard export's table, named by Cloud Billing.
       BILLING_TABLE = "${local.project_id}.${google_bigquery_dataset.billing_export.dataset_id}.gcp_billing_export_v1_${replace(local.billing_account, "-", "_")}"
     }
