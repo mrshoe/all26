@@ -168,6 +168,11 @@ resource "google_artifact_registry_repository" "wildhat" {
 # Cloud Billing writes cost rows here, labels included, so spend can be split
 # by who launched what. Turning the export on can only be done in the console:
 # Billing > Billing export > BigQuery export, pick this project and dataset.
+# Standard and detailed exports are both on (enabled 2026-10-22).
+#
+# Enabling it gave billing-export-bigquery@system.gserviceaccount.com Owner on
+# the dataset. Don't add `access` blocks here: Terraform would replace the
+# dataset's whole access list and silently break the export.
 resource "google_bigquery_dataset" "billing_export" {
   dataset_id = "billing_export"
   location   = "US"
