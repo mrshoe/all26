@@ -1,0 +1,6 @@
+# Provider plugins, and anything that could hold state (state lives in the
+# private admin bucket and contains student emails).
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
