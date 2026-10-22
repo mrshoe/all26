@@ -31,6 +31,7 @@ resource "google_project_service" "apis" {
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "identitytoolkit.googleapis.com",
+    "monitoring.googleapis.com",
     "run.googleapis.com",
     "storage.googleapis.com",
     "sts.googleapis.com",
