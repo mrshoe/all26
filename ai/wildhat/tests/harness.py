@@ -365,8 +365,15 @@ class WildhatTestCase(unittest.TestCase):
                 "WILDHAT_FIREBASE_API_KEY",
             )
         }
+        # Keep any real gcloud, terraform or wildhat out of reach (GitHub's
+        # Ubuntu runners have gcloud), so only the fakes can ever run.
+        path = [
+            d
+            for d in os.environ["PATH"].split(os.pathsep)
+            if d and not any(shutil.which(tool, path=d) for tool in ("gcloud", "terraform", "wildhat"))
+        ]
         env.update(
-            PATH=f"{self.bin}{os.pathsep}{os.environ['PATH']}",
+            PATH=os.pathsep.join([str(self.bin), *path]),
             HOME=str(self.home),
             USERPROFILE=str(self.home),
             APPDATA=str(self.home / "AppData" / "Roaming"),
