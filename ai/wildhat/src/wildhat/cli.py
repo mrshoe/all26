@@ -420,6 +420,7 @@ def cmd_login(args) -> int:
                 pass
     finally:
         server.shutdown()
+        server.server_close()
 
     reply = sign_in_with_code(email, oob_code)
     handle = jwt_claims(reply["idToken"]).get("handle")
