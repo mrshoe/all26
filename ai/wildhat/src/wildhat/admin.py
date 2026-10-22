@@ -40,6 +40,7 @@ from wildhat.cli import (
     IDENTITY_TOOLKIT,
     IS_WINDOWS,
     PROJECT_ID,
+    REGION,
     WildhatError,
     gcloud,
 )
@@ -452,6 +453,52 @@ def cmd_apply(args) -> int:
     return plan_and_apply(Api())
 
 
+# ---------------------------------------------------------------------------
+# Kill switch: the job watchdog function (ai/terraform/guardrails.tf)
+# ---------------------------------------------------------------------------
+
+WATCHDOG = (
+    f"https://cloudfunctions.googleapis.com/v2/projects/{PROJECT_ID}"
+    f"/locations/{REGION}/functions/job-watchdog"
+)
+
+
+def cmd_cancel_jobs(args) -> int:
+    minutes = args.running_longer_than
+    which = (
+        "EVERY running job execution"
+        if minutes == 0
+        else f"every job execution running longer than {minutes} minutes"
+    )
+    if not args.yes and not confirm(f"Cancel {which}?"):
+        return 1
+
+    api = Api()
+    url = api.json("GET", WATCHDOG)["serviceConfig"]["uri"]
+    # The function only accepts Google-signed identity tokens.
+    token = gcloud("auth", "print-identity-token").stdout.strip()
+    req = urllib.request.Request(
+        f"{url}?{urllib.parse.urlencode({'max_minutes': minutes})}",
+        data=b"",
+        headers={"Authorization": f"Bearer {token}"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            result = json.load(resp)
+    except urllib.error.HTTPError as e:
+        raise ApiError(e.code, e.reason) from None
+
+    if result.get("month_cost") is not None:
+        print(f"This month's cost so far: ${result['month_cost']:.2f}")
+    print(f"Checked {result['checked']} execution(s).")
+    for name in result["cancelled"]:
+        print(f"  cancelled {name.split('/jobs/')[-1]}")
+    if not result["cancelled"]:
+        print("Nothing to cancel.")
+    return 0
+
+
 def add_parsers(sub) -> None:
     admin = sub.add_parser("admin", help="mentor-only commands")
     admin_sub = admin.add_subparsers(dest="admin_command", required=True)
@@ -466,3 +513,15 @@ def add_parsers(sub) -> None:
     admin_sub.add_parser(
         "apply", help="show Terraform's plan for the roster and offer to apply it"
     ).set_defaults(func=cmd_apply)
+    cancel = admin_sub.add_parser(
+        "cancel-jobs", help="kill switch: cancel running Cloud Run job executions"
+    )
+    cancel.add_argument(
+        "--running-longer-than",
+        type=float,
+        default=0,
+        metavar="MINUTES",
+        help="only cancel executions running longer than this (default: all)",
+    )
+    cancel.add_argument("--yes", action="store_true", help="don't ask first")
+    cancel.set_defaults(func=cmd_cancel_jobs)

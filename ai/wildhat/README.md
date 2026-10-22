@@ -53,6 +53,7 @@ login`), then:
 | `wildhat admin edit-roster` | Opens the roster in `$EDITOR`, checks it, shows your changes, saves it, syncs Firebase, then shows Terraform's plan and offers to apply it. |
 | `wildhat admin sync [--dry-run]` | Makes Firebase match the roster. Safe to run any time. |
 | `wildhat admin apply` | Shows Terraform's plan for the roster and offers to apply it. |
+| `wildhat admin cancel-jobs [--running-longer-than MINUTES]` | Kill switch: cancels every running Cloud Run job execution (or only those running longer than MINUTES). |
 
 Run these from inside your all26 checkout so wildhat can find `ai/terraform`.
 You also need [Terraform](https://developer.hashicorp.com/terraform/install).

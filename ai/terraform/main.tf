@@ -21,9 +21,17 @@ data "google_storage_bucket_object_content" "roster" {
 
 resource "google_project_service" "apis" {
   for_each = toset([
+    "artifactregistry.googleapis.com",
+    "bigquery.googleapis.com",
+    "billingbudgets.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "cloudquotas.googleapis.com",
+    "cloudscheduler.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "identitytoolkit.googleapis.com",
+    "monitoring.googleapis.com",
     "run.googleapis.com",
     "storage.googleapis.com",
     "sts.googleapis.com",
