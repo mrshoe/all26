@@ -1,5 +1,6 @@
 # Spending guardrail. Alerts email the billing account's admins; they don't
-# stop anything. A runaway job still needs someone to cancel it.
+# stop anything. (The org policy blocks budgets from triggering code, so the
+# watchdog in guardrails.tf caps how long any job runs instead.)
 
 locals {
   billing_account = "01B1D9-5119C3-F28D8E"
