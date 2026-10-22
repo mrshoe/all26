@@ -5,18 +5,20 @@
 #
 # INFRA.md planned for the budget to trigger job cancellation through Pub/Sub.
 # The organization's domain-restriction policy blocks that: the budget can't be
-# granted publish access to a topic in this project. So a watchdog cancels any
-# execution that runs too long instead.
+# granted publish access to a topic in this project. So a scheduled watchdog
+# does it instead: it cancels any execution that runs too long, and every
+# running execution once the billing export shows the month's cost at or over
+# the budget.
 
 locals {
   max_job_runtime_hours = 8
 }
 
-# --- Cancel executions that run too long ----------------------------------
+# --- Cancel executions that run too long, or once over budget ------------
 
 resource "google_service_account" "job_watchdog" {
   account_id   = "job-watchdog"
-  display_name = "Cancels Cloud Run job executions that run too long"
+  display_name = "Cancels Cloud Run jobs that run too long or overspend"
 }
 
 # Just enough to find and cancel executions; nothing else.
@@ -32,6 +34,20 @@ resource "google_project_iam_member" "job_watchdog_cancel" {
   member  = google_service_account.job_watchdog.member
 }
 
+# To total the month's cost from the billing export. dataset_iam_member only
+# adds this account; the billing export's own access is left alone.
+resource "google_bigquery_dataset_iam_member" "job_watchdog_billing" {
+  dataset_id = google_bigquery_dataset.billing_export.dataset_id
+  role       = "roles/bigquery.dataViewer"
+  member     = google_service_account.job_watchdog.member
+}
+
+resource "google_project_iam_member" "job_watchdog_query" {
+  project = local.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = google_service_account.job_watchdog.member
+}
+
 # Cloud Scheduler calls the function as the watchdog's own account.
 resource "google_cloud_run_service_iam_member" "job_watchdog_invoke" {
   location = local.region
@@ -43,7 +59,8 @@ resource "google_cloud_run_service_iam_member" "job_watchdog_invoke" {
 resource "google_cloud_scheduler_job" "job_watchdog" {
   name     = "job-watchdog"
   region   = local.region
-  schedule = "*/15 * * * *"
+  # Every minute while we test it; back to "*/15 * * * *" afterwards.
+  schedule = "* * * * *"
 
   http_target {
     http_method = "POST"
@@ -132,6 +149,9 @@ resource "google_cloudfunctions2_function" "job_watchdog" {
       PROJECT           = local.project_id
       REGION            = local.region
       MAX_RUNTIME_HOURS = local.max_job_runtime_hours
+      BUDGET_USD        = local.monthly_budget_usd
+      # The standard export's table, named by Cloud Billing.
+      BILLING_TABLE = "${local.project_id}.${google_bigquery_dataset.billing_export.dataset_id}.gcp_billing_export_v1_${replace(local.billing_account, "-", "_")}"
     }
   }
 

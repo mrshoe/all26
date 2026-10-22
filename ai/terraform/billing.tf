@@ -1,9 +1,10 @@
-# Spending guardrail. Alerts email the billing account's admins; they don't
-# stop anything. (The org policy blocks budgets from triggering code, so the
-# watchdog in guardrails.tf caps how long any job runs instead.)
+# Spending guardrail. Alerts email the billing account's admins and the extra
+# recipients below; they don't stop anything. The watchdog in guardrails.tf
+# does: it cancels running jobs once the month's cost reaches the same amount.
 
 locals {
-  billing_account = "01B1D9-5119C3-F28D8E"
+  billing_account    = "01B1D9-5119C3-F28D8E"
+  monthly_budget_usd = 300
   # Extra alert recipients, such as a phone's email-to-text address. They're
   # personal, so they live in the private admin bucket, not in this repo.
   alert_emails = jsondecode(data.google_storage_bucket_object_content.alerts.content).budget_alert_emails
@@ -35,7 +36,7 @@ resource "google_billing_budget" "monthly" {
   amount {
     specified_amount {
       currency_code = "USD"
-      units         = "300"
+      units         = tostring(local.monthly_budget_usd)
     }
   }
 
