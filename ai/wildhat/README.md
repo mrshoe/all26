@@ -77,3 +77,21 @@ account, `stu-<first-last>`. Whenever gcloud needs a fresh token, it runs
 
 Your credentials are stored in `~/.config/wildhat/` (macOS) or
 `%APPDATA%\wildhat\` (Windows). Don't share the files in that folder.
+
+## Tests
+
+From this directory, with Python 3.10 or newer (nothing to install):
+
+```
+python -m unittest discover -s tests
+```
+
+The tests run the real code in `src/` through its command line. They fake
+only what's outside wildhat: Google's web APIs, the keyboard, and the `gcloud`,
+`terraform` and editor programs (`tests/fake_tool.py`). The fake gcloud runs
+`wildhat id-token` from the credential config the way Google's libraries do,
+from a folder with a space in its name. GitHub runs the tests on macOS,
+Windows and Linux whenever `ai/wildhat/` changes
+(`.github/workflows/wildhat.yml`). The same workflow runs the job watchdog's
+tests, in `ai/terraform/functions/tests/` (run them from
+`ai/terraform/functions` the same way).
