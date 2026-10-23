@@ -92,4 +92,6 @@ only what's outside wildhat: Google's web APIs, the keyboard, and the `gcloud`,
 `wildhat id-token` from the credential config the way Google's libraries do,
 from a folder with a space in its name. GitHub runs the tests on macOS,
 Windows and Linux whenever `ai/wildhat/` changes
-(`.github/workflows/wildhat.yml`).
+(`.github/workflows/wildhat.yml`). The same workflow runs the job watchdog's
+tests, in `ai/terraform/functions/tests/` (run them from
+`ai/terraform/functions` the same way).
