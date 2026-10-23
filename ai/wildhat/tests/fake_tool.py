@@ -5,9 +5,11 @@ PATH. Each runs this script with the tool's name first. Every call is logged
 to calls.jsonl in $WILDHAT_FAKE_DIR, and each tool acts like the real one
 closely enough to check wildhat's side of the conversation:
 
-- gcloud writes the credential config, remembers `auth login` and `config
-  set`, and, like google-auth, runs the credential config's executable
-  (`wildhat id-token`) whenever a student's credentials are used.
+- gcloud keeps a list of signed-in accounts and which one is active, honours
+  --account, writes the credential config, and, like google-auth, runs the
+  credential config's executable (`wildhat id-token`) whenever a wildhat
+  service account's credentials are used. A Google user account's access
+  token is "ya29.user:<email>"; its identity token is "id:<email>".
 - terraform's plan says there are changes (exit 2) and writes the plan file.
 - fake-editor replaces the file with the next text queued in editor.json.
 
@@ -25,8 +27,6 @@ import time
 from pathlib import Path
 
 FAKE_DIR = Path(os.environ["WILDHAT_FAKE_DIR"])
-MENTOR_ACCESS_TOKEN = "ya29.mentor"
-MENTOR_ID_TOKEN = "mentor-id-token"
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 
 
@@ -71,14 +71,14 @@ def override(tool: str, args: list[str]) -> int | None:
 # ---------------------------------------------------------------------------
 
 
-def credential_source_token(state: dict) -> str:
+def credential_source_token(cred_file: str) -> str:
     """Run the executable credential source the way google-auth does."""
     if os.environ.get("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES") != "1":
         raise SystemExit(
             "ERROR: Executables need to be explicitly allowed (set "
             "GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES to '1') to run."
         )
-    cred = json.loads(Path(state["cred_file"]).read_text(encoding="utf-8"))
+    cred = json.loads(Path(cred_file).read_text(encoding="utf-8"))
     executable = cred["credential_source"]["executable"]
     # google-auth splits the command with shlex in POSIX mode.
     argv = shlex.split(executable["command"])
@@ -105,8 +105,24 @@ def credential_source_token(state: dict) -> str:
 
 
 def gcloud(args: list[str]) -> int:
-    state = load("gcloud.json", {"config": {}, "cred_file": None, "account": None})
+    # accounts: {email: {"cred_file": path, or None for a Google user account}}
+    state = load("gcloud.json", {"config": {}, "accounts": {}, "active": None})
     cmd = words(args)
+
+    def account() -> str:
+        name = option(args, "account") or state["active"]
+        if name is None:
+            raise SystemExit("ERROR: (gcloud) You do not currently have an active account selected.")
+        if name not in state["accounts"]:
+            raise SystemExit(f"ERROR: (gcloud) There are no credentials for account [{name}].")
+        return name
+
+    def use_credentials(name: str) -> str:
+        """An access token for the account, the way gcloud gets one."""
+        cred_file = state["accounts"][name]["cred_file"]
+        if cred_file is None:
+            return f"ya29.user:{name}"
+        return f"ya29.sa.{credential_source_token(cred_file)[:8]}"
 
     if cmd[:3] == ["iam", "workload-identity-pools", "create-cred-config"]:
         output = option(args, "output-file")
@@ -135,10 +151,19 @@ def gcloud(args: list[str]) -> int:
         cred_file = option(args, "cred-file")
         cred = json.loads(Path(cred_file).read_text(encoding="utf-8"))
         url = cred["service_account_impersonation_url"]
-        state["cred_file"] = cred_file
-        state["account"] = url.split("/serviceAccounts/")[1].split(":")[0]
+        name = url.split("/serviceAccounts/")[1].split(":")[0]
+        state["accounts"][name] = {"cred_file": cred_file}
+        if "--no-activate" not in args:
+            state["active"] = name
         save("gcloud.json", state)
-        print(f"Authenticated with external account credentials for: [{state['account']}].", file=sys.stderr)
+        print(f"Authenticated with external account credentials for: [{name}].", file=sys.stderr)
+        return 0
+
+    if cmd[:2] == ["auth", "list"]:
+        assert "--format=json" in args, args
+        print(json.dumps(
+            [{"account": a, "status": "ACTIVE" if a == state["active"] else ""} for a in state["accounts"]]
+        ))
         return 0
 
     if cmd[:2] == ["config", "set"]:
@@ -148,30 +173,25 @@ def gcloud(args: list[str]) -> int:
         return 0
 
     if cmd[:2] == ["auth", "revoke"]:
-        if state["account"] == cmd[2]:
-            state["account"] = state["cred_file"] = None
-            save("gcloud.json", state)
+        if state["accounts"].pop(cmd[2], None) is not None and state["active"] == cmd[2]:
+            state["active"] = None
+        save("gcloud.json", state)
         print(f"Revoked credentials:\n - {cmd[2]}", file=sys.stderr)
         return 0
 
     if cmd[:2] == ["auth", "print-access-token"]:
-        account = option(args, "account") or state["account"]
-        if account is None:
-            print(MENTOR_ACCESS_TOKEN)
-            return 0
-        if account != state["account"]:
-            print(f"ERROR: There are no credentials for account [{account}].", file=sys.stderr)
-            return 1
-        print(f"ya29.student.{credential_source_token(state)[:8]}")
+        print(use_credentials(account()))
         return 0
 
     if cmd[:2] == ["auth", "print-identity-token"]:
-        print(MENTOR_ID_TOKEN)
+        name = account()
+        if state["accounts"][name]["cred_file"] is not None:
+            raise SystemExit("ERROR: (gcloud) the fake gcloud only makes identity tokens for user accounts")
+        print(f"id:{name}")
         return 0
 
     if cmd[:3] == ["run", "jobs", "list"]:
-        if state["account"]:
-            credential_source_token(state)
+        use_credentials(account())
         print("Listed 0 items.", file=sys.stderr)
         return 0
 

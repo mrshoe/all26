@@ -43,8 +43,10 @@ from wildhat import cli  # noqa: E402
 PROJECT = "vernal-mantra-512116-d0"
 ADMIN_BUCKET = f"{PROJECT}-admin"
 WATCHDOG_URL = "https://job-watchdog-abc123-uc.a.run.app"
-MENTOR_ACCESS_TOKEN = "ya29.mentor"
-MENTOR_ID_TOKEN = "mentor-id-token"
+# The mentor's Google account, as the fake gcloud hands out its tokens.
+MENTOR = "david@team100.org"
+MENTOR_ACCESS_TOKEN = f"ya29.user:{MENTOR}"
+MENTOR_ID_TOKEN = f"id:{MENTOR}"
 REAL_URLOPEN = urllib.request.urlopen
 # A wildhat run that takes longer than this is stuck (e.g. login waiting for a
 # sign-in link that never comes).
@@ -77,6 +79,8 @@ class FakeGoogle:
         self.offline = False
         self.failures: dict[str, tuple[int, str]] = {}
         self.watchdog_reply = {"month_cost": 12.5, "checked": 0, "cancelled": []}
+        # Google accounts with access to the admin APIs (project Owners).
+        self.mentors = {MENTOR}
         self._oob_codes: dict[str, str] = {}
         self._refresh_tokens: dict[str, str] = {}
         self._generation = 1_700_000_000_000_000
@@ -183,7 +187,7 @@ class FakeGoogle:
 
     def _is_mentor(self, request: dict) -> bool:
         return (
-            request["headers"].get("authorization") == f"Bearer {MENTOR_ACCESS_TOKEN}"
+            request["headers"].get("authorization") in {f"Bearer ya29.user:{m}" for m in self.mentors}
             and request["headers"].get("x-goog-user-project") == PROJECT
         )
 
@@ -316,7 +320,7 @@ class FakeGoogle:
         raise AssertionError(f"Unexpected Cloud Functions call: {request['path']}")
 
     def _watchdog(self, request: dict):
-        if request["headers"].get("authorization") != f"Bearer {MENTOR_ID_TOKEN}":
+        if request["headers"].get("authorization") not in {f"Bearer id:{m}" for m in self.mentors}:
             return 403, "Forbidden", None
         assert request["method"] == "POST"
         return 200, self.watchdog_reply, None
@@ -478,6 +482,21 @@ class WildhatTestCase(unittest.TestCase):
             {"tool": tool, "words": words, "stdout": stdout, "stderr": stderr, "returncode": returncode}
         )
         path.write_text(json.dumps(responses), encoding="utf-8")
+
+    def gcloud_login(self, *accounts: str, active: str | None = None) -> None:
+        """Sign Google user accounts in to the fake gcloud, as `gcloud auth
+        login` would. The last one is active unless `active` says otherwise."""
+        path = self.fake_dir / "gcloud.json"
+        state = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {
+            "config": {}, "accounts": {}, "active": None
+        }
+        for account in accounts:
+            state["accounts"][account] = {"cred_file": None}
+        state["active"] = active or accounts[-1]
+        path.write_text(json.dumps(state), encoding="utf-8")
+
+    def gcloud_state(self) -> dict:
+        return json.loads((self.fake_dir / "gcloud.json").read_text(encoding="utf-8"))
 
     def queue_edits(self, *texts: str | None) -> None:
         """What the editor does each time it opens: replace the file with the

@@ -1,5 +1,5 @@
 # Student sign-in: Firebase ID tokens -> workload identity federation -> one
-# service account per student, stu-<handle>.
+# service account per person, wh-<handle>. Mentors are on the roster too.
 
 resource "google_iam_workload_identity_pool" "students" {
   workload_identity_pool_id = "students"
@@ -21,7 +21,7 @@ resource "google_iam_workload_identity_pool_provider" "firebase" {
 
 resource "google_service_account" "student" {
   for_each     = local.students
-  account_id   = "stu-${each.key}"
+  account_id   = "wh-${each.key}"
   display_name = each.value.name
 }
 

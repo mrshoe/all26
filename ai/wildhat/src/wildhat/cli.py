@@ -8,7 +8,11 @@ How sign-in works, in short:
 2. Google Cloud's workload identity federation trusts Firebase ID tokens. gcloud
    and the Python client libraries run `wildhat id-token` whenever they need a
    fresh one, trade it for a Google access token, and act as the student's own
-   service account, stu-<handle>.
+   service account, wh-<handle>.
+
+Mentors are on the roster too and sign in the same way, so their jobs look
+exactly like students'. Their own Google account stays signed in to gcloud
+for the admin commands, so every wildhat gcloud call names its account.
 
 Standard library only, and it must work on macOS and Windows.
 """
@@ -55,10 +59,10 @@ SECURE_TOKEN = "https://securetoken.googleapis.com/v1/token"
 # Reuse a cached ID token only if it has at least this many seconds left.
 TOKEN_MIN_LIFETIME = 5 * 60
 # Handles are first-last: lowercase letters and hyphens, maybe a trailing
-# number (jane-doe2), at most 26 characters so stu-<handle> fits in a service
+# number (jane-doe2), at most 27 characters so wh-<handle> fits in a service
 # account ID.
 HANDLE_RE = re.compile(r"^[a-z][a-z-]*[0-9]*$")
-HANDLE_MAX = 26
+HANDLE_MAX = 27
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 # gcloud and google-auth refuse to run an executable credential source unless
 # this is set.
@@ -139,7 +143,7 @@ def load_account() -> dict:
 
 
 def service_account(handle: str) -> str:
-    return f"stu-{handle}@{PROJECT_ID}.iam.gserviceaccount.com"
+    return f"wh-{handle}@{PROJECT_ID}.iam.gserviceaccount.com"
 
 
 # ---------------------------------------------------------------------------
@@ -356,6 +360,15 @@ def gcloud(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return result
 
 
+def gcloud_accounts() -> list[dict]:
+    """Accounts signed in to gcloud: [{"account": ..., "status": "ACTIVE" or ""}]."""
+    return json.loads(gcloud("auth", "list", "--format=json").stdout or "[]")
+
+
+def is_service_account(account: str) -> bool:
+    return account.endswith(".gserviceaccount.com")
+
+
 def wildhat_command() -> str:
     """The absolute path to this program, for gcloud to run as `id-token`."""
     path = shutil.which("wildhat")
@@ -440,6 +453,17 @@ def cmd_login(args) -> int:
     print(f"Signed in as {email} ({handle}). Setting up gcloud...")
 
     sa = service_account(handle)
+    # If a Google account is already active in gcloud (a mentor's, say), keep
+    # it active: the admin commands and the person's own gcloud use rely on
+    # it. wildhat names the service account whenever it needs it.
+    active_user = next(
+        (
+            a["account"]
+            for a in gcloud_accounts()
+            if a["status"] == "ACTIVE" and not is_service_account(a["account"])
+        ),
+        None,
+    )
     gcloud(
         "iam", "workload-identity-pools", "create-cred-config", PROVIDER_RESOURCE,
         f"--service-account={sa}",
@@ -447,17 +471,22 @@ def cmd_login(args) -> int:
         "--executable-timeout-millis=10000",
         f"--output-file={cred_path()}",
     )
-    gcloud("auth", "login", f"--cred-file={cred_path()}")
+    gcloud("auth", "login", f"--cred-file={cred_path()}", *(["--no-activate"] if active_user else []))
     gcloud("config", "set", "project", PROJECT_ID)
     gcloud("config", "set", "run/region", REGION)
 
-    check = gcloud("run", "jobs", "list", f"--region={REGION}", check=False)
+    check = gcloud("run", "jobs", "list", f"--region={REGION}", f"--account={sa}", check=False)
     if check.returncode != 0:
         raise WildhatError(
             "You're on the roster, but your cloud access isn't set up yet. "
             "Ask a mentor.\n\ngcloud said:\n" + check.stderr.strip()
         )
-    print(f"Done. gcloud now works as {sa}.")
+    if active_user:
+        print(f"Done. wildhat works as {sa}.")
+        print(f"gcloud's active account is still {active_user}. To run gcloud as")
+        print(f"{sa}, add --account={sa}.")
+    else:
+        print(f"Done. gcloud now works as {sa}.")
     print_shell_setup()
     return 0
 

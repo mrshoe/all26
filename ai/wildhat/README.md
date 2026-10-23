@@ -67,12 +67,24 @@ Sync handles sign-in. Each student's service account and IAM grants come
 from Terraform, which reads the same `roster.json`, so there's only one
 roster.
 
+### Mentors are on the roster too
+
+Add yourself with your team100.org address and run `wildhat login` like a
+student. Your jobs then run as your own `wh-<handle>` service account, with
+exactly a student's access, so they look and behave just like students' jobs.
+
+Your Google account stays gcloud's active account: `wildhat login` doesn't
+switch it if a Google account is already active. The admin commands always
+use your Google account and everything else in wildhat uses your service
+account, whichever one is active. To run gcloud yourself as the service
+account, add `--account=wh-<handle>@vernal-mantra-512116-d0.iam.gserviceaccount.com`.
+
 ## How it works
 
 You sign in to Firebase Authentication with an email link. Google Cloud's
 workload identity federation trusts Firebase's ID tokens, so gcloud trades
 your token for a short-lived Google access token and acts as your own service
-account, `stu-<first-last>`. Whenever gcloud needs a fresh token, it runs
+account, `wh-<first-last>`. Whenever gcloud needs a fresh token, it runs
 `wildhat id-token`.
 
 Your credentials are stored in `~/.config/wildhat/` (macOS) or

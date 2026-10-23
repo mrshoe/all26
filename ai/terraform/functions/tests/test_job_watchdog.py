@@ -61,7 +61,7 @@ def execution(
     job: str,
     name: str,
     *,
-    creator: str = "stu-alice@test-project.iam.gserviceaccount.com",
+    creator: str = "wh-alice@test-project.iam.gserviceaccount.com",
     minutes_ago: float = 5,
     gpus: int = 0,
     tasks: int = 1,
@@ -307,9 +307,9 @@ class BudgetTest(WatchdogTestCase):
                 self.assertEqual(self.cancelled(), ["weekend"])
 
 
-ALICE = "stu-alice@test-project.iam.gserviceaccount.com"
-BOB = "stu-bob@test-project.iam.gserviceaccount.com"
-CAROL = "stu-carol@test-project.iam.gserviceaccount.com"
+ALICE = "wh-alice@test-project.iam.gserviceaccount.com"
+BOB = "wh-bob@test-project.iam.gserviceaccount.com"
+CAROL = "wh-carol@test-project.iam.gserviceaccount.com"
 
 
 class GpuCapTest(WatchdogTestCase):

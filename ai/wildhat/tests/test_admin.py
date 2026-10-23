@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from harness import ADMIN_BUCKET, MENTOR_ACCESS_TOKEN, WATCHDOG_URL, WildhatTestCase
+from harness import ADMIN_BUCKET, MENTOR, MENTOR_ACCESS_TOKEN, WATCHDOG_URL, WildhatTestCase
 
 MAX = {"email": "824767@seq.org", "name": "Max Shoemaker"}
 JANE = {"email": "111111@seq.org", "name": "Jane Doe"}
@@ -17,6 +17,7 @@ def roster_json(**students) -> str:
 class AdminTestCase(WildhatTestCase):
     def setUp(self):
         super().setUp()
+        self.gcloud_login(MENTOR)
         # Max is on the roster but was disabled; a former student still has a
         # handle; a mentor uses Firebase without one.
         self.google.add_user(MAX["email"], "max-shoemaker", displayName=MAX["name"], disabled=True)
@@ -226,21 +227,51 @@ class SyncTest(AdminTestCase):
 
 
 class MentorCredentialsTest(AdminTestCase):
-    def test_without_gcloud_credentials(self):
-        self.respond("gcloud", ["auth", "print-access-token"], stderr="ERROR: no account", returncode=1)
+    def test_uses_the_mentors_account_by_name(self):
+        self.wildhat("admin", "sync")
+
+        self.assertIn(["auth", "print-access-token"], self.commands("gcloud"))
+        (call,) = [c for c in self.calls("gcloud") if "print-access-token" in c["args"]]
+        self.assertIn(f"--account={MENTOR}", call["args"])
+
+    def test_expired_gcloud_credentials(self):
+        self.respond("gcloud", ["auth", "print-access-token"], stderr="ERROR: Reauthentication failed.", returncode=1)
 
         run = self.wildhat("admin", "sync")
 
-        self.assertFailedWith(run, "Run: gcloud auth login")
-        self.assertIn("no account", run.err)
+        self.assertFailedWith(run, f"Couldn't get gcloud credentials for {MENTOR}. Run: gcloud auth login")
+        self.assertIn("Reauthentication failed", run.err)
 
-    def test_a_student_account_is_refused_with_a_hint(self):
-        self.respond("gcloud", ["auth", "print-access-token"], stdout="ya29.student\n")
+    def test_no_google_account_in_gcloud(self):
+        (self.fake_dir / "gcloud.json").unlink()
+
+        run = self.wildhat("admin", "sync")
+
+        self.assertFailedWith(run, "none is signed in to gcloud. Run: gcloud auth login")
+
+    def test_a_google_account_without_access_is_refused_with_a_hint(self):
+        self.gcloud_login("someone@team100.org")
 
         run = self.wildhat("admin", "sync")
 
         self.assertFailedWith(run, "HTTP 403")
         self.assertIn("gcloud auth list", run.err)
+
+    def test_the_active_google_account_wins(self):
+        self.gcloud_login("someone@team100.org", MENTOR, active=MENTOR)
+
+        self.assertSucceeded(self.wildhat("admin", "sync"))
+
+    def test_several_google_accounts_and_none_active_must_be_picked(self):
+        self.gcloud_login("someone@team100.org", MENTOR)
+        state = self.gcloud_state()
+        state["active"] = None
+        (self.fake_dir / "gcloud.json").write_text(json.dumps(state), encoding="utf-8")
+
+        run = self.wildhat("admin", "sync")
+
+        self.assertFailedWith(run, "Several Google accounts are signed in to gcloud")
+        self.assertIn("gcloud config set account", run.err)
 
 
 class ApplyTest(AdminTestCase):
