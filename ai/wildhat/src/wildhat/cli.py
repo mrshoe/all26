@@ -8,7 +8,11 @@ How sign-in works, in short:
 2. Google Cloud's workload identity federation trusts Firebase ID tokens. gcloud
    and the Python client libraries run `wildhat id-token` whenever they need a
    fresh one, trade it for a Google access token, and act as the student's own
-   service account, stu-<handle>.
+   service account, wh-<handle>.
+
+Mentors are on the roster too and sign in the same way, so their jobs look
+exactly like students'. Their own Google account stays signed in to gcloud
+for the admin commands, so every wildhat gcloud call names its account.
 
 Standard library only, and it must work on macOS and Windows.
 """
@@ -55,14 +59,16 @@ SECURE_TOKEN = "https://securetoken.googleapis.com/v1/token"
 # Reuse a cached ID token only if it has at least this many seconds left.
 TOKEN_MIN_LIFETIME = 5 * 60
 # Handles are first-last: lowercase letters and hyphens, maybe a trailing
-# number (jane-doe2), at most 26 characters so stu-<handle> fits in a service
+# number (jane-doe2), at most 27 characters so wh-<handle> fits in a service
 # account ID.
 HANDLE_RE = re.compile(r"^[a-z][a-z-]*[0-9]*$")
-HANDLE_MAX = 26
+HANDLE_MAX = 27
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 # gcloud and google-auth refuse to run an executable credential source unless
 # this is set.
 ALLOW_EXECUTABLES = "GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES"
+# Where the Python client libraries look for credentials.
+GOOGLE_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS"
 
 IS_WINDOWS = os.name == "nt"
 
@@ -139,7 +145,7 @@ def load_account() -> dict:
 
 
 def service_account(handle: str) -> str:
-    return f"stu-{handle}@{PROJECT_ID}.iam.gserviceaccount.com"
+    return f"wh-{handle}@{PROJECT_ID}.iam.gserviceaccount.com"
 
 
 # ---------------------------------------------------------------------------
@@ -307,20 +313,51 @@ def start_callback_server(codes: queue.Queue) -> HTTPServer:
     return server
 
 
-def read_pasted_links(codes: queue.Queue) -> None:
-    """Fallback for students who can't open the email on this computer."""
+def read_lines(lines: queue.Queue) -> None:
+    """Put each typed line on `lines`, then None at the end of input.
+
+    One thread reads the keyboard for all of login, so a question asked after
+    the browser delivers the sign-in link doesn't race a read that's still
+    waiting for a pasted one.
+    """
     while True:
         try:
-            line = input()
+            lines.put(input())
         except (EOFError, OSError):
+            lines.put(None)
             return
-        if not line.strip():
-            continue
-        code = find_oob_code(line)
-        if code:
-            codes.put(code)
-            return
-        print("Couldn't find a sign-in code in that. Paste the whole link.")
+
+
+def wait_for_code(codes: queue.Queue, lines: queue.Queue) -> str:
+    """Wait for the browser's redirect, or for the student to paste the link
+    (for students who can't open the email on this computer)."""
+    typing = True
+    while True:
+        # Wait in short steps: on Windows a bare get() can't be stopped with
+        # Ctrl+C.
+        try:
+            return codes.get(timeout=0.5)
+        except queue.Empty:
+            pass
+        while typing and not lines.empty():
+            line = lines.get()
+            if line is None:
+                lines.put(None)  # Leave the end of input for later questions.
+                typing = False
+            elif code := find_oob_code(line):
+                return code
+            elif line.strip():
+                print("Couldn't find a sign-in code in that. Paste the whole link.")
+
+
+def ask_yes(question: str, lines: queue.Queue) -> bool:
+    print(f"{question} [Y/n] ", end="", flush=True)
+    line = lines.get()
+    if line is None:
+        lines.put(None)
+        print()
+        return False
+    return line.strip().lower() in ("", "y", "yes")
 
 
 # ---------------------------------------------------------------------------
@@ -356,6 +393,15 @@ def gcloud(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return result
 
 
+def gcloud_accounts() -> list[dict]:
+    """Accounts signed in to gcloud: [{"account": ..., "status": "ACTIVE" or ""}]."""
+    return json.loads(gcloud("auth", "list", "--format=json").stdout or "[]")
+
+
+def is_service_account(account: str) -> bool:
+    return account.endswith(".gserviceaccount.com")
+
+
 def wildhat_command() -> str:
     """The absolute path to this program, for gcloud to run as `id-token`."""
     path = shutil.which("wildhat")
@@ -375,17 +421,111 @@ def wildhat_command() -> str:
     return shlex.quote(str(Path(path).resolve()))
 
 
-def print_shell_setup() -> None:
-    cred = cred_path()
-    print("\nTo use the Python client libraries (and gcloud from any terminal),")
+# ---------------------------------------------------------------------------
+# Environment variables, so gcloud and the Python libraries work in any terminal
+# ---------------------------------------------------------------------------
+
+# Marks wildhat's lines in ~/.zshrc etc., so logout can take them out again.
+RC_BEGIN = "# >>> wildhat >>>"
+RC_END = "# <<< wildhat <<<"
+RC_BLOCK = re.compile(rf"^{re.escape(RC_BEGIN)}\n.*?^{re.escape(RC_END)}\n?", re.M | re.S)
+
+
+def read_user_env(name: str) -> str | None:
+    """A Windows user environment variable, as `setx` saves it."""
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            return winreg.QueryValueEx(key, name)[0]
+    except FileNotFoundError:
+        return None
+
+
+def write_user_env(name: str, value: str | None) -> None:
+    """Set a Windows user environment variable, or delete it (None), like
+    `setx`. Terminals opened afterwards see the change."""
+    import ctypes
+    import winreg
+
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_SET_VALUE) as key:
+        if value is None:
+            try:
+                winreg.DeleteValue(key, name)
+            except FileNotFoundError:
+                pass
+        else:
+            winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+    # Tell Windows (HWND_BROADCAST, WM_SETTINGCHANGE), so new terminals get it.
+    ctypes.windll.user32.SendMessageTimeoutW(0xFFFF, 0x1A, 0, "Environment", 2, 5000, None)
+
+
+def shell_rc() -> Path | None:
+    """The startup file of the person's shell, if we know it."""
+    shell = Path(os.environ.get("SHELL", "")).name
+    if shell == "zsh":
+        return Path.home() / ".zshrc"
+    if shell == "bash":
+        # macOS's Terminal starts login shells, which read .bash_profile.
+        return Path.home() / (".bash_profile" if sys.platform == "darwin" else ".bashrc")
+    return None
+
+
+def set_up_environment(lines: queue.Queue) -> None:
+    """Set the variables gcloud and the Python libraries need in new terminals.
+
+    wildhat itself doesn't need them: it sets ALLOW_EXECUTABLES whenever it
+    runs gcloud.
+    """
+    cred = str(cred_path())
+    wanted = {ALLOW_EXECUTABLES: "1", GOOGLE_CREDENTIALS: cred}
+    existing = (read_user_env(GOOGLE_CREDENTIALS) if IS_WINDOWS else None) or os.environ.get(
+        GOOGLE_CREDENTIALS
+    )
+    if existing and existing != cred:
+        # Someone's own credentials (a mentor's, say). Don't take them over.
+        del wanted[GOOGLE_CREDENTIALS]
+        print(f"\nLeaving {GOOGLE_CREDENTIALS} set to {existing}.")
+        print("The Python libraries will use that instead of wildhat.")
+
     if IS_WINDOWS:
-        print("run these once in PowerShell, then open a new terminal:\n")
-        print(f"  setx {ALLOW_EXECUTABLES} 1")
-        print(f'  setx GOOGLE_APPLICATION_CREDENTIALS "{cred}"')
-    else:
-        print("add these lines to ~/.zshrc (or ~/.bashrc), then open a new terminal:\n")
-        print(f"  export {ALLOW_EXECUTABLES}=1")
-        print(f"  export GOOGLE_APPLICATION_CREDENTIALS='{cred}'")
+        for name, value in wanted.items():
+            write_user_env(name, value)
+        print(f"\nSet {' and '.join(wanted)} for your Windows account.")
+        print("Open a new terminal to use gcloud directly.")
+        return
+
+    exports = [f"export {name}={shlex.quote(value)}" for name, value in wanted.items()]
+    rc = shell_rc()
+    text = rc.read_text(encoding="utf-8") if rc and rc.exists() else ""
+    if rc is None or RC_BEGIN not in text:
+        where = f"~/{rc.name}" if rc else "your shell's startup file"
+        print(f"\nTo use gcloud directly in other terminals, {where} needs:\n")
+        for line in exports:
+            print(f"  {line}")
+        print()
+        if rc is None or not ask_yes(f"Add them to {where}?", lines):
+            return
+    text = RC_BLOCK.sub("", text)
+    if text and not text.endswith("\n"):
+        text += "\n"
+    rc.write_text(text + "\n".join([RC_BEGIN, *exports, RC_END]) + "\n", encoding="utf-8")
+    print(f"Added them to ~/{rc.name}. Open a new terminal to use gcloud directly.")
+
+
+def remove_environment() -> None:
+    """Undo set_up_environment, as far as it's still wildhat's."""
+    if IS_WINDOWS:
+        # ALLOW_EXECUTABLES stays: it's harmless, and something else may need it.
+        if read_user_env(GOOGLE_CREDENTIALS) == str(cred_path()):
+            write_user_env(GOOGLE_CREDENTIALS, None)
+        return
+    rc = shell_rc()
+    if rc and rc.exists():
+        text = rc.read_text(encoding="utf-8")
+        if RC_BEGIN in text:
+            rc.write_text(RC_BLOCK.sub("", text), encoding="utf-8")
+            print(f"Removed wildhat's lines from ~/{rc.name}.")
 
 
 # ---------------------------------------------------------------------------
@@ -409,15 +549,9 @@ def cmd_login(args) -> int:
         print("Open your school Gmail (gmail.com) in a browser on THIS computer")
         print("and click the link. Sign-in finishes here by itself.")
         print("(If you can only open the email somewhere else, paste the whole link here.)\n")
-        threading.Thread(target=read_pasted_links, args=(codes,), daemon=True).start()
-        # Wait in short steps: on Windows a bare get() can't be stopped with
-        # Ctrl+C.
-        while True:
-            try:
-                oob_code = codes.get(timeout=0.5)
-                break
-            except queue.Empty:
-                pass
+        lines: queue.Queue = queue.Queue()
+        threading.Thread(target=read_lines, args=(lines,), daemon=True).start()
+        oob_code = wait_for_code(codes, lines)
     finally:
         server.shutdown()
         server.server_close()
@@ -440,6 +574,17 @@ def cmd_login(args) -> int:
     print(f"Signed in as {email} ({handle}). Setting up gcloud...")
 
     sa = service_account(handle)
+    # If a Google account is already active in gcloud (a mentor's, say), keep
+    # it active: the admin commands and the person's own gcloud use rely on
+    # it. wildhat names the service account whenever it needs it.
+    active_user = next(
+        (
+            a["account"]
+            for a in gcloud_accounts()
+            if a["status"] == "ACTIVE" and not is_service_account(a["account"])
+        ),
+        None,
+    )
     gcloud(
         "iam", "workload-identity-pools", "create-cred-config", PROVIDER_RESOURCE,
         f"--service-account={sa}",
@@ -447,18 +592,23 @@ def cmd_login(args) -> int:
         "--executable-timeout-millis=10000",
         f"--output-file={cred_path()}",
     )
-    gcloud("auth", "login", f"--cred-file={cred_path()}")
+    gcloud("auth", "login", f"--cred-file={cred_path()}", *(["--no-activate"] if active_user else []))
     gcloud("config", "set", "project", PROJECT_ID)
     gcloud("config", "set", "run/region", REGION)
 
-    check = gcloud("run", "jobs", "list", f"--region={REGION}", check=False)
+    check = gcloud("run", "jobs", "list", f"--region={REGION}", f"--account={sa}", check=False)
     if check.returncode != 0:
         raise WildhatError(
             "You're on the roster, but your cloud access isn't set up yet. "
             "Ask a mentor.\n\ngcloud said:\n" + check.stderr.strip()
         )
-    print(f"Done. gcloud now works as {sa}.")
-    print_shell_setup()
+    if active_user:
+        print(f"Done. wildhat works as {sa}.")
+        print(f"gcloud's active account is still {active_user}. To run gcloud as")
+        print(f"{sa}, add --account={sa}.")
+    else:
+        print(f"Done. gcloud now works as {sa}.")
+    set_up_environment(lines)
     return 0
 
 
@@ -526,6 +676,7 @@ def cmd_logout(args) -> int:
         gcloud("auth", "revoke", service_account(account["handle"]), check=False)
     if state_dir().exists():
         shutil.rmtree(state_dir())
+    remove_environment()
     print("Signed out.")
     return 0
 

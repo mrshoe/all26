@@ -43,6 +43,8 @@ from wildhat.cli import (
     REGION,
     WildhatError,
     gcloud,
+    gcloud_accounts,
+    is_service_account,
 )
 
 ADMIN_BUCKET = f"{PROJECT_ID}-admin"
@@ -68,11 +70,35 @@ To revoke a student's access, delete their entry.
 # ---------------------------------------------------------------------------
 
 
-def access_token() -> str:
-    result = gcloud("auth", "print-access-token", check=False)
+def mentor_account() -> str:
+    """The mentor's own Google account in gcloud.
+
+    A mentor who has also run `wildhat login` has their wh-<handle> service
+    account signed in too, so don't rely on whichever account is active.
+    """
+    users = [a for a in gcloud_accounts() if not is_service_account(a["account"])]
+    for a in users:
+        if a["status"] == "ACTIVE":
+            return a["account"]
+    if len(users) == 1:
+        return users[0]["account"]
+    if not users:
+        raise WildhatError(
+            "Admin commands need a mentor's Google account, and none is signed "
+            "in to gcloud. Run: gcloud auth login"
+        )
+    raise WildhatError(
+        "Several Google accounts are signed in to gcloud: "
+        + ", ".join(a["account"] for a in users)
+        + ". Pick yours with: gcloud config set account EMAIL"
+    )
+
+
+def access_token(account: str) -> str:
+    result = gcloud("auth", "print-access-token", f"--account={account}", check=False)
     if result.returncode != 0:
         raise WildhatError(
-            "Couldn't get your gcloud credentials. Run: gcloud auth login\n"
+            f"Couldn't get gcloud credentials for {account}. Run: gcloud auth login\n"
             + result.stderr.strip()
         )
     return result.stdout.strip()
@@ -80,7 +106,8 @@ def access_token() -> str:
 
 class Api:
     def __init__(self):
-        self.token = access_token()
+        self.account = mentor_account()
+        self.token = access_token(self.account)
 
     def request(
         self,
@@ -117,8 +144,8 @@ class ApiError(WildhatError):
         hint = ""
         if status in (401, 403):
             hint = (
-                "\nAdmin commands need a mentor's gcloud account. Check which "
-                "one is active with: gcloud auth list"
+                "\nAdmin commands need a mentor's Google account. Check which "
+                "accounts gcloud has with: gcloud auth list"
             )
         super().__init__(f"Google said (HTTP {status}): {message}{hint}")
 
@@ -476,7 +503,7 @@ def cmd_cancel_jobs(args) -> int:
     api = Api()
     url = api.json("GET", WATCHDOG)["serviceConfig"]["uri"]
     # The function only accepts Google-signed identity tokens.
-    token = gcloud("auth", "print-identity-token").stdout.strip()
+    token = gcloud("auth", "print-identity-token", f"--account={api.account}").stdout.strip()
     req = urllib.request.Request(
         f"{url}?{urllib.parse.urlencode({'max_minutes': minutes})}",
         data=b"",

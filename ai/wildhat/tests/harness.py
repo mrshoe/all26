@@ -9,6 +9,8 @@ what's outside it:
   When the fake gcloud uses a student's credentials it runs `wildhat id-token`
   from the credential config, as a separate process, the way google-auth does.
 - The keyboard (input()).
+- Windows' user environment variables (the registry functions in cli). The
+  real ones are tested on their own, in test_environment.py.
 
 Each test gets its own home directory, so it never touches the real wildhat or
 gcloud state. The temp paths contain spaces on purpose: real Windows paths
@@ -43,8 +45,10 @@ from wildhat import cli  # noqa: E402
 PROJECT = "vernal-mantra-512116-d0"
 ADMIN_BUCKET = f"{PROJECT}-admin"
 WATCHDOG_URL = "https://job-watchdog-abc123-uc.a.run.app"
-MENTOR_ACCESS_TOKEN = "ya29.mentor"
-MENTOR_ID_TOKEN = "mentor-id-token"
+# The mentor's Google account, as the fake gcloud hands out its tokens.
+MENTOR = "dana@team100.org"
+MENTOR_ACCESS_TOKEN = f"ya29.user:{MENTOR}"
+MENTOR_ID_TOKEN = f"id:{MENTOR}"
 REAL_URLOPEN = urllib.request.urlopen
 # A wildhat run that takes longer than this is stuck (e.g. login waiting for a
 # sign-in link that never comes).
@@ -77,6 +81,8 @@ class FakeGoogle:
         self.offline = False
         self.failures: dict[str, tuple[int, str]] = {}
         self.watchdog_reply = {"month_cost": 12.5, "checked": 0, "cancelled": []}
+        # Google accounts with access to the admin APIs (project Owners).
+        self.mentors = {MENTOR}
         self._oob_codes: dict[str, str] = {}
         self._refresh_tokens: dict[str, str] = {}
         self._generation = 1_700_000_000_000_000
@@ -183,7 +189,7 @@ class FakeGoogle:
 
     def _is_mentor(self, request: dict) -> bool:
         return (
-            request["headers"].get("authorization") == f"Bearer {MENTOR_ACCESS_TOKEN}"
+            request["headers"].get("authorization") in {f"Bearer ya29.user:{m}" for m in self.mentors}
             and request["headers"].get("x-goog-user-project") == PROJECT
         )
 
@@ -316,7 +322,7 @@ class FakeGoogle:
         raise AssertionError(f"Unexpected Cloud Functions call: {request['path']}")
 
     def _watchdog(self, request: dict):
-        if request["headers"].get("authorization") != f"Bearer {MENTOR_ID_TOKEN}":
+        if request["headers"].get("authorization") not in {f"Bearer id:{m}" for m in self.mentors}:
             return 403, "Forbidden", None
         assert request["method"] == "POST"
         return 200, self.watchdog_reply, None
@@ -377,6 +383,7 @@ class WildhatTestCase(unittest.TestCase):
             HOME=str(self.home),
             USERPROFILE=str(self.home),
             APPDATA=str(self.home / "AppData" / "Roaming"),
+            SHELL="/bin/zsh",
             EDITOR="fake-editor",
             WILDHAT_FAKE_DIR=str(self.fake_dir),
             WILDHAT_TERRAFORM_DIR=str(self.terraform_dir),
@@ -391,9 +398,27 @@ class WildhatTestCase(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
         self.typed: list = []
+        self.output = io.StringIO()
         patcher = mock.patch("builtins.input", self._input)
         patcher.start()
         self.addCleanup(patcher.stop)
+
+        # Windows user environment variables (what `setx` sets), so tests
+        # never change the real ones.
+        self.user_env: dict[str, str] = {}
+        for name, fake in [
+            ("read_user_env", self.user_env.get),
+            ("write_user_env", self._write_user_env),
+        ]:
+            patcher = mock.patch.object(cli, name, fake)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def _write_user_env(self, name: str, value: str | None) -> None:
+        if value is None:
+            self.user_env.pop(name, None)
+        else:
+            self.user_env[name] = value
 
     def write_launcher(self, name: str, argv: list[str], env: dict | None = None) -> None:
         if os.name == "nt":
@@ -420,6 +445,21 @@ class WildhatTestCase(unittest.TestCase):
         line = self.typed.pop(0)
         return line() if callable(line) else line
 
+    def when_asked(self, question: str, answer: str):
+        """For `typed`: wait until wildhat has asked `question`, then answer.
+        wildhat reads the keyboard ahead, so a plain string would be typed
+        before the question appears."""
+
+        def type_it() -> str:
+            deadline = time.monotonic() + RUN_TIMEOUT
+            while question not in self.output.getvalue():
+                if time.monotonic() > deadline:
+                    raise EOFError
+                time.sleep(0.01)
+            return answer
+
+        return type_it
+
     # --- Running wildhat ----------------------------------------------------
 
     def wildhat(self, *argv: str, typed=()) -> Run:
@@ -430,6 +470,7 @@ class WildhatTestCase(unittest.TestCase):
         """
         self.typed = list(typed)
         out, err = io.StringIO(), io.StringIO()
+        self.output = out
         result = {}
 
         def run():
@@ -478,6 +519,21 @@ class WildhatTestCase(unittest.TestCase):
             {"tool": tool, "words": words, "stdout": stdout, "stderr": stderr, "returncode": returncode}
         )
         path.write_text(json.dumps(responses), encoding="utf-8")
+
+    def gcloud_login(self, *accounts: str, active: str | None = None) -> None:
+        """Sign Google user accounts in to the fake gcloud, as `gcloud auth
+        login` would. The last one is active unless `active` says otherwise."""
+        path = self.fake_dir / "gcloud.json"
+        state = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {
+            "config": {}, "accounts": {}, "active": None
+        }
+        for account in accounts:
+            state["accounts"][account] = {"cred_file": None}
+        state["active"] = active or accounts[-1]
+        path.write_text(json.dumps(state), encoding="utf-8")
+
+    def gcloud_state(self) -> dict:
+        return json.loads((self.fake_dir / "gcloud.json").read_text(encoding="utf-8"))
 
     def queue_edits(self, *texts: str | None) -> None:
         """What the editor does each time it opens: replace the file with the

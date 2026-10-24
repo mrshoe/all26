@@ -7,7 +7,7 @@ from unittest import mock
 
 from harness import PROJECT, WildhatTestCase, jwt_claims
 
-STUDENT_SA = f"stu-kai-morales@{PROJECT}.iam.gserviceaccount.com"
+STUDENT_SA = f"wh-kai-morales@{PROJECT}.iam.gserviceaccount.com"
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 
 

@@ -5,7 +5,7 @@ import urllib.parse
 
 from harness import PROJECT, WildhatTestCase, jwt_claims
 
-STUDENT_SA = f"stu-kai-morales@{PROJECT}.iam.gserviceaccount.com"
+STUDENT_SA = f"wh-kai-morales@{PROJECT}.iam.gserviceaccount.com"
 
 
 def wrapped(link: str, *wrappers: str) -> str:
@@ -36,6 +36,7 @@ class LoginTest(WildhatTestCase):
         self.assertEqual(
             [c[:4] for c in self.commands("gcloud")],
             [
+                ["auth", "list"],
                 ["iam", "workload-identity-pools", "create-cred-config",
                  "projects/735918754010/locations/global/workloadIdentityPools/students/providers/firebase"],
                 ["auth", "login"],
@@ -47,6 +48,17 @@ class LoginTest(WildhatTestCase):
         for call in self.calls("gcloud"):
             self.assertIn("--quiet", call["args"])
             self.assertEqual(call["allow_executables"], "1")
+        # On a student's laptop, plain gcloud now works as them.
+        self.assertEqual(self.gcloud_state()["active"], STUDENT_SA)
+        (check,) = [c for c in self.calls("gcloud") if c["args"][:3] == ["run", "jobs", "list"]]
+        self.assertIn(f"--account={STUDENT_SA}", check["args"])
+
+    def test_signing_in_again_keeps_the_service_account_active(self):
+        self.log_in()
+
+        self.assertSucceeded(self.wildhat("login", "--email", "813579@seq.org"))
+
+        self.assertEqual(self.gcloud_state()["active"], STUDENT_SA)
 
     def test_gcloud_can_run_wildhat_id_token_from_the_credential_config(self):
         self.log_in()
