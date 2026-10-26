@@ -195,6 +195,28 @@ def gcloud(args: list[str]) -> int:
         print("Listed 0 items.", file=sys.stderr)
         return 0
 
+    # Artifact Registry, as image names: ["<repo>/<name>:<tag>", ...]
+    if cmd[:4] == ["artifacts", "docker", "images", "describe"]:
+        use_credentials(account())
+        if cmd[4] not in state.get("images", []):
+            print(f"ERROR: (gcloud.artifacts.docker.images.describe) Image not found: {cmd[4]}", file=sys.stderr)
+            return 1
+        print(f"image_summary:\n  fully_qualified_digest: {cmd[4].split(':')[0]}@sha256:abc")
+        return 0
+
+    if cmd[:2] == ["builds", "submit"]:
+        use_credentials(account())
+        folder = Path(cmd[2])
+        config = option(args, "config")
+        substitutions = dict(s.split("=", 1) for s in option(args, "substitutions").split(","))
+        if not (folder / "Dockerfile").is_file() or not Path(config).is_file():
+            print(f"ERROR: (gcloud.builds.submit) no Dockerfile or {config}", file=sys.stderr)
+            return 1
+        state.setdefault("images", []).append(substitutions["_IMAGE"])
+        save("gcloud.json", state)
+        print(f"Created [https://cloudbuild.googleapis.com/v1/builds/b1].\nSUCCESS", file=sys.stderr)
+        return 0
+
     print(f"ERROR: the fake gcloud doesn't know {args}", file=sys.stderr)
     return 2
 

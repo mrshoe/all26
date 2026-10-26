@@ -1,6 +1,7 @@
-"""Mentor commands: edit-roster, sync, apply and cancel-jobs."""
+"""Mentor commands: edit-roster, sync, apply, cancel-jobs and build-image."""
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -343,3 +344,71 @@ class CancelJobsTest(AdminTestCase):
         self.respond("gcloud", ["auth", "print-identity-token"], stdout="not-a-mentor\n")
 
         self.assertFailedWith(self.wildhat("admin", "cancel-jobs", "--yes"), "HTTP 403")
+
+
+REPO = Path(__file__).resolve().parents[3]
+BASE_IMAGE = "us-central1-docker.pkg.dev/vernal-mantra-512116-d0/wildhat/base:abc123"
+
+
+class BuildImageTest(AdminTestCase):
+    def setUp(self):
+        super().setUp()
+        folder = self.tmp / "images" / "base"
+        folder.mkdir(parents=True)
+        (folder / "Dockerfile").write_text("FROM python:3.11-slim\n", encoding="utf-8")
+        (folder / "cloudbuild.yaml").write_text("steps: []\n", encoding="utf-8")
+
+    def builds(self) -> list[dict]:
+        return [c for c in self.calls("gcloud") if c["args"][:2] == ["builds", "submit"]]
+
+    def test_builds_with_cloud_build_as_the_image_builder(self):
+        run = self.wildhat("admin", "build-image", "base", "abc123")
+
+        self.assertSucceeded(run)
+        self.assertIn(f"Built {BASE_IMAGE}", run.out)
+        (build,) = self.builds()
+        folder = self.tmp / "images" / "base"
+        self.assertEqual(build["args"][2], str(folder))
+        for flag in [
+            f"--config={folder / 'cloudbuild.yaml'}",
+            f"--substitutions=_IMAGE={BASE_IMAGE}",
+            "--region=us-central1",
+            "--service-account=projects/vernal-mantra-512116-d0/serviceAccounts/"
+            "image-builder@vernal-mantra-512116-d0.iam.gserviceaccount.com",
+            f"--gcs-source-staging-dir=gs://{ADMIN_BUCKET}/builds/source",
+            f"--account={MENTOR}",
+        ]:
+            self.assertIn(flag, build["args"])
+
+    def test_an_existing_tag_isnt_built_again(self):
+        self.assertSucceeded(self.wildhat("admin", "build-image", "base", "abc123"))
+
+        run = self.wildhat("admin", "build-image", "base", "abc123")
+
+        self.assertSucceeded(run)
+        self.assertIn("is already built", run.out)
+        self.assertEqual(len(self.builds()), 1)
+
+    def test_a_failed_build_is_reported(self):
+        self.respond("gcloud", ["builds", "submit"], stderr="ERROR: build b1 failed: step 0 exited 1", returncode=1)
+
+        run = self.wildhat("admin", "build-image", "base", "abc123")
+
+        self.assertFailedWith(run, "The image build failed")
+        self.assertIn("step 0 exited 1", run.err)
+
+    def test_an_unknown_image(self):
+        self.assertFailedWith(self.wildhat("admin", "build-image", "nope", "abc123"), "There's no Dockerfile")
+        self.assertEqual(self.builds(), [])
+
+    def test_the_repos_terraform_and_images_fit_together(self):
+        # What jobs.tf runs, against the real ai/images folder.
+        jobs_tf = (REPO / "ai" / "terraform" / "jobs.tf").read_text(encoding="utf-8")
+        command = re.search(r'command\s*=\s*"(wildhat admin build-image [^"]+)"', jobs_tf).group(1)
+        argv = command.replace("${local.base_image_tag}", "abc123").split()[1:]
+        os.environ["WILDHAT_TERRAFORM_DIR"] = str(REPO / "ai" / "terraform")
+
+        self.assertSucceeded(self.wildhat(*argv))
+        (build,) = self.builds()
+        self.assertEqual(build["args"][2], str(REPO / "ai" / "images" / "base"))
+        self.assertIn("$_IMAGE", (REPO / "ai" / "images" / "base" / "cloudbuild.yaml").read_text(encoding="utf-8"))

@@ -36,6 +36,8 @@ resource "google_service_account_iam_member" "student_signin" {
 
 locals {
   student_project_roles = [
+    # Read and write run records in Firestore (jobs.tf).
+    "roles/datastore.user",
     "roles/logging.viewer",
     "roles/run.viewer",
     "roles/serviceusage.serviceUsageConsumer",
@@ -54,7 +56,8 @@ resource "google_project_iam_member" "student" {
 }
 
 # Run source, data and results. Students can read everything in it and write
-# only under src/<handle>/.
+# only under src/<handle>/ (what they launch) and runs/<handle>/ (what their
+# jobs write, since jobs run as their launcher).
 resource "google_storage_bucket" "wildhat" {
   name                        = "${local.project_id}-wildhat"
   location                    = local.region
@@ -75,7 +78,10 @@ resource "google_storage_bucket_iam_member" "student_upload" {
   role     = "roles/storage.objectCreator"
   member   = google_service_account.student[each.key].member
   condition {
-    title      = "own-src-prefix"
-    expression = "resource.name.startsWith(\"projects/_/buckets/${google_storage_bucket.wildhat.name}/objects/src/${each.key}/\")"
+    title = "own-prefixes"
+    expression = join(" || ", [
+      for prefix in ["src", "runs"] :
+      "resource.name.startsWith(\"projects/_/buckets/${google_storage_bucket.wildhat.name}/objects/${prefix}/${each.key}/\")"
+    ])
   }
 }

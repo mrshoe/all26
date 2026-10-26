@@ -1,6 +1,5 @@
-# Cost guardrails from ../INFRA.md, apart from the budget (billing.tf). Still
-# to come with `wildhat launch`: a timeout and launched-by label on every job
-# definition.
+# Cost guardrails from ../INFRA.md, apart from the budget (billing.tf) and the
+# timeout, parallelism and launched-by label on every job definition (jobs.tf).
 #
 # GPU quota: today it's 0 L4s, and Google won't take an increase request
 # ("not enough usage history"). Cloud Run grants 3 L4s with the first GPU job;

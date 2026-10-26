@@ -28,6 +28,7 @@ resource "google_project_service" "apis" {
     "cloudfunctions.googleapis.com",
     "cloudquotas.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "firestore.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "identitytoolkit.googleapis.com",

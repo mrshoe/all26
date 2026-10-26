@@ -526,6 +526,48 @@ def cmd_cancel_jobs(args) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Container images (ai/images), built by Cloud Build
+# ---------------------------------------------------------------------------
+
+IMAGE_REPO = f"{REGION}-docker.pkg.dev/{PROJECT_ID}/wildhat"
+IMAGE_BUILDER = f"image-builder@{PROJECT_ID}.iam.gserviceaccount.com"
+
+
+def cmd_build_image(args) -> int:
+    """Build ai/images/<name> and push it as <name>:<tag>.
+
+    Terraform runs this (ai/terraform/jobs.tf) whenever the folder changes,
+    with a tag made from its contents, so an existing tag is already built.
+    """
+    account = mentor_account()
+    image = f"{IMAGE_REPO}/{args.name}:{args.tag}"
+    describe = gcloud("artifacts", "docker", "images", "describe", image, f"--account={account}", check=False)
+    if describe.returncode == 0:
+        print(f"{image} is already built.")
+        return 0
+    folder = terraform_dir().parent / "images" / args.name
+    if not (folder / "Dockerfile").is_file():
+        raise WildhatError(f"There's no Dockerfile in {folder}.")
+
+    print(f"Building {image} with Cloud Build. This can take 10 minutes or more...")
+    sys.stdout.flush()
+    build = gcloud(
+        "builds", "submit", str(folder),
+        f"--config={folder / 'cloudbuild.yaml'}",
+        f"--substitutions=_IMAGE={image}",
+        f"--region={REGION}",
+        f"--service-account=projects/{PROJECT_ID}/serviceAccounts/{IMAGE_BUILDER}",
+        f"--gcs-source-staging-dir=gs://{ADMIN_BUCKET}/builds/source",
+        f"--account={account}",
+        check=False,
+    )
+    if build.returncode != 0:
+        raise WildhatError(f"The image build failed:\n{build.stderr.strip()}")
+    print(f"Built {image}.")
+    return 0
+
+
 def add_parsers(sub) -> None:
     admin = sub.add_parser("admin", help="mentor-only commands")
     admin_sub = admin.add_subparsers(dest="admin_command", required=True)
@@ -552,3 +594,9 @@ def add_parsers(sub) -> None:
     )
     cancel.add_argument("--yes", action="store_true", help="don't ask first")
     cancel.set_defaults(func=cmd_cancel_jobs)
+    build = admin_sub.add_parser(
+        "build-image", help="build a container image in ai/images (Terraform runs this)"
+    )
+    build.add_argument("name", help="the folder in ai/images, e.g. base")
+    build.add_argument("tag", help="the tag to push it as")
+    build.set_defaults(func=cmd_build_image)
