@@ -12,6 +12,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -30,7 +31,11 @@ wildhat_run = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(wildhat_run)
 
 BUCKET = "vernal-mantra-512116-d0-wildhat"
-OUTPUT = f"gs://{BUCKET}/runs/jane-doe/run-1/"
+RUN = "20261026-1430-ab12"
+OUTPUT = f"gs://{BUCKET}/runs/jane-doe/{RUN}/"
+RUN_DOC = f"projects/vernal-mantra-512116-d0/databases/(default)/documents/runs/{RUN}"
+EPISODE_DOC = f"{RUN_DOC}/episodes/3"
+BASE_SEED = 1234567890123
 
 
 def wheel(name: str, version: str, code: str) -> bytes:
@@ -54,14 +59,19 @@ class FakeCloud:
 
     def __init__(self):
         self.objects: dict[tuple[str, str], bytes] = {}
+        # Firestore: each PATCH to a document, as {field: value}, in order.
+        self.updates: dict[str, list[dict]] = {}
+        self.firestore_down = False
 
     def urlopen(self, req, timeout=None):
         url = urllib.parse.urlsplit(req.full_url)
         if url.hostname == "metadata.google.internal":
             assert req.get_header("Metadata-flavor") == "Google"
             return io.BytesIO(json.dumps({"access_token": "ya29.job", "expires_in": 3599}).encode())
-        assert url.hostname == "storage.googleapis.com", req.full_url
         assert req.get_header("Authorization") == "Bearer ya29.job"
+        if url.hostname == "firestore.googleapis.com":
+            return self.firestore(req, url)
+        assert url.hostname == "storage.googleapis.com", req.full_url
         query = dict(urllib.parse.parse_qsl(url.query))
         path = urllib.parse.unquote(url.path)
         if path.startswith("/storage/v1/b/") and query.get("alt") == "media":
@@ -78,6 +88,24 @@ class FakeCloud:
             return io.BytesIO(b"{}")
         raise AssertionError(f"Unexpected request: {req.get_method()} {req.full_url}")
 
+    def firestore(self, req, url):
+        if self.firestore_down:
+            raise urllib.error.HTTPError(req.full_url, 503, "Service Unavailable", None, io.BytesIO(b"{}"))
+        assert req.get_method() == "PATCH"
+        doc = urllib.parse.unquote(url.path).removeprefix("/v1/")
+        mask = urllib.parse.parse_qs(url.query)["updateMask.fieldPaths"]
+        fields = json.loads(req.data)["fields"]
+        assert sorted(mask) == sorted(fields), (mask, fields)
+        self.updates.setdefault(doc, []).append({k: next(iter(v.values())) for k, v in fields.items()})
+        return io.BytesIO(b"{}")
+
+    def episode(self) -> dict:
+        """The episode's record, after all its updates."""
+        merged = {}
+        for update in self.updates.get(EPISODE_DOC, []):
+            merged.update(update)
+        return merged
+
     def outputs(self) -> dict[str, bytes]:
         prefix = OUTPUT[len(f"gs://{BUCKET}/"):]
         return {n[len(prefix):]: d for (b, n), d in self.objects.items() if n.startswith(prefix)}
@@ -92,7 +120,15 @@ class EntrypointTest(unittest.TestCase):
         patcher = mock.patch("urllib.request.urlopen", self.cloud.urlopen)
         patcher.start()
         self.addCleanup(patcher.stop)
-        self.env = {"WILDHAT_OUTPUT": OUTPUT, "WILDHAT_WORK": str(self.work), "CLOUD_RUN_TASK_INDEX": "3"}
+        self.env = {
+            "WILDHAT_OUTPUT": OUTPUT,
+            "WILDHAT_RUN_DOC": RUN_DOC,
+            "WILDHAT_CWD": "",
+            "WILDHAT_EPISODE_COUNT": "5",
+            "WILDHAT_BASE_SEED": str(BASE_SEED),
+            "WILDHAT_WORK": str(self.work),
+            "CLOUD_RUN_TASK_INDEX": "3",
+        }
 
     def upload_source(self, files: dict[str, str | bytes], *, damage: bool = False) -> None:
         buf = io.BytesIO()
@@ -130,8 +166,8 @@ class EntrypointTest(unittest.TestCase):
 
         self.assertEqual(code, 0)
         self.assertEqual(self.cloud.outputs(), {
-            "task-3/weights/best.pt": b"weights --epochs 25",
-            "task-3/results.csv": b"ball\n",
+            "episode-3/weights/best.pt": b"weights --epochs 25",
+            "episode-3/results.csv": b"ball\n",
         })
 
     def test_a_failing_command_still_uploads_its_outputs_and_fails_the_task(self):
@@ -144,7 +180,7 @@ class EntrypointTest(unittest.TestCase):
         code = self.run_entrypoint(sys.executable, "crash.py")
 
         self.assertEqual(code, 7)
-        self.assertEqual(self.cloud.outputs(), {"task-3/log.txt": b"got this far"})
+        self.assertEqual(self.cloud.outputs(), {"episode-3/log.txt": b"got this far"})
 
     @unittest.skipIf(os.name == "nt", "the image is Linux; Windows has no SIGTERM to pass on")
     def test_a_cancel_reaches_the_command_and_its_outputs_are_kept(self):
@@ -166,7 +202,7 @@ class EntrypointTest(unittest.TestCase):
         code = self.run_entrypoint(sys.executable, "long.py")
 
         self.assertEqual(code, 0)
-        self.assertEqual(self.cloud.outputs(), {"task-3/checkpoint.pt": b"saved on cancel"})
+        self.assertEqual(self.cloud.outputs(), {"episode-3/checkpoint.pt": b"saved on cancel"})
 
     def venv_python(self) -> str:
         """A fresh virtual environment's python, standing in for the image's,
@@ -193,7 +229,7 @@ class EntrypointTest(unittest.TestCase):
         code = self.run_entrypoint(python, "main.py")
 
         self.assertEqual(code, 0)
-        self.assertEqual(self.cloud.outputs(), {"task-3/said.txt": b"hi from a requirement"})
+        self.assertEqual(self.cloud.outputs(), {"episode-3/said.txt": b"hi from a requirement"})
 
     def test_failing_requirements_stop_the_run(self):
         python = self.venv_python()
@@ -220,6 +256,96 @@ class EntrypointTest(unittest.TestCase):
         with self.assertRaises(tarfile.FilterError):
             self.run_entrypoint(sys.executable, "main.py")
         self.assertFalse((self.work / "escaped.py").exists())
+
+    # --- Episodes ---------------------------------------------------------
+
+    def report_env(self) -> dict:
+        """Run a command that saves what the episode saw, and return it."""
+        self.upload_source({"sim/report.py": (
+            "import json, os, pathlib\n"
+            "names = ['WILDHAT_EPISODE', 'WILDHAT_EPISODE_COUNT', 'WILDHAT_SEED']\n"
+            "seen = {n: os.environ[n] for n in names}\n"
+            "seen['cwd'] = pathlib.Path.cwd().name\n"
+            "pathlib.Path(os.environ['WILDHAT_OUTPUT_DIR'], 'seen.json').write_text(json.dumps(seen))\n"
+        )})
+        self.env["WILDHAT_CWD"] = "sim"
+        self.assertEqual(self.run_entrypoint(sys.executable, "report.py"), 0)
+        return json.loads(self.cloud.outputs()["episode-3/seen.json"])
+
+    def test_each_episode_gets_its_number_and_seed(self):
+        seen = self.report_env()
+
+        self.assertEqual(seen["WILDHAT_EPISODE"], "3")
+        self.assertEqual(seen["WILDHAT_EPISODE_COUNT"], "5")
+        self.assertEqual(seen["WILDHAT_SEED"], str(wildhat_run.episode_seed(BASE_SEED, 3)))
+        # It runs where the person launched it from (ai/sim, say).
+        self.assertEqual(seen["cwd"], "sim")
+
+    def test_seeds_differ_by_episode_and_run(self):
+        seeds = {wildhat_run.episode_seed(base, i) for base in (BASE_SEED, BASE_SEED + 1) for i in range(100)}
+        self.assertEqual(len(seeds), 200)
+        self.assertTrue(all(0 <= seed < 2**63 for seed in seeds))
+
+    def test_a_replayed_episode_uses_the_given_seed(self):
+        self.env["WILDHAT_SEED"] = "42"
+
+        self.assertEqual(self.report_env()["WILDHAT_SEED"], "42")
+
+    def test_a_folder_outside_the_source_is_refused(self):
+        self.upload_source({"main.py": ""})
+        self.env["WILDHAT_CWD"] = "../.."
+
+        self.assertIn("there's no folder", str(self.run_entrypoint(sys.executable, "main.py")))
+
+    # --- Run records --------------------------------------------------------
+
+    def test_the_episode_record_follows_the_episode(self):
+        self.upload_source({"main.py": ""})
+
+        self.assertEqual(self.run_entrypoint(sys.executable, "main.py"), 0)
+
+        first, last = self.cloud.updates[EPISODE_DOC]
+        self.assertEqual(first["status"], "running")
+        self.assertIn("started_at", first)
+        self.assertEqual(last["status"], "succeeded")
+        self.assertEqual(last["exit_code"], "0")
+        self.assertEqual(last["outputs"], OUTPUT + "episode-3/")
+        self.assertIn("finished_at", last)
+
+    def test_failures_and_stops_are_recorded(self):
+        self.upload_source({"crash.py": "raise SystemExit(7)"})
+        self.run_entrypoint(sys.executable, "crash.py")
+        self.assertEqual(self.cloud.episode()["status"], "failed")
+        self.assertEqual(self.cloud.episode()["exit_code"], "7")
+
+        if os.name != "nt":
+            self.upload_source({"long.py": (
+                "import os, signal, time\n"
+                "signal.signal(signal.SIGTERM, lambda *a: os._exit(0))\n"
+                "os.kill(os.getppid(), signal.SIGTERM)\n"
+                "time.sleep(30)\n"
+            )})
+            shutil.rmtree(self.work)
+            self.run_entrypoint(sys.executable, "long.py")
+            self.assertEqual(self.cloud.episode()["status"], "stopped")
+
+    def test_a_run_that_never_started_its_command_is_recorded_as_failed(self):
+        self.upload_source({"main.py": ""}, damage=True)
+
+        self.run_entrypoint(sys.executable, "main.py")
+
+        self.assertEqual(self.cloud.episode()["status"], "failed")
+        self.assertIn("is damaged", self.cloud.episode()["error"])
+
+    def test_a_firestore_outage_doesnt_fail_the_episode(self):
+        self.cloud.firestore_down = True
+        self.upload_source({"main.py": (
+            "import os, pathlib\n"
+            "pathlib.Path(os.environ['WILDHAT_OUTPUT_DIR'], 'out.txt').write_text('done')\n"
+        )})
+
+        self.assertEqual(self.run_entrypoint(sys.executable, "main.py"), 0)
+        self.assertEqual(self.cloud.outputs(), {"episode-3/out.txt": b"done"})
 
     def test_no_command(self):
         self.upload_source({"main.py": ""})

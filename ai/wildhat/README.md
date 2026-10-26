@@ -1,8 +1,8 @@
 # wildhat
 
-The command-line tool for Team 100's Wildhat AI system. For now it does one
-thing: it signs you in to the team's Google Cloud project, so that `gcloud`
-and the Google Cloud Python libraries work as you.
+The command-line tool for Team 100's Wildhat AI system. It signs you in to the
+team's Google Cloud project, so that `gcloud` and the Google Cloud Python
+libraries work as you, and it runs your code in the cloud.
 
 ## Install
 
@@ -50,6 +50,71 @@ gcloud run jobs list
 
 You only need to sign in once. Your sign-in lasts until a mentor removes your
 access.
+
+## Run something in the cloud
+
+The code that runs in the cloud lives in `ai/src` (see
+[../src/README.md](../src/README.md)). From anywhere inside it:
+
+```
+wildhat launch -- python train.py --epochs 25
+wildhat launch --gpu -- python train.py
+wildhat launch --episodes 50 --timeout 2h -- python sim.py --scenario corner
+```
+
+launch packs up `ai/src` exactly as it is on your computer, uncommitted
+changes and new files included, uploads it, and starts the run. Nothing
+outside `ai/src` is uploaded. It
+prints the run's ID (like `20261026-1430-ab12`) and returns straight away;
+the run carries on in the cloud.
+
+| Option | What it does |
+|---|---|
+| `--episodes N` | Runs N copies of the command, each with its own seed (default 1, at most 100). Use it for simulations, data generation and evals. Training runs leave it out. |
+| `--gpu` | Gives each episode an NVIDIA L4. Not available until the project gets GPU quota. |
+| `--timeout 90m` | How long each episode may run (default 1h, at most 8h). |
+| `--seed S` | Replays one episode with the seed it had (needs `--episodes 1`). |
+
+Your command can read:
+
+- `WILDHAT_EPISODE`: this episode's number (0, 1, 2, ...)
+- `WILDHAT_EPISODE_COUNT`: how many episodes the run has
+- `WILDHAT_SEED`: this episode's random seed. Use it for everything random,
+  so the episode can be replayed.
+- `WILDHAT_OUTPUT_DIR`: a folder for results. Everything written there is
+  saved to `gs://vernal-mantra-512116-d0-wildhat/runs/<you>/<run>/episode-<n>/`
+  when the episode ends, even if it fails, times out or is cancelled.
+
+When an episode times out or is cancelled, your command gets a `SIGTERM`
+first. Python stops at once by default, without running `finally:` blocks, so
+to save a checkpoint on the way out, handle it:
+
+```python
+import signal, sys
+def stop(signum, frame):
+    save_checkpoint()  # quickly: there are only a few seconds
+    sys.exit(1)
+signal.signal(signal.SIGTERM, stop)
+```
+
+The command runs in the same folder you launched from. Files that `.gitignore`
+ignores aren't uploaded, and the upload can be at most 100 MB, so keep
+datasets in the bucket. If `ai/src/requirements.txt` exists, it's installed
+before each episode starts; the cloud already has Python 3.11, PyTorch (with
+CUDA) and ultralytics.
+
+**Everyone on the team can read what launch uploads.** It names any files git
+doesn't track yet, so you can spot a private note before it goes. Move those
+out of `ai/src`, or add them to `.gitignore`.
+
+Each run is recorded in Firestore, in `runs/<run>`, with who launched it, the
+command, the uploaded code and the git commit it started from (and whether
+there were uncommitted changes), and in `runs/<run>/episodes/<n>`, with each
+episode's seed, status and outputs. The uploaded code stays in the bucket, so
+you can always check exactly what a run ran.
+
+The first run after the cloud image changes waits about 10 minutes while
+Cloud Run loads the image; after that runs start in seconds.
 
 ## Other commands
 

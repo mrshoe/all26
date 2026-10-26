@@ -701,9 +701,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("logout", help="sign out and delete saved credentials").set_defaults(
         func=cmd_logout
     )
-    # Imported here because admin imports from this module.
-    from wildhat import admin
+    # Imported here because these import from this module.
+    from wildhat import admin, launch
 
+    launch.add_parsers(sub)
     admin.add_parsers(sub)
 
     args = parser.parse_args(argv)

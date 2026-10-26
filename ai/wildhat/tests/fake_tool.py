@@ -9,7 +9,8 @@ closely enough to check wildhat's side of the conversation:
   --account, writes the credential config, and, like google-auth, runs the
   credential config's executable (`wildhat id-token`) whenever a wildhat
   service account's credentials are used. A Google user account's access
-  token is "ya29.user:<email>"; its identity token is "id:<email>".
+  token is "ya29.user:<email>"; its identity token is "id:<email>". A
+  service account's access token is "ya29.sa:<email>".
 - terraform's plan says there are changes (exit 2) and writes the plan file.
 - fake-editor replaces the file with the next text queued in editor.json.
 
@@ -18,6 +19,7 @@ whose words prefix the call's non-flag arguments supplies stdout, stderr and
 the exit code instead.
 """
 
+import base64
 import json
 import os
 import shlex
@@ -27,6 +29,7 @@ import time
 from pathlib import Path
 
 FAKE_DIR = Path(os.environ["WILDHAT_FAKE_DIR"])
+PROJECT = "vernal-mantra-512116-d0"
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 
 
@@ -69,6 +72,11 @@ def override(tool: str, args: list[str]) -> int | None:
 # ---------------------------------------------------------------------------
 # gcloud
 # ---------------------------------------------------------------------------
+
+
+def jwt_claims(token: str) -> dict:
+    payload = token.split(".")[1]
+    return json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
 
 
 def credential_source_token(cred_file: str) -> str:
@@ -122,7 +130,12 @@ def gcloud(args: list[str]) -> int:
         cred_file = state["accounts"][name]["cred_file"]
         if cred_file is None:
             return f"ya29.user:{name}"
-        return f"ya29.sa.{credential_source_token(cred_file)[:8]}"
+        # Like the token exchange: the ID token's handle must be this
+        # account's (the real check is IAM's workloadIdentityUser grant).
+        handle = jwt_claims(credential_source_token(cred_file)).get("handle")
+        if name != f"wh-{handle}@{PROJECT}.iam.gserviceaccount.com":
+            raise SystemExit(f"ERROR: (gcloud) Permission 'iam.serviceAccounts.getAccessToken' denied on {name}")
+        return f"ya29.sa:{name}"
 
     if cmd[:3] == ["iam", "workload-identity-pools", "create-cred-config"]:
         output = option(args, "output-file")
@@ -193,6 +206,41 @@ def gcloud(args: list[str]) -> int:
     if cmd[:3] == ["run", "jobs", "list"]:
         use_credentials(account())
         print("Listed 0 items.", file=sys.stderr)
+        return 0
+
+    if cmd[:3] == ["run", "jobs", "execute"]:
+        name = account()
+        use_credentials(name)
+        job = cmd[3]
+        # Each person's jobs (ai/terraform/jobs.tf); the GPU ones only once
+        # the quota allows them.
+        handle = name.removeprefix("wh-").split("@")[0]
+        exists = job == f"wh-{handle}" or (job == f"wh-{handle}-gpu" and state.get("gpu_jobs"))
+        if not job.startswith("wh-") or not (job.removeprefix("wh-").removesuffix("-gpu") == handle):
+            print(f"ERROR: (gcloud.run.jobs.execute) PERMISSION_DENIED: Permission 'run.jobs.runWithOverrides' denied on resource '{job}'", file=sys.stderr)
+            return 1
+        if not exists:
+            print(f"ERROR: (gcloud.run.jobs.execute) NOT_FOUND: Resource '{job}' was not found", file=sys.stderr)
+            return 1
+        # launch passes the command and environment in a flags file.
+        flags = json.loads(Path(option(args, "flags-file")).read_text(encoding="utf-8"))
+        env, command = flags["--update-env-vars"], flags["--args"]
+        assert all(isinstance(v, str) for v in [*env.values(), *command]), flags
+        execution = {
+            "metadata": {"name": f"{job}-{len(state.setdefault('executions', [])) + 1:05d}"},
+            "spec": {
+                "taskCount": int(option(args, "tasks")),
+                "template": {"spec": {
+                    "timeoutSeconds": option(args, "task-timeout").removesuffix("s"),
+                    "containers": [{"args": command,
+                                    "env": [{"name": k, "value": v} for k, v in env.items()]}],
+                }},
+            },
+        }
+        state["executions"].append(execution)
+        save("gcloud.json", state)
+        print(json.dumps(execution))
+        print(f"Execution [{execution['metadata']['name']}] is being started asynchronously.", file=sys.stderr)
         return 0
 
     # Artifact Registry, as image names: ["<repo>/<name>:<tag>", ...]

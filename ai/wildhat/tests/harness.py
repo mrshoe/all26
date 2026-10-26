@@ -44,12 +44,14 @@ from wildhat import cli  # noqa: E402
 
 PROJECT = "vernal-mantra-512116-d0"
 ADMIN_BUCKET = f"{PROJECT}-admin"
+WILDHAT_BUCKET = f"{PROJECT}-wildhat"
 WATCHDOG_URL = "https://job-watchdog-abc123-uc.a.run.app"
 # The mentor's Google account, as the fake gcloud hands out its tokens.
 MENTOR = "dana@team100.org"
 MENTOR_ACCESS_TOKEN = f"ya29.user:{MENTOR}"
 MENTOR_ID_TOKEN = f"id:{MENTOR}"
 REAL_URLOPEN = urllib.request.urlopen
+REAL_GIT = shutil.which("git")
 # A wildhat run that takes longer than this is stuck (e.g. login waiting for a
 # sign-in link that never comes).
 RUN_TIMEOUT = 60
@@ -60,6 +62,22 @@ def jwt(claims: dict) -> str:
         return base64.urlsafe_b64encode(json.dumps(d).encode()).rstrip(b"=").decode()
 
     return f"{part({'alg': 'RS256', 'typ': 'JWT'})}.{part(claims)}.signature"
+
+
+def firestore_fields(fields: dict) -> dict:
+    """Firestore's typed values ({"integerValue": "3"}) as plain Python."""
+
+    def plain(value: dict):
+        (kind, v), = value.items()
+        if kind == "integerValue":
+            return int(v)
+        if kind == "arrayValue":
+            return [plain(x) for x in v.get("values", [])]
+        if kind == "mapValue":
+            return firestore_fields(v.get("fields", {}))
+        return v
+
+    return {k: plain(v) for k, v in fields.items()}
 
 
 def jwt_claims(token: str) -> dict:
@@ -81,6 +99,8 @@ class FakeGoogle:
         self.offline = False
         self.failures: dict[str, tuple[int, str]] = {}
         self.watchdog_reply = {"month_cost": 12.5, "checked": 0, "cancelled": []}
+        # Firestore documents by path under documents/, as {field: value}.
+        self.documents: dict[str, dict] = {}
         # Google accounts with access to the admin APIs (project Owners).
         self.mentors = {MENTOR}
         self._oob_codes: dict[str, str] = {}
@@ -137,6 +157,7 @@ class FakeGoogle:
             "query": dict(urllib.parse.parse_qsl(url.query)),
             "headers": {k.lower(): v for k, v in req.header_items()},
             "body": req.data,
+            "url": req.full_url,
         }
         self.requests.append(request)
         for suffix, (status, message) in self.failures.items():
@@ -146,6 +167,7 @@ class FakeGoogle:
             "identitytoolkit.googleapis.com": self._identity_toolkit,
             "securetoken.googleapis.com": self._secure_token,
             "storage.googleapis.com": self._storage,
+            "firestore.googleapis.com": self._firestore,
             "cloudfunctions.googleapis.com": self._cloud_functions,
             urllib.parse.urlsplit(WATCHDOG_URL).hostname: self._watchdog,
         }.get(url.hostname)
@@ -291,19 +313,42 @@ class FakeGoogle:
 
     # --- Cloud Storage ------------------------------------------------------
 
+    def _service_account(self, request: dict) -> str | None:
+        """The handle whose wh- service account made the request, if one did."""
+        token = request["headers"].get("authorization", "")
+        prefix, suffix = "Bearer ya29.sa:wh-", f"@{PROJECT}.iam.gserviceaccount.com"
+        if token.startswith(prefix) and token.endswith(suffix):
+            return token[len(prefix):-len(suffix)]
+        return None
+
+    def _may_access(self, request: dict, bucket: str, name: str, write: bool) -> bool:
+        """IAM for the buckets (ai/terraform/students.tf): mentors may do
+        anything; wh- accounts may read the wildhat bucket and write only
+        their own src/ and runs/ folders."""
+        if self._is_mentor(request):
+            return True
+        handle = self._service_account(request)
+        if handle is None or bucket != WILDHAT_BUCKET:
+            return False
+        return not write or name.startswith((f"src/{handle}/", f"runs/{handle}/"))
+
     def _storage(self, request: dict):
-        if not self._is_mentor(request):
-            return 403, "Anonymous caller does not have storage.objects.get access", None
         path = request["path"]
-        if path.startswith("/storage/v1/b/") and request["query"].get("alt") == "media":
+        if path.startswith("/storage/v1/b/") and request["method"] == "GET":
             bucket, name = path[len("/storage/v1/b/"):].split("/o/", 1)
+            if not self._may_access(request, bucket, name, write=False):
+                return 403, "Caller does not have storage.objects.get access", None
             found = self.objects.get((bucket, name))
             if not found:
                 return 404, "No such object", None
+            if request["query"].get("alt") != "media":
+                return 200, {"name": name, "generation": str(found[1]), "size": str(len(found[0]))}, None
             return 200, found[0], {"X-Goog-Generation": str(found[1])}
         if path.startswith("/upload/storage/v1/b/") and request["method"] == "POST":
             bucket = path[len("/upload/storage/v1/b/"):].split("/o", 1)[0]
             name = request["query"]["name"]
+            if not self._may_access(request, bucket, name, write=True):
+                return 403, "Caller does not have storage.objects.create access", None
             want = int(request["query"]["ifGenerationMatch"])
             have = self.objects.get((bucket, name), (None, 0))[1]
             if want != have:
@@ -311,6 +356,36 @@ class FakeGoogle:
             generation = self.put_object(bucket, name, request["body"])
             return 200, {"name": name, "generation": str(generation)}, None
         raise AssertionError(f"Unexpected Cloud Storage call: {request['method']} {path}")
+
+    # --- Firestore ------------------------------------------------------------
+
+    def _firestore(self, request: dict):
+        # Every wh- account has roles/datastore.user (ai/terraform/students.tf).
+        if not self._service_account(request) and not self._is_mentor(request):
+            return 403, "Missing or insufficient permissions.", None
+        prefix = f"/v1/projects/{PROJECT}/databases/(default)/documents"
+        path = request["path"]
+        assert path.startswith(prefix), path
+        doc = path[len(prefix):].lstrip("/")
+        if doc == ":commit" or path.endswith(":commit"):
+            writes = json.loads(request["body"])["writes"]
+            names = [w["update"]["name"].split("/documents/", 1)[1] for w in writes]
+            for write, name in zip(writes, names):
+                if write.get("currentDocument", {}).get("exists") is False and name in self.documents:
+                    return 409, f"Document already exists: {name}", None
+            for write, name in zip(writes, names):
+                self.documents[name] = firestore_fields(write["update"]["fields"])
+            return 200, {"writeResults": [{} for _ in writes]}, None
+        if request["method"] == "PATCH":
+            fields = firestore_fields(json.loads(request["body"])["fields"])
+            mask = urllib.parse.parse_qs(urllib.parse.urlsplit(request["url"]).query)["updateMask.fieldPaths"]
+            assert sorted(mask) == sorted(fields), (mask, fields)
+            self.documents.setdefault(doc, {}).update(fields)
+            return 200, {"name": doc}, None
+        if request["method"] == "DELETE":
+            self.documents.pop(doc, None)
+            return 200, {}, None
+        raise AssertionError(f"Unexpected Firestore call: {request['method']} {path}")
 
     # --- The job watchdog ---------------------------------------------------
 
@@ -352,6 +427,10 @@ class WildhatTestCase(unittest.TestCase):
 
         for tool in ("gcloud", "terraform", "fake-editor"):
             self.write_launcher(tool, [sys.executable, str(TESTS / "fake_tool.py"), tool])
+        # The real git, for launch. Its folder may be hidden below for also
+        # holding a real gcloud (/usr/bin on GitHub's Ubuntu runners).
+        if REAL_GIT:
+            self.write_launcher("git", [REAL_GIT])
         # `wildhat` as gcloud runs it. It can't reach FakeGoogle, so send
         # anything it tries online to a closed port rather than to Google.
         self.write_launcher(
