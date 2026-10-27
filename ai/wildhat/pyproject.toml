@@ -1,7 +1,7 @@
 [project]
 name = "wildhat"
-version = "0.1.0"
-description = "Team 100 Wildhat AI command-line tool: sign in to the team's Google Cloud project"
+dynamic = ["version"]
+description = "Team 100 Wildhat AI command-line tool: sign in to the team's Google Cloud project and run code there"
 readme = "README.md"
 requires-python = ">=3.10"
 # Standard library only. Keep it that way so installs work on any laptop.
@@ -13,6 +13,11 @@ wildhat = "wildhat.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# The version's only copy is __version__ in src/wildhat/__init__.py. Bump it
+# with every change people should upgrade for; `wildhat --version` shows it.
+[tool.hatch.version]
+path = "src/wildhat/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wildhat"]

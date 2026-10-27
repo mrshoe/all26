@@ -19,10 +19,13 @@ often do.
 
 import base64
 import contextlib
+import datetime
+import gc
 import http.client
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -32,6 +35,7 @@ import unittest
 import urllib.error
 import urllib.parse
 import urllib.request
+import warnings
 from pathlib import Path
 from unittest import mock
 
@@ -99,8 +103,18 @@ class FakeGoogle:
         self.offline = False
         self.failures: dict[str, tuple[int, str]] = {}
         self.watchdog_reply = {"month_cost": 12.5, "checked": 0, "cancelled": []}
-        # Firestore documents by path under documents/, as {field: value}.
+        # Firestore documents by path under documents/, as {field: value},
+        # and as Firestore's typed values.
         self.documents: dict[str, dict] = {}
+        self.typed_documents: dict[str, dict] = {}
+        # Cloud Run executions' progress by name, and those cancelled.
+        self.execution_progress: dict[str, dict] = {}
+        self.cancelled_executions: list[str] = []
+        self.log_entries: list[dict] = []
+        # Called whenever logs are read, so a test can make a run progress.
+        self.on_log_read = None
+        # Pages are small, so that paging gets tested.
+        self.page_size = 2
         # Google accounts with access to the admin APIs (project Owners).
         self.mentors = {MENTOR}
         self._oob_codes: dict[str, str] = {}
@@ -168,6 +182,8 @@ class FakeGoogle:
             "securetoken.googleapis.com": self._secure_token,
             "storage.googleapis.com": self._storage,
             "firestore.googleapis.com": self._firestore,
+            "run.googleapis.com": self._run_api,
+            "logging.googleapis.com": self._logging,
             "cloudfunctions.googleapis.com": self._cloud_functions,
             urllib.parse.urlsplit(WATCHDOG_URL).hostname: self._watchdog,
         }.get(url.hostname)
@@ -273,7 +289,8 @@ class FakeGoogle:
                 with REAL_URLOPEN(url, timeout=10) as resp:
                     self.browser_visits.append((url, resp.status, resp.read().decode()))
             except urllib.error.HTTPError as e:
-                self.browser_visits.append((url, e.code, e.read().decode()))
+                with e:
+                    self.browser_visits.append((url, e.code, e.read().decode()))
 
     def _sign_in_with_email_link(self, body: dict):
         if self._oob_codes.pop(body["oobCode"], None) != body["email"]:
@@ -334,6 +351,19 @@ class FakeGoogle:
 
     def _storage(self, request: dict):
         path = request["path"]
+        if path.startswith("/storage/v1/b/") and path.endswith("/o") and request["method"] == "GET":
+            # Listing, a page of `page_size` at a time so paging gets tested.
+            bucket = path[len("/storage/v1/b/"):-len("/o")]
+            prefix = request["query"].get("prefix", "")
+            if not self._may_access(request, bucket, prefix, write=False):
+                return 403, "Caller does not have storage.objects.list access", None
+            names = sorted(n for (b, n) in self.objects if b == bucket and n.startswith(prefix))
+            start = int(request["query"].get("pageToken") or 0)
+            page = names[start:start + self.page_size]
+            reply = {"items": [{"name": n, "size": str(len(self.objects[bucket, n][0]))} for n in page]}
+            if start + self.page_size < len(names):
+                reply["nextPageToken"] = str(start + self.page_size)
+            return 200, reply, None
         if path.startswith("/storage/v1/b/") and request["method"] == "GET":
             bucket, name = path[len("/storage/v1/b/"):].split("/o/", 1)
             if not self._may_access(request, bucket, name, write=False):
@@ -359,33 +389,171 @@ class FakeGoogle:
 
     # --- Firestore ------------------------------------------------------------
 
+    def update_document(self, path: str, typed: dict) -> None:
+        """Set fields of a Firestore document, given as typed values
+        ({"stringValue": ...}): what the base image's entrypoint does as an
+        episode goes."""
+        self.typed_documents.setdefault(path, {}).update(typed)
+        self.documents[path] = firestore_fields(self.typed_documents[path])
+
     def _firestore(self, request: dict):
         # Every wh- account has roles/datastore.user (ai/terraform/students.tf).
         if not self._service_account(request) and not self._is_mentor(request):
             return 403, "Missing or insufficient permissions.", None
-        prefix = f"/v1/projects/{PROJECT}/databases/(default)/documents"
+        root = f"projects/{PROJECT}/databases/(default)/documents"
+        prefix = f"/v1/{root}"
         path = request["path"]
         assert path.startswith(prefix), path
         doc = path[len(prefix):].lstrip("/")
-        if doc == ":commit" or path.endswith(":commit"):
+
+        def as_document(name: str) -> dict:
+            return {"name": f"{root}/{name}", "fields": self.typed_documents[name]}
+
+        if path.endswith(":commit"):
             writes = json.loads(request["body"])["writes"]
             names = [w["update"]["name"].split("/documents/", 1)[1] for w in writes]
             for write, name in zip(writes, names):
                 if write.get("currentDocument", {}).get("exists") is False and name in self.documents:
                     return 409, f"Document already exists: {name}", None
             for write, name in zip(writes, names):
-                self.documents[name] = firestore_fields(write["update"]["fields"])
+                self.typed_documents[name] = {}
+                self.update_document(name, write["update"]["fields"])
             return 200, {"writeResults": [{} for _ in writes]}, None
+        if path.endswith(":runQuery"):
+            query = json.loads(request["body"])["structuredQuery"]
+            (collection,) = [c["collectionId"] for c in query["from"]]
+            assert collection == "runs", query
+            assert query["orderBy"] == [{"field": {"fieldPath": "created_at"}, "direction": "DESCENDING"}], query
+            names = [n for n in self.typed_documents if n.count("/") == 1 and n.startswith("runs/")
+                     and "created_at" in self.typed_documents[n]]
+            if "where" in query:
+                f = query["where"]["fieldFilter"]
+                assert f["field"]["fieldPath"] == "launched_by" and f["op"] == "EQUAL", f
+                names = [n for n in names if self.documents[n]["launched_by"] == f["value"]["stringValue"]]
+            names.sort(key=lambda n: self.documents[n]["created_at"], reverse=True)
+            rows = [{"document": as_document(n)} for n in names[:query["limit"]]]
+            return 200, rows or [{"readTime": "2026-10-26T00:00:00Z"}], None
+        if request["method"] == "GET" and doc.count("/") % 2 == 0:  # A collection
+            names = sorted(n for n in self.typed_documents if n.rsplit("/", 1)[0] == doc)
+            start = int(request["query"].get("pageToken") or 0)
+            page = names[start:start + self.page_size]
+            reply = {"documents": [as_document(n) for n in page]}
+            if start + self.page_size < len(names):
+                reply["nextPageToken"] = str(start + self.page_size)
+            return 200, reply, None
+        if request["method"] == "GET":
+            if doc not in self.typed_documents:
+                return 404, f"Document {doc} not found", None
+            return 200, as_document(doc), None
         if request["method"] == "PATCH":
-            fields = firestore_fields(json.loads(request["body"])["fields"])
+            typed = json.loads(request["body"])["fields"]
             mask = urllib.parse.parse_qs(urllib.parse.urlsplit(request["url"]).query)["updateMask.fieldPaths"]
-            assert sorted(mask) == sorted(fields), (mask, fields)
-            self.documents.setdefault(doc, {}).update(fields)
+            assert sorted(mask) == sorted(typed), (mask, typed)
+            self.update_document(doc, typed)
             return 200, {"name": doc}, None
         if request["method"] == "DELETE":
             self.documents.pop(doc, None)
+            self.typed_documents.pop(doc, None)
             return 200, {}, None
         raise AssertionError(f"Unexpected Firestore call: {request['method']} {path}")
+
+    # --- Cloud Run (the REST API; gcloud's side is in fake_tool.py) ----------
+
+    def executions(self) -> dict[str, dict]:
+        """Executions the fake gcloud started, by name, with their progress
+        (set_execution) merged in."""
+        path = Path(os.environ["WILDHAT_FAKE_DIR"]) / "gcloud.json"
+        started = json.loads(path.read_text(encoding="utf-8")).get("executions", []) if path.exists() else []
+        found = {}
+        for e in started:
+            name = e["metadata"]["name"]
+            job = name.rsplit("-", 1)[0]
+            found[name] = {
+                "name": f"projects/{PROJECT}/locations/us-central1/jobs/{job}/executions/{name}",
+                "taskCount": e["spec"]["taskCount"],
+                "createTime": "2026-10-26T07:00:00Z",
+                **self.execution_progress.get(name, {}),
+            }
+        return found
+
+    def set_execution(self, name: str, **progress) -> None:
+        """E.g. set_execution(name, runningCount=2, succeededCount=1), or
+        completionTime=... once it's over. Counts that are 0 are left out, as
+        Cloud Run does."""
+        self.execution_progress.setdefault(name, {}).update(progress)
+
+    def _run_api(self, request: dict):
+        # run.viewer on the project lets every wh- account read executions.
+        handle = self._service_account(request)
+        if handle is None:
+            return 403, "Permission denied", None
+        m = re.fullmatch(rf"/v2/projects/{PROJECT}/locations/us-central1/jobs/([^/]+)/executions/([^/:]+)(:cancel)?",
+                         request["path"])
+        assert m, request["path"]
+        job, name, cancel = m.groups()
+        execution = self.executions().get(name)
+        if execution is None or not name.startswith(job + "-"):
+            return 404, f"Execution {name} not found", None
+        if not cancel:
+            assert request["method"] == "GET"
+            return 200, execution, None
+        # run.jobsExecutorWithOverrides on their own jobs only (jobs.tf).
+        if job.removeprefix("wh-").removesuffix("-gpu") != handle:
+            return 403, "Permission 'run.executions.cancel' denied", None
+        done = sum(execution.get(f"{k}Count", 0) for k in ("succeeded", "failed"))
+        self.set_execution(name, completionTime="2026-10-26T08:00:00Z", runningCount=0,
+                           cancelledCount=execution["taskCount"] - done)
+        self.cancelled_executions.append(name)
+        return 200, {"name": execution["name"]}, None
+
+    # --- Cloud Logging --------------------------------------------------------
+
+    def add_log(self, execution: str, episode: int | None, text: str, log="run.googleapis.com%2Fstdout",
+                second: int | None = None) -> None:
+        """A line one episode printed, as Cloud Run records it, `second`
+        seconds into the run (by default a second after the last line).
+        Cloud Run also writes audit entries for an execution, with no
+        episode."""
+        if not self.log_entries:
+            self._log_start = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+        if second is None:
+            second = len(self.log_entries)
+        when = self._log_start + datetime.timedelta(seconds=second)
+        self.log_entries.append({
+            "insertId": f"log-{len(self.log_entries)}",
+            "timestamp": when.isoformat().replace("+00:00", "Z"),
+            "logName": f"projects/{PROJECT}/logs/{log}",
+            **({"textPayload": text} if text is not None else {"protoPayload": {"@type": "AuditLog"}}),
+            "labels": {"run.googleapis.com/execution_name": execution,
+                       **({} if episode is None else {"run.googleapis.com/task_index": str(episode)})},
+        })
+
+    def _logging(self, request: dict):
+        if self._service_account(request) is None:  # logging.viewer
+            return 403, "Permission denied", None
+        assert request["path"] == "/v2/entries:list", request["path"]
+        if self.on_log_read:
+            self.on_log_read()
+        body = json.loads(request["body"])
+        assert body["resourceNames"] == [f"projects/{PROJECT}"] and body["orderBy"] == "timestamp asc", body
+        flt = body["filter"]
+        assert 'resource.type="cloud_run_job"' in flt, flt
+        execution = re.search(r'labels."run.googleapis.com/execution_name"="([^"]+)"', flt).group(1)
+        task = re.search(r'labels."run.googleapis.com/task_index"="(\d+)"', flt)
+        log = re.search(r'logName:"([^"]+)"', flt)
+        after = re.search(r'timestamp>="([^"]+)"', flt).group(1)
+        entries = sorted((
+            e for e in self.log_entries
+            if e["labels"]["run.googleapis.com/execution_name"] == execution
+            and (task is None or e["labels"].get("run.googleapis.com/task_index") == task.group(1))
+            and (log is None or log.group(1) in e["logName"])
+            and e["timestamp"] >= after
+        ), key=lambda e: e["timestamp"])
+        start = int(body.get("pageToken") or 0)
+        reply = {"entries": entries[start:start + self.page_size]}
+        if start + self.page_size < len(entries):
+            reply["nextPageToken"] = str(start + self.page_size)
+        return 200, reply, None
 
     # --- The job watchdog ---------------------------------------------------
 
@@ -560,14 +728,26 @@ class WildhatTestCase(unittest.TestCase):
             except BaseException as e:
                 result["error"] = e
 
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            thread = threading.Thread(target=run, daemon=True)
-            thread.start()
-            thread.join(RUN_TIMEOUT)
+        # Anything wildhat leaves open (an HTTP error's body, say) is reported
+        # when it's garbage-collected, which can be at some random later
+        # moment; collect at the end, so it's always caught in the run that
+        # leaked it. (Warning filters are process-wide, so this covers the
+        # run's thread too.)
+        with warnings.catch_warnings(record=True) as leaks:
+            warnings.simplefilter("always", ResourceWarning)
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                thread = threading.Thread(target=run, daemon=True)
+                thread.start()
+                thread.join(RUN_TIMEOUT)
+            if not thread.is_alive():
+                gc.collect()
         if thread.is_alive():
             self.fail(f"wildhat {' '.join(argv)} hung.\nOutput so far:\n{out.getvalue()}{err.getvalue()}")
         if "error" in result:
             raise result["error"]
+        leaks = [w for w in leaks if issubclass(w.category, ResourceWarning)]
+        if leaks:
+            self.fail(f"wildhat {' '.join(argv)} left something open: {leaks[0].message}")
         return Run(result["code"], out.getvalue(), err.getvalue())
 
     def assertSucceeded(self, run: Run) -> None:

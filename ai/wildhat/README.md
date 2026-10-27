@@ -26,6 +26,18 @@ uv tool update-shell
 Open a new terminal so `wildhat` is on your PATH, and check with `wildhat
 --version`.
 
+### Upgrade
+
+From the root of the repo, get the latest code and reinstall:
+
+```
+git pull
+uv tool install --reinstall ./ai/wildhat
+```
+
+`--reinstall` is needed: without it, uv keeps the version you already have.
+You stay signed in. `wildhat --version` shows which version you have.
+
 ## Sign in
 
 ```
@@ -82,8 +94,8 @@ Your command can read:
 - `WILDHAT_SEED`: this episode's random seed. Use it for everything random,
   so the episode can be replayed.
 - `WILDHAT_OUTPUT_DIR`: a folder for results. Everything written there is
-  saved to `gs://vernal-mantra-512116-d0-wildhat/runs/<you>/<run>/episode-<n>/`
-  when the episode ends, even if it fails, times out or is cancelled.
+  saved with the run when the episode ends, even if it fails, times out or is
+  cancelled. Get it with `wildhat download`.
 
 When an episode times out or is cancelled, your command gets a `SIGTERM`
 first. Python stops at once by default, without running `finally:` blocks, so
@@ -107,14 +119,38 @@ CUDA) and ultralytics.
 doesn't track yet, so you can spot a private note before it goes. Move those
 out of `ai/src`, or add them to `.gitignore`.
 
-Each run is recorded in Firestore, in `runs/<run>`, with who launched it, the
-command, the uploaded code and the git commit it started from (and whether
-there were uncommitted changes), and in `runs/<run>/episodes/<n>`, with each
-episode's seed, status and outputs. The uploaded code stays in the bucket, so
-you can always check exactly what a run ran.
+Each run keeps a record of who launched it, the command, the git commit it
+started from (and whether there were uncommitted changes), and each episode's
+seed, status and outputs; `wildhat runs RUN` shows it. The exact code it ran
+is kept too, so `wildhat download RUN --source` always gets what a run
+really ran.
 
 The first run after the cloud image changes waits about 10 minutes while
 Cloud Run loads the image; after that runs start in seconds.
+
+## Follow your runs
+
+```
+wildhat runs                       # everyone's latest runs
+wildhat runs --mine                # yours (or --user jane-doe for someone's)
+wildhat runs 20261026-1430-ab12    # one run: its code, command, and each episode
+wildhat logs 20261026-1430-ab12 -f # its output, as it happens
+wildhat cancel 20261026-1430-ab12
+wildhat download 20261026-1430-ab12
+```
+
+| Command | What it does |
+|---|---|
+| `wildhat runs [RUN]` | Lists the latest runs (everyone's; `--mine`, `--user HANDLE`, `--limit N`), or shows one: the command, the git commit it started from, and each episode's seed, status, exit code and time. |
+| `wildhat logs RUN` | Prints a run's output so far, each line marked with its episode, like `[3]`. `-f` keeps printing until the run ends; `--episode N` shows one episode. Logs are kept for 30 days. |
+| `wildhat cancel RUN` | Cancels one of your runs, after asking (`--yes` doesn't ask). Running episodes get a `SIGTERM` and a few seconds to save their outputs. |
+| `wildhat download RUN` | Downloads a run's outputs to `./RUN/episode-<n>/` (`--episode N` for one, `--to DIR` for somewhere else). `--source` downloads the exact code it ran instead. Not into `ai/src`, which the next launch would upload. |
+
+You can see, follow and download everyone's runs, but only cancel your own.
+A run's status is `starting`, `running (2 of 5 done)`, `succeeded`,
+`failed (1 of 5)` or `cancelled`; an episode that was cancelled before it
+started shows as `not started`, and one that timed out or was cancelled
+while running as `stopped`.
 
 ## Other commands
 

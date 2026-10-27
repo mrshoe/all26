@@ -128,7 +128,8 @@ class Api:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return resp.read(), dict(resp.headers)
         except urllib.error.HTTPError as e:
-            raise ApiError(e.code, error_message(e)) from None
+            with e:  # Close the error's body, or Python warns later.
+                raise ApiError(e.code, error_message(e)) from None
         except urllib.error.URLError as e:
             raise WildhatError(f"Couldn't reach Google ({e.reason}). Are you online?")
 
@@ -269,7 +270,12 @@ def run_editor(path: Path) -> None:
 
 
 def confirm(question: str) -> bool:
-    return input(f"{question} [y/N] ").strip().lower() in ("y", "yes")
+    try:
+        answer = input(f"{question} [y/N] ")
+    except EOFError:  # Nothing to read (a script, say): that's a no.
+        print()
+        return False
+    return answer.strip().lower() in ("y", "yes")
 
 
 # ---------------------------------------------------------------------------
@@ -514,7 +520,8 @@ def cmd_cancel_jobs(args) -> int:
         with urllib.request.urlopen(req, timeout=120) as resp:
             result = json.load(resp)
     except urllib.error.HTTPError as e:
-        raise ApiError(e.code, e.reason) from None
+        with e:
+            raise ApiError(e.code, e.reason) from None
 
     if result.get("month_cost") is not None:
         print(f"This month's cost so far: ${result['month_cost']:.2f}")

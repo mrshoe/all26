@@ -163,10 +163,11 @@ def request(token: str, method: str, url: str, body=None, content_type="applicat
             text = resp.read()
             return json.loads(text) if text else {}
     except urllib.error.HTTPError as e:
-        try:
-            message = json.load(e)["error"]["message"]
-        except (ValueError, KeyError, TypeError):
-            message = e.reason
+        with e:  # Close the error's body, or Python warns later.
+            try:
+                message = json.load(e)["error"]["message"]
+            except (ValueError, KeyError, TypeError):
+                message = e.reason
         raise WildhatError(f"Google said (HTTP {e.code}): {message}") from None
     except urllib.error.URLError as e:
         raise WildhatError(f"Couldn't reach Google ({e.reason}). Are you online?")
@@ -363,7 +364,6 @@ def cmd_launch(args) -> int:
     where = "a GPU" if args.gpu else "CPU"
     count = f"{args.episodes} episodes" if args.episodes > 1 else "1 episode"
     print(f"Launched run {run_id}: {count} on {where}, up to {timeout // 60} min each.")
-    print(f"Outputs: {output}")
     return 0
 
 

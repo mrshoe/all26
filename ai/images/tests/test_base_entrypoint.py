@@ -263,7 +263,7 @@ class EntrypointTest(unittest.TestCase):
         """Run a command that saves what the episode saw, and return it."""
         self.upload_source({"sim/report.py": (
             "import json, os, pathlib\n"
-            "names = ['WILDHAT_EPISODE', 'WILDHAT_EPISODE_COUNT', 'WILDHAT_SEED']\n"
+            "names = ['WILDHAT_EPISODE', 'WILDHAT_EPISODE_COUNT', 'WILDHAT_SEED', 'PYTHONUNBUFFERED']\n"
             "seen = {n: os.environ[n] for n in names}\n"
             "seen['cwd'] = pathlib.Path.cwd().name\n"
             "pathlib.Path(os.environ['WILDHAT_OUTPUT_DIR'], 'seen.json').write_text(json.dumps(seen))\n"
@@ -278,6 +278,8 @@ class EntrypointTest(unittest.TestCase):
         self.assertEqual(seen["WILDHAT_EPISODE"], "3")
         self.assertEqual(seen["WILDHAT_EPISODE_COUNT"], "5")
         self.assertEqual(seen["WILDHAT_SEED"], str(wildhat_run.episode_seed(BASE_SEED, 3)))
+        # Otherwise print() output would only reach the logs when it exits.
+        self.assertEqual(seen["PYTHONUNBUFFERED"], "1")
         # It runs where the person launched it from (ai/sim, say).
         self.assertEqual(seen["cwd"], "sim")
 

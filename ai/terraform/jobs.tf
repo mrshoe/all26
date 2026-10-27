@@ -93,6 +93,20 @@ resource "google_firestore_database" "default" {
   depends_on = [google_project_service.apis]
 }
 
+# For `wildhat runs --mine` and `--user`: one person's runs, newest first.
+resource "google_firestore_index" "runs_by_person" {
+  database   = google_firestore_database.default.name
+  collection = "runs"
+  fields {
+    field_path = "launched_by"
+    order      = "ASCENDING"
+  }
+  fields {
+    field_path = "created_at"
+    order      = "DESCENDING"
+  }
+}
+
 # --- Each person's jobs -------------------------------------------------------
 
 resource "google_cloud_run_v2_job" "cpu" {

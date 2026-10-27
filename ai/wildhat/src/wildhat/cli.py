@@ -183,10 +183,11 @@ def post(url: str, body: bytes, content_type: str) -> dict:
         with urllib.request.urlopen(req, timeout=8) as resp:
             return json.load(resp)
     except urllib.error.HTTPError as e:
-        try:
-            code = json.load(e)["error"]["message"]
-        except (ValueError, KeyError, TypeError):
-            code = f"HTTP {e.code}"
+        with e:  # Close the error's body, or Python warns later.
+            try:
+                code = json.load(e)["error"]["message"]
+            except (ValueError, KeyError, TypeError):
+                code = f"HTTP {e.code}"
         # Codes can carry detail after a colon, e.g. "INVALID_EMAIL : ...".
         short = code.split(":")[0].strip()
         raise WildhatError(FIREBASE_ERRORS.get(short, f"Sign-in failed: {code}"))
@@ -681,19 +682,44 @@ def cmd_logout(args) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+# How `wildhat --help` groups the commands. Each command's help text is the
+# one it's added with.
+HELP_SECTIONS = [
+    ("Sign in", ["login", "whoami", "logout"]),
+    ("Run in the cloud", ["launch", "runs", "logs", "cancel", "download"]),
+    ("Mentors", ["admin"]),
+]
+
+
+def sectioned_help(sub) -> str:
+    """The commands' help, under HELP_SECTIONS' headings. (argparse can only
+    list subcommands in one block.)"""
+    helps = {action.dest: action.help for action in sub._choices_actions}
+    width = max(map(len, helps)) + 2
+    lines = ["Team 100 Wildhat AI tools."]
+    for title, names in HELP_SECTIONS:
+        lines += ["", f"{title}:"]
+        lines += [f"  {name.ljust(width)}{helps[name]}" for name in names]
+    lines += ["", "Run `wildhat COMMAND --help` for a command's options."]
+    return "\n".join(lines)
+
+
+def build_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction]:
     parser = argparse.ArgumentParser(
-        prog="wildhat", description="Team 100 Wildhat AI tools."
+        prog="wildhat",
+        usage="wildhat COMMAND [options]",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--version", action="version", version=__version__)
-    sub = parser.add_subparsers(dest="command", required=True)
+    sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND", help=argparse.SUPPRESS)
 
     login = sub.add_parser("login", help="sign in with your school email")
     login.add_argument("--email", help="your school email address")
     login.set_defaults(func=cmd_login)
 
+    # No help, so it isn't listed: gcloud runs it, people never need to.
     sub.add_parser(
-        "id-token", help="print an ID token (gcloud runs this; you don't need to)"
+        "id-token", description="Print an ID token. gcloud runs this; you don't need to."
     ).set_defaults(func=cmd_id_token)
     sub.add_parser("whoami", help="show who you're signed in as").set_defaults(
         func=cmd_whoami
@@ -702,11 +728,17 @@ def main(argv: list[str] | None = None) -> int:
         func=cmd_logout
     )
     # Imported here because these import from this module.
-    from wildhat import admin, launch
+    from wildhat import admin, launch, runs
 
     launch.add_parsers(sub)
+    runs.add_parsers(sub)
     admin.add_parsers(sub)
+    parser.description = sectioned_help(sub)
+    return parser, sub
 
+
+def main(argv: list[str] | None = None) -> int:
+    parser, _ = build_parser()
     args = parser.parse_args(argv)
     try:
         return args.func(args)

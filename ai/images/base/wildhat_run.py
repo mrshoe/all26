@@ -16,7 +16,8 @@ one task per episode, with:
 
 The command runs in the unpacked source, after `pip install -r requirements.txt`
 if the source has one at its top. It gets WILDHAT_EPISODE (0, 1, ...),
-WILDHAT_EPISODE_COUNT, WILDHAT_SEED and WILDHAT_OUTPUT_DIR. Whatever it writes
+WILDHAT_EPISODE_COUNT, WILDHAT_SEED and WILDHAT_OUTPUT_DIR, and
+PYTHONUNBUFFERED=1 so its output reaches the logs as it's printed. Whatever it writes
 to $WILDHAT_OUTPUT_DIR is uploaded to WILDHAT_OUTPUT/episode-<n>/ when it
 exits, whether it succeeded or not, and also when it's stopped by a cancel or
 the timeout. Cloud Run's filesystem lives in memory, so those files count
@@ -207,6 +208,10 @@ def main(command: list[str]) -> int:
         WILDHAT_OUTPUT_DIR=str(output_dir),
         WILDHAT_EPISODE=str(episode),
         WILDHAT_SEED=str(seed),
+        # stdout here is a pipe, not a terminal, so Python would hold print()
+        # output until the command exits; `wildhat logs -f` should show it as
+        # it happens.
+        PYTHONUNBUFFERED="1",
     )
     try:
         run_dir = prepare(source, src, cwd, env)

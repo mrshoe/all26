@@ -21,7 +21,10 @@ RUN_ID = re.compile(r"^\d{8}-\d{4}-[a-km-z2-9]{4}$")
 ENTRYPOINT = Path(__file__).resolve().parents[2] / "images" / "base" / "wildhat_run.py"
 
 
-class LaunchTest(WildhatTestCase):
+class LaunchTestCase(WildhatTestCase):
+    """A real git checkout with ai/src, signed in as Kai. Also used by
+    test_runs.py."""
+
     def setUp(self):
         super().setUp()
         self.repo = self.tmp / "all26 repo"
@@ -100,6 +103,8 @@ class LaunchTest(WildhatTestCase):
             files = {m.name: tar.extractfile(m).read() for m in tar.getmembers()}
         return name, files
 
+
+class LaunchTest(LaunchTestCase):
     # --- What gets packed ----------------------------------------------------
 
     def test_packs_ai_src_as_it_is_on_disk(self):
@@ -156,6 +161,7 @@ class LaunchTest(WildhatTestCase):
         run_id, record, episodes = self.run_record()
         self.assertRegex(run_id, RUN_ID)
         self.assertIn(f"Launched run {run_id}: 3 episodes on CPU, up to 90 min each.", run.out)
+        self.assertNotIn("gs://", run.out)
         name, _ = self.tarball()
         self.assertEqual(record["source"], f"gs://{WILDHAT_BUCKET}/{name}")
         self.assertEqual(record["source_sha256"], name.split("/")[-1].removesuffix(".tar.gz"))

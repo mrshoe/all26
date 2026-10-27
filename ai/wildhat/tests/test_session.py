@@ -138,6 +138,28 @@ class CommandLineTest(WildhatTestCase):
         self.assertSucceeded(run)
         self.assertEqual(run.out.strip(), __version__)
 
+    def test_help_lists_every_command_once_under_a_heading(self):
+        from harness import cli
+
+        run = self.wildhat("--help")
+
+        self.assertSucceeded(run)
+        listed, heading = {}, None
+        for line in run.out.split("options:")[0].splitlines():
+            if line.endswith(":") and not line.startswith(" "):
+                heading = line[:-1]
+            elif line.startswith("  ") and heading:
+                name, help_text = line.split(None, 1)
+                self.assertNotIn(name, listed, "listed twice")
+                listed[name] = (heading, help_text)
+        _, sub = cli.build_parser()
+        # id-token is for gcloud, not people, so it isn't listed.
+        self.assertEqual(sorted(listed), sorted(set(sub.choices) - {"id-token"}))
+        self.assertEqual(listed["launch"], ("Run in the cloud", "run a command in the cloud"))
+        self.assertEqual(listed["login"][0], "Sign in")
+        self.assertEqual(listed["admin"][0], "Mentors")
+        self.assertNotIn("id-token", run.out)
+
     def test_the_source_tree_is_what_is_tested(self):
         import wildhat
         from harness import SRC
