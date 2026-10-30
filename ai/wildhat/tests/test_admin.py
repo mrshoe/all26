@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-from harness import ADMIN_BUCKET, MENTOR, MENTOR_ACCESS_TOKEN, WATCHDOG_URL, WildhatTestCase
+from harness import ADMIN_BUCKET, MENTOR, MENTOR_ACCESS_TOKEN, PROJECT, REGION, WATCHDOG_URL, WildhatTestCase
 
 KAI = {"email": "813579@seq.org", "name": "Kai Morales"}
 JANE = {"email": "111111@seq.org", "name": "Jane Doe"}
@@ -60,6 +60,8 @@ class EditRosterTest(AdminTestCase):
         self.assertNotIn("disabled", self.google.user("mentor@team100.org"))
         # Then Terraform, with the mentor's credentials, in ai/terraform.
         self.assertEqual([c[0] for c in self.commands("terraform")], ["init", "plan", "apply"])
+        # Its state is in the admin bucket, named from config.json.
+        self.assertIn(f"-backend-config=bucket={ADMIN_BUCKET}", self.calls("terraform")[0]["args"])
         for call in self.calls("terraform"):
             self.assertEqual(call["oauth_token"], MENTOR_ACCESS_TOKEN)
             self.assertIn(f"-chdir={self.terraform_dir}", call["args"])
@@ -347,7 +349,7 @@ class CancelJobsTest(AdminTestCase):
 
 
 REPO = Path(__file__).resolve().parents[3]
-BASE_IMAGE = "us-central1-docker.pkg.dev/vernal-mantra-512116-d0/wildhat/base:abc123"
+BASE_IMAGE = f"{REGION}-docker.pkg.dev/{PROJECT}/wildhat/base:abc123"
 
 
 class BuildImageTest(AdminTestCase):
@@ -372,9 +374,9 @@ class BuildImageTest(AdminTestCase):
         for flag in [
             f"--config={folder / 'cloudbuild.yaml'}",
             f"--substitutions=_IMAGE={BASE_IMAGE}",
-            "--region=us-central1",
-            "--service-account=projects/vernal-mantra-512116-d0/serviceAccounts/"
-            "image-builder@vernal-mantra-512116-d0.iam.gserviceaccount.com",
+            f"--region={REGION}",
+            f"--service-account=projects/{PROJECT}/serviceAccounts/"
+            f"image-builder@{PROJECT}.iam.gserviceaccount.com",
             f"--gcs-source-staging-dir=gs://{ADMIN_BUCKET}/builds/source",
             f"--account={MENTOR}",
         ]:

@@ -3,6 +3,8 @@
 
 resource "google_iam_workload_identity_pool" "students" {
   workload_identity_pool_id = "students"
+
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_iam_workload_identity_pool_provider" "firebase" {
@@ -23,6 +25,8 @@ resource "google_service_account" "student" {
   for_each     = local.students
   account_id   = "wh-${each.key}"
   display_name = each.value.name
+
+  depends_on = [google_project_service.apis]
 }
 
 # Only a token for the roster's email can act as the student's account. This

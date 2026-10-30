@@ -4,6 +4,7 @@ person's Cloud Run job. Uses a real git repository in a temp folder."""
 import hashlib
 import importlib.util
 import io
+import json
 import os
 import re
 import subprocess
@@ -229,6 +230,15 @@ class LaunchTest(LaunchTestCase):
             "WILDHAT_BASE_SEED": str(record["base_seed"]),
         })
 
+    def test_in_wildhats_project_whatever_gcloud_defaults_to(self):
+        state = self.gcloud_state()
+        state["config"]["project"] = "some-other-project"
+        (self.fake_dir / "gcloud.json").write_text(json.dumps(state), encoding="utf-8")
+
+        self.assertSucceeded(self.launch("--", "python", "sim.py"))
+
+        self.assertEqual(len(self.executions()), 1)
+
     def test_from_the_top_of_ai_src(self):
         self.cd(self.src)
 
@@ -275,7 +285,7 @@ class LaunchTest(LaunchTestCase):
         for args, message in [
             (["--episodes", "101"], "between 1 and 100"),
             (["--episodes", "0"], "between 1 and 100"),
-            (["--timeout", "9h"], "at most 8h"),
+            (["--timeout", "9h"], "at most 6h"),
             (["--timeout", "soon"], "Can't read the timeout"),
             (["--seed", "1", "--episodes", "2"], "needs --episodes 1"),
             (["--seed", "-1"], "between 0 and 2^63 - 1"),
@@ -286,7 +296,7 @@ class LaunchTest(LaunchTestCase):
                 self.assertEqual(len(self.google.requests), before)
 
     def test_timeouts(self):
-        for text, seconds in [("90m", 5400), ("2h", 7200), ("45s", 45), ("600", 600), ("8h", 28800)]:
+        for text, seconds in [("90m", 5400), ("2h", 7200), ("45s", 45), ("600", 600), ("6h", 21600)]:
             with self.subTest(text=text):
                 self.assertEqual(launch.parse_duration(text), seconds)
 

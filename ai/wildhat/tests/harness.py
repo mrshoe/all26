@@ -43,10 +43,14 @@ TESTS = Path(__file__).resolve().parent
 SRC = TESTS.parent / "src"
 # Always test this source tree, even if some other wildhat is installed.
 sys.path.insert(0, str(SRC))
+# A made-up project, so the tests check that nothing about the real one is
+# hard-coded. Every wildhat process the tests start reads it too.
+os.environ["WILDHAT_CONFIG"] = str(TESTS / "config.json")
 
 from wildhat import cli  # noqa: E402
 
-PROJECT = "vernal-mantra-512116-d0"
+PROJECT = cli.PROJECT_ID
+REGION = cli.REGION
 ADMIN_BUCKET = f"{PROJECT}-admin"
 WILDHAT_BUCKET = f"{PROJECT}-wildhat"
 WATCHDOG_URL = "https://job-watchdog-abc123-uc.a.run.app"
@@ -469,7 +473,7 @@ class FakeGoogle:
             name = e["metadata"]["name"]
             job = name.rsplit("-", 1)[0]
             found[name] = {
-                "name": f"projects/{PROJECT}/locations/us-central1/jobs/{job}/executions/{name}",
+                "name": f"projects/{PROJECT}/locations/{REGION}/jobs/{job}/executions/{name}",
                 "taskCount": e["spec"]["taskCount"],
                 "createTime": "2026-10-26T07:00:00Z",
                 **self.execution_progress.get(name, {}),
@@ -487,7 +491,7 @@ class FakeGoogle:
         handle = self._service_account(request)
         if handle is None:
             return 403, "Permission denied", None
-        m = re.fullmatch(rf"/v2/projects/{PROJECT}/locations/us-central1/jobs/([^/]+)/executions/([^/:]+)(:cancel)?",
+        m = re.fullmatch(rf"/v2/projects/{PROJECT}/locations/{REGION}/jobs/([^/]+)/executions/([^/:]+)(:cancel)?",
                          request["path"])
         assert m, request["path"]
         job, name, cancel = m.groups()
@@ -560,7 +564,7 @@ class FakeGoogle:
     def _cloud_functions(self, request: dict):
         if not self._is_mentor(request):
             return 403, "Permission denied", None
-        if request["path"] == f"/v2/projects/{PROJECT}/locations/us-central1/functions/job-watchdog":
+        if request["path"] == f"/v2/projects/{PROJECT}/locations/{REGION}/functions/job-watchdog":
             return 200, {"serviceConfig": {"uri": WATCHDOG_URL}}, None
         raise AssertionError(f"Unexpected Cloud Functions call: {request['path']}")
 
@@ -615,7 +619,6 @@ class WildhatTestCase(unittest.TestCase):
                 cli.ALLOW_EXECUTABLES,
                 "VISUAL",
                 "GOOGLE_APPLICATION_CREDENTIALS",
-                "WILDHAT_FIREBASE_API_KEY",
             )
         }
         # Keep any real gcloud, terraform or wildhat out of reach (GitHub's
@@ -788,6 +791,9 @@ class WildhatTestCase(unittest.TestCase):
         }
         for account in accounts:
             state["accounts"][account] = {"cred_file": None}
+        # Mentors use gcloud for other projects too, so wildhat can't rely on
+        # its default project.
+        state["config"].setdefault("project", "some-other-project")
         state["active"] = active or accounts[-1]
         path.write_text(json.dumps(state), encoding="utf-8")
 

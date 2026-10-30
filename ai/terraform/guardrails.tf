@@ -15,10 +15,10 @@
 # the budget.
 
 locals {
-  max_job_runtime_hours = 8
+  max_job_runtime_hours = local.config.max_job_runtime_hours
   # GPUs one person's executions may hold at once, and the whole project.
-  max_gpus_per_user = 5
-  max_gpus          = 10
+  max_gpus_per_user = local.config.max_gpus_per_user
+  max_gpus          = local.config.max_gpus
 }
 
 # --- Cancel executions that run too long, overspend or hog GPUs ----------
@@ -26,6 +26,8 @@ locals {
 resource "google_service_account" "job_watchdog" {
   account_id   = "job-watchdog"
   display_name = "Cancels Cloud Run jobs that run too long or overspend"
+
+  depends_on = [google_project_service.apis]
 }
 
 # Just enough to find and cancel executions; nothing else.
@@ -33,6 +35,8 @@ resource "google_project_iam_custom_role" "job_canceller" {
   role_id     = "jobCanceller"
   title       = "Cloud Run job canceller"
   permissions = ["run.jobs.list", "run.executions.list", "run.executions.cancel"]
+
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_project_iam_member" "job_watchdog_cancel" {
@@ -64,8 +68,8 @@ resource "google_cloud_run_service_iam_member" "job_watchdog_invoke" {
 }
 
 resource "google_cloud_scheduler_job" "job_watchdog" {
-  name   = "job-watchdog"
-  region = local.region
+  name     = "job-watchdog"
+  region   = local.region
   schedule = "*/15 * * * *"
 
   http_target {
@@ -85,6 +89,8 @@ resource "google_cloud_scheduler_job" "job_watchdog" {
 resource "google_service_account" "function_builder" {
   account_id   = "function-builder"
   display_name = "Builds Cloud Run functions"
+
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_project_iam_member" "function_builder" {
@@ -109,11 +115,16 @@ resource "google_storage_bucket_iam_member" "function_builder_source" {
 }
 
 # Cloud Functions copies the source into its own staging bucket before the
-# build reads it.
-resource "google_storage_bucket_iam_member" "function_builder_staging" {
-  bucket = "gcf-v2-sources-${local.project_number}-${local.region}"
-  role   = "roles/storage.objectViewer"
-  member = google_service_account.function_builder.member
+# build reads it. It creates that bucket on its first deploy, after this grant,
+# so the grant is on the project, limited to the bucket by name.
+resource "google_project_iam_member" "function_builder_staging" {
+  project = local.project_id
+  role    = "roles/storage.objectViewer"
+  member  = google_service_account.function_builder.member
+  condition {
+    title      = "function-staging-only"
+    expression = "resource.name.startsWith(\"projects/_/buckets/gcf-v2-sources-${local.project_number}-${local.region}/\")"
+  }
 }
 
 data "archive_file" "job_watchdog" {
@@ -167,7 +178,7 @@ resource "google_cloudfunctions2_function" "job_watchdog" {
     google_project_service.apis,
     google_project_iam_member.function_builder,
     google_storage_bucket_iam_member.function_builder_source,
-    google_storage_bucket_iam_member.function_builder_staging,
+    google_project_iam_member.function_builder_staging,
   ]
 }
 

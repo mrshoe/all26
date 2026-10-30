@@ -5,9 +5,12 @@
 # `wildhat admin apply`, which pass in their gcloud credentials.
 
 locals {
-  project_id     = "vernal-mantra-512116-d0"
-  project_number = "735918754010"
-  region         = "us-central1"
+  # The project's settings, shared with the wildhat CLI. ../SETUP.md says how
+  # to fill them in for a new project.
+  config         = jsondecode(file("${path.module}/../wildhat/src/wildhat/config.json"))
+  project_id     = local.config.project_id
+  project_number = local.config.project_number
+  region         = local.config.region
 
   # The roster's only copy is in the private admin bucket. Edit it with
   # `wildhat admin edit-roster`. Keyed by handle: {email, name}.

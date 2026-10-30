@@ -3,8 +3,8 @@
 # does: it cancels running jobs once the month's cost reaches the same amount.
 
 locals {
-  billing_account    = "01B1D9-5119C3-F28D8E"
-  monthly_budget_usd = 300
+  billing_account    = local.config.billing_account
+  monthly_budget_usd = local.config.monthly_budget_usd
   # Extra alert recipients, such as a phone's email-to-text address. They're
   # personal, so they live in the private admin bucket, not in this repo.
   alert_emails = jsondecode(data.google_storage_bucket_object_content.alerts.content).budget_alert_emails
@@ -50,11 +50,15 @@ resource "google_billing_budget" "monthly" {
     threshold_percent = 1.0
   }
 
-  # The billing admins still get the threshold emails too.
-  all_updates_rule {
-    monitoring_notification_channels = [
-      for c in google_monitoring_notification_channel.budget_alert : c.id
-    ]
+  # The billing admins still get the threshold emails too. Google drops a rule
+  # with no channels, so with no extra recipients there's no rule at all.
+  dynamic "all_updates_rule" {
+    for_each = length(local.alert_emails) > 0 ? [1] : []
+    content {
+      monitoring_notification_channels = [
+        for c in google_monitoring_notification_channel.budget_alert : c.id
+      ]
+    }
   }
 
   depends_on = [google_project_service.apis["billingbudgets.googleapis.com"]]

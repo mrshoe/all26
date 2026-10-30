@@ -1,0 +1,13 @@
+{
+  "project_id": "test-project",
+  "project_number": "123456789012",
+  "region": "europe-west4",
+  "firebase_api_key": "test-api-key",
+  "billing_account": "000000-000000-000000",
+  "monthly_budget_usd": 100,
+  "max_job_runtime_hours": 6,
+  "max_gpus_per_user": 2,
+  "max_gpus": 4,
+  "cpu_parallelism": 3,
+  "gpu_jobs": false
+}

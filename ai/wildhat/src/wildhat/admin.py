@@ -402,7 +402,8 @@ def plan_and_apply(api: Api) -> int:
             text=True,
         )
 
-    init = tf("init", "-input=false", capture=True)
+    # Terraform can't read the state's bucket from config.json itself.
+    init = tf("init", "-input=false", f"-backend-config=bucket={ADMIN_BUCKET}", capture=True)
     if init.returncode != 0:
         raise WildhatError(f"terraform init failed:\n{init.stdout}{init.stderr}")
 
@@ -563,6 +564,7 @@ def cmd_build_image(args) -> int:
         "builds", "submit", str(folder),
         f"--config={folder / 'cloudbuild.yaml'}",
         f"--substitutions=_IMAGE={image}",
+        f"--project={PROJECT_ID}",
         f"--region={REGION}",
         f"--service-account=projects/{PROJECT_ID}/serviceAccounts/{IMAGE_BUILDER}",
         f"--gcs-source-staging-dir=gs://{ADMIN_BUCKET}/builds/source",

@@ -13,10 +13,11 @@ terraform {
   }
 
   # State holds student emails, so it lives in the private admin bucket next
-  # to the roster, never in this public repo. The bucket itself was created by
-  # hand; it can't hold its own state.
+  # to the roster, never in this public repo. The bucket itself is created by
+  # hand (../SETUP.md); it can't hold its own state. Its name can't come from
+  # config.json here, so `wildhat admin` passes it to init:
+  #   terraform init -backend-config=bucket=<project_id>-admin
   backend "gcs" {
-    bucket = "vernal-mantra-512116-d0-admin"
     prefix = "terraform"
   }
 }

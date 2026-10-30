@@ -39,6 +39,7 @@ import urllib.request
 from pathlib import Path
 
 from wildhat.cli import (
+    CONFIG,
     IS_WINDOWS,
     PROJECT_ID,
     REGION,
@@ -55,9 +56,8 @@ FIRESTORE = f"https://firestore.googleapis.com/v1/{FIRESTORE_DB}/documents"
 
 MAX_EPISODES = 100
 DEFAULT_TIMEOUT = 60 * 60
-# The job watchdog cancels anything older (max_job_runtime_hours in
-# ai/terraform/guardrails.tf).
-MAX_TIMEOUT = 8 * 60 * 60
+# The job watchdog cancels anything older.
+MAX_TIMEOUT = CONFIG["max_job_runtime_hours"] * 60 * 60
 MAX_SOURCE_BYTES = 100 * 1000 * 1000
 # Everything in here runs in the cloud, and nothing else does.
 SOURCE_DIR = "ai/src"
@@ -344,6 +344,7 @@ def cmd_launch(args) -> int:
         flags.write_text(json.dumps({"--update-env-vars": env, "--args": command}), encoding="utf-8")
         result = gcloud(
             "run", "jobs", "execute", job,
+            f"--project={PROJECT_ID}",
             f"--region={REGION}",
             f"--account={sa}",
             "--async",

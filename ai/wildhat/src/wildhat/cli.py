@@ -37,17 +37,22 @@ from pathlib import Path
 
 from wildhat import __version__
 
-# Project config. None of this is secret, so it is fine in a public repo.
-PROJECT_ID = "vernal-mantra-512116-d0"
-PROJECT_NUMBER = "735918754010"
-REGION = "us-central1"
+# The project's settings, shared with Terraform (../../../terraform/main.tf).
+# None of it is secret, so it is fine in a public repo; ../../../SETUP.md says
+# how to fill it in for a new project. The tests point WILDHAT_CONFIG at their
+# own copy.
+CONFIG = json.loads(
+    Path(os.environ.get("WILDHAT_CONFIG") or Path(__file__).with_name("config.json")).read_text(
+        encoding="utf-8"
+    )
+)
+PROJECT_ID = CONFIG["project_id"]
+PROJECT_NUMBER = CONFIG["project_number"]
+REGION = CONFIG["region"]
+# Identifies the project to Firebase; it grants no access by itself.
+FIREBASE_API_KEY = CONFIG["firebase_api_key"]
 POOL = "students"
 PROVIDER = "firebase"
-# Firebase Web API key: Firebase console, Project settings, General, "Web API
-# key". It identifies the project to Firebase; it grants no access by itself.
-FIREBASE_API_KEY = os.environ.get(
-    "WILDHAT_FIREBASE_API_KEY", "AIzaSyA2L6NIedHbqjMiwBSNdNbW-SqoyEBO61U"
-)
 
 PROVIDER_RESOURCE = (
     f"projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/"
@@ -156,7 +161,7 @@ def service_account(handle: str) -> str:
 def api_key() -> str:
     if not FIREBASE_API_KEY:
         raise WildhatError(
-            "wildhat was built without a Firebase API key. Ask a mentor."
+            "wildhat's config.json has no firebase_api_key. Ask a mentor."
         )
     return FIREBASE_API_KEY
 
@@ -597,11 +602,15 @@ def cmd_login(args) -> int:
     gcloud("config", "set", "project", PROJECT_ID)
     gcloud("config", "set", "run/region", REGION)
 
-    check = gcloud("run", "jobs", "list", f"--region={REGION}", f"--account={sa}", check=False)
+    check = gcloud(
+        "run", "jobs", "list", f"--project={PROJECT_ID}", f"--region={REGION}", f"--account={sa}", check=False
+    )
     if check.returncode != 0:
         raise WildhatError(
-            "You're on the roster, but your cloud access isn't set up yet. "
-            "Ask a mentor.\n\ngcloud said:\n" + check.stderr.strip()
+            "You're on the roster, but your cloud access isn't set up yet. If you "
+            "were added in the last 10 minutes, Google may still be switching it "
+            "on: wait a few minutes and run `wildhat login` again. Otherwise, ask "
+            "a mentor.\n\ngcloud said:\n" + check.stderr.strip()
         )
     if active_user:
         print(f"Done. wildhat works as {sa}.")

@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 
 FAKE_DIR = Path(os.environ["WILDHAT_FAKE_DIR"])
-PROJECT = "vernal-mantra-512116-d0"
+PROJECT = json.loads(Path(os.environ["WILDHAT_CONFIG"]).read_text(encoding="utf-8"))["project_id"]
 ID_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:id_token"
 
 
@@ -125,6 +125,14 @@ def gcloud(args: list[str]) -> int:
             raise SystemExit(f"ERROR: (gcloud) There are no credentials for account [{name}].")
         return name
 
+    def in_wildhats_project(command: str) -> bool:
+        """Like gcloud: --project, or else the configured default project."""
+        project = option(args, "project") or state["config"].get("project")
+        if project != PROJECT:
+            print(f"ERROR: ({command}) NOT_FOUND: nothing like that in project [{project}]", file=sys.stderr)
+            return False
+        return True
+
     def use_credentials(name: str) -> str:
         """An access token for the account, the way gcloud gets one."""
         cred_file = state["accounts"][name]["cred_file"]
@@ -205,12 +213,16 @@ def gcloud(args: list[str]) -> int:
 
     if cmd[:3] == ["run", "jobs", "list"]:
         use_credentials(account())
+        if not in_wildhats_project("gcloud.run.jobs.list"):
+            return 1
         print("Listed 0 items.", file=sys.stderr)
         return 0
 
     if cmd[:3] == ["run", "jobs", "execute"]:
         name = account()
         use_credentials(name)
+        if not in_wildhats_project("gcloud.run.jobs.execute"):
+            return 1
         job = cmd[3]
         # Each person's jobs (ai/terraform/jobs.tf); the GPU ones only once
         # the quota allows them.
@@ -254,6 +266,8 @@ def gcloud(args: list[str]) -> int:
 
     if cmd[:2] == ["builds", "submit"]:
         use_credentials(account())
+        if not in_wildhats_project("gcloud.builds.submit"):
+            return 1
         folder = Path(cmd[2])
         config = option(args, "config")
         substitutions = dict(s.split("=", 1) for s in option(args, "substitutions").split(","))

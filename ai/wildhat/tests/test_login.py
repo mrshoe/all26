@@ -3,7 +3,7 @@ import os
 import shlex
 import urllib.parse
 
-from harness import PROJECT, WildhatTestCase, jwt_claims
+from harness import PROJECT, REGION, WildhatTestCase, jwt_claims
 
 STUDENT_SA = f"wh-kai-morales@{PROJECT}.iam.gserviceaccount.com"
 
@@ -38,10 +38,10 @@ class LoginTest(WildhatTestCase):
             [
                 ["auth", "list"],
                 ["iam", "workload-identity-pools", "create-cred-config",
-                 "projects/735918754010/locations/global/workloadIdentityPools/students/providers/firebase"],
+                 "projects/123456789012/locations/global/workloadIdentityPools/students/providers/firebase"],
                 ["auth", "login"],
                 ["config", "set", "project", PROJECT],
-                ["config", "set", "run/region", "us-central1"],
+                ["config", "set", "run/region", REGION],
                 ["run", "jobs", "list"],
             ],
         )

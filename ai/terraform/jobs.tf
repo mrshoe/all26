@@ -10,15 +10,15 @@
 
 locals {
   # Off until Google raises the L4 quota above 0 (see guardrails.tf).
-  gpu_jobs = false
+  gpu_jobs = local.config.gpu_jobs
 
   # Overridable per run by `wildhat launch`, up to the watchdog's limit.
   job_timeout = "3600s"
   # Tasks of one execution that may run at once. Overrides can't change it.
-  # 5 x 8 GB is as much as the project's Cloud Run memory quota allows
+  # 5 x 8 GB is as much as a new project's Cloud Run memory quota allows
   # ("Parallelism must be set to 5 or fewer to set the requested total
   # memory").
-  cpu_parallelism = 5
+  cpu_parallelism = local.config.cpu_parallelism
 
   image_repo = "${local.region}-docker.pkg.dev/${local.project_id}/${google_artifact_registry_repository.wildhat.repository_id}"
   # Tagged by a hash of images/base, so changing any file there builds a new
@@ -37,6 +37,8 @@ locals {
 resource "google_service_account" "image_builder" {
   account_id   = "image-builder"
   display_name = "Builds wildhat's container images"
+
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_project_iam_member" "image_builder" {

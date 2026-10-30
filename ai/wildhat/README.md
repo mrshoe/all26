@@ -163,7 +163,7 @@ while running as `stopped`.
 ## For mentors: the roster
 
 The roster (each student's handle, school email and name) is private, so it
-lives in a private bucket, `gs://vernal-mantra-512116-d0-admin/roster.json`,
+lives in the project's private admin bucket, `gs://<project_id>-admin/roster.json`,
 and never in this repo. Sign in with your own account first (`gcloud auth
 login`), then:
 
@@ -197,7 +197,15 @@ Your Google account stays gcloud's active account: `wildhat login` doesn't
 switch it if a Google account is already active. The admin commands always
 use your Google account and everything else in wildhat uses your service
 account, whichever one is active. To run gcloud yourself as the service
-account, add `--account=wh-<handle>@vernal-mantra-512116-d0.iam.gserviceaccount.com`.
+account, add `--account=wh-<handle>@<project_id>.iam.gserviceaccount.com`.
+
+### The project's settings
+
+`src/wildhat/config.json` holds the Google Cloud project's ID, number, region
+and Firebase API key, plus the billing account, budget and job limits. The CLI
+and Terraform both read it. None of it is secret. After changing it, everyone
+reinstalls wildhat (see Upgrade). Setting up a new project from scratch is in
+[../SETUP.md](../SETUP.md).
 
 ## How it works
 
