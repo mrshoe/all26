@@ -17,7 +17,7 @@ export interface Prefs {
   plots?: string[][];
 }
 
-export const defaultPrefs = (): Prefs => ({ boxes: true, speed: 1 });
+export const defaultPrefs = (): Prefs => ({ boxes: false, speed: 1 });
 
 const COLORS = ["#2a7de1", "#e1572a", "#2aa876", "#a14ad9", "#d9a20f", "#d94a8c"];
 
@@ -205,7 +205,10 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     const frame = frameOf();
     scrub.value = String(frame);
     readout.textContent = `frame ${frame + 1}/${info.frames} · ${(frame / fps).toFixed(2)} s`;
-    playButton.textContent = video.paused ? "Play" : "Pause";
+    // Only when it changes: this runs every animation frame while playing,
+    // and replacing the button's text mid-click swallows the click.
+    const label = video.paused ? "Play" : "Pause";
+    if (playButton.textContent !== label) playButton.textContent = label;
     for (const plot of plots) plot.refresh();
   }
 
