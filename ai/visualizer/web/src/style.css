@@ -60,7 +60,7 @@ header a {
 
 main {
   padding: 16px;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
 }
 
@@ -320,4 +320,117 @@ th {
 
 .u-legend {
   font-size: 12px;
+}
+
+/* A run: its episodes down the left, the chosen one on the right. */
+
+.run {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.sidebar {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sidebar > p:first-child {
+  margin-top: 0;
+}
+
+.run-id {
+  font-size: 15px;
+  margin: 0 0 2px;
+  overflow-wrap: anywhere;
+}
+
+.sidebar h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+
+.facts-box summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.facts-box .facts {
+  grid-template-columns: 1fr;
+  gap: 0;
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
+.facts-box dd {
+  margin-bottom: 6px;
+}
+
+.playlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.playlist li + li {
+  border-top: 1px solid var(--line);
+}
+
+.playlist a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 7px 10px;
+  color: var(--text);
+}
+
+.playlist a:hover {
+  background: var(--panel);
+  text-decoration: none;
+}
+
+.playlist li.selected a {
+  background: var(--panel);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ep-name {
+  font-weight: 600;
+}
+
+.ep-meta {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.episode-pane h1 {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .run {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .playlist {
+    max-height: 220px;
+  }
 }
