@@ -1,0 +1,323 @@
+:root {
+  --bg: #ffffff;
+  --panel: #f5f6f8;
+  --text: #1c1e21;
+  --muted: #6b7280;
+  --line: #dfe2e6;
+  --accent: #2a7de1;
+  --error: #b42318;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a;
+    --panel: #1e2125;
+    --text: #e6e8eb;
+    --muted: #9aa1ab;
+    --line: #30343a;
+    --accent: #6aa8f0;
+    --error: #f97066;
+    --ok: #4ac26b;
+    --warn: #d4a72c;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+header a {
+  color: var(--text);
+}
+
+main {
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 4px 0 12px;
+}
+
+button,
+select,
+input[type="email"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+.linkish {
+  background: none;
+  border: none;
+  color: var(--accent);
+  padding: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--error);
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.num {
+  text-align: right;
+}
+
+.who {
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.toolbar h1 {
+  margin: 0;
+}
+
+.signin {
+  max-width: 480px;
+  margin: 48px auto;
+}
+
+.signin .row {
+  display: flex;
+  gap: 8px;
+}
+
+.signin input {
+  flex: 1;
+  min-width: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.runs {
+  display: block;
+  overflow-x: auto;
+}
+
+.what {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statuses {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.status {
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.status.succeeded {
+  color: var(--ok);
+}
+
+.status.failed {
+  color: var(--error);
+}
+
+.status.running,
+.status.stopped {
+  color: var(--warn);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.player {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .player {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.video {
+  width: 100%;
+  background: #000;
+  border-radius: 6px;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.scrub {
+  flex: 1;
+  min-width: 120px;
+}
+
+.readout {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.plots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.plot-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.plot-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.plot {
+  width: 100%;
+  min-height: 60px;
+}
+
+.picker summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2px 12px;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.objects {
+  margin-top: 24px;
+}
+
+.objects summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.tag {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.u-legend {
+  font-size: 12px;
+}

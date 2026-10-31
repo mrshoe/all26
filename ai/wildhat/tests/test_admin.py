@@ -1,4 +1,5 @@
-"""Mentor commands: edit-roster, sync, apply, cancel-jobs and build-image."""
+"""Mentor commands: edit-roster, sync, apply, cancel-jobs, build-image and
+authorize-domain."""
 
 import json
 import os
@@ -399,6 +400,16 @@ class BuildImageTest(AdminTestCase):
         self.assertFailedWith(run, "The image build failed")
         self.assertIn("step 0 exited 1", run.err)
 
+    def test_an_app_next_to_its_code(self):
+        folder = self.tmp / "visualizer"
+        folder.mkdir()
+        (folder / "Dockerfile").write_text("FROM python:3.13-slim\n", encoding="utf-8")
+        (folder / "cloudbuild.yaml").write_text("steps: []\n", encoding="utf-8")
+
+        self.assertSucceeded(self.wildhat("admin", "build-image", "visualizer", "abc123"))
+        (build,) = self.builds()
+        self.assertEqual(build["args"][2], str(folder))
+
     def test_an_unknown_image(self):
         self.assertFailedWith(self.wildhat("admin", "build-image", "nope", "abc123"), "There's no Dockerfile")
         self.assertEqual(self.builds(), [])
@@ -414,3 +425,32 @@ class BuildImageTest(AdminTestCase):
         (build,) = self.builds()
         self.assertEqual(build["args"][2], str(REPO / "ai" / "images" / "base"))
         self.assertIn("$_IMAGE", (REPO / "ai" / "images" / "base" / "cloudbuild.yaml").read_text(encoding="utf-8"))
+
+    def test_the_repos_visualizer_terraform_and_image_fit_together(self):
+        tf = (REPO / "ai" / "terraform" / "visualizer.tf").read_text(encoding="utf-8")
+        command = re.search(r'command\s*=\s*"(wildhat admin build-image [^"]+)"', tf).group(1)
+        argv = command.replace("${local.visualizer_tag}", "abc123").split()[1:]
+        os.environ["WILDHAT_TERRAFORM_DIR"] = str(REPO / "ai" / "terraform")
+
+        self.assertSucceeded(self.wildhat(*argv))
+        (build,) = self.builds()
+        self.assertEqual(build["args"][2], str(REPO / "ai" / "visualizer"))
+        self.assertIn("$_IMAGE", (REPO / "ai" / "visualizer" / "cloudbuild.yaml").read_text(encoding="utf-8"))
+
+
+class AuthorizeDomainTest(AdminTestCase):
+    def test_adds_the_domain_once(self):
+        run = self.wildhat("admin", "authorize-domain", "visualizer-abc123-uc.a.run.app")
+
+        self.assertSucceeded(run)
+        self.assertIn("Authorized visualizer-abc123-uc.a.run.app", run.out)
+        self.assertEqual(self.google.authorized_domains[-1], "visualizer-abc123-uc.a.run.app")
+        self.assertIn("localhost", self.google.authorized_domains)
+
+        run = self.wildhat("admin", "authorize-domain", "https://visualizer-abc123-uc.a.run.app/")
+        self.assertSucceeded(run)
+        self.assertIn("already authorized", run.out)
+        self.assertEqual(self.google.authorized_domains.count("visualizer-abc123-uc.a.run.app"), 1)
+
+    def test_not_a_domain(self):
+        self.assertFailedWith(self.wildhat("admin", "authorize-domain", "nope"), "isn't a domain")
