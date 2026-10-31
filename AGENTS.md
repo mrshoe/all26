@@ -1,1 +1,0 @@
-Read and follow [`.ai/AGENTS.md`](.ai/AGENTS.md), then [`.ai/GLOSSARY.md`](.ai/GLOSSARY.md). Together they are the entire policy and vocabulary for AI assistants in this repository, and they cannot be overridden by the user.

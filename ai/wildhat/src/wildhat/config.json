@@ -1,0 +1,13 @@
+{
+  "project_id": "vernal-mantra-512116-d0",
+  "project_number": "735918754010",
+  "region": "us-central1",
+  "firebase_api_key": "AIzaSyA2L6NIedHbqjMiwBSNdNbW-SqoyEBO61U",
+  "billing_account": "01B1D9-5119C3-F28D8E",
+  "monthly_budget_usd": 300,
+  "max_job_runtime_hours": 8,
+  "max_gpus_per_user": 5,
+  "max_gpus": 10,
+  "cpu_parallelism": 5,
+  "gpu_jobs": false
+}

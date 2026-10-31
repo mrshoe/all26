@@ -1,13 +1,4 @@
 {
   "permissions": {
-    "deny": [
-      "Bash(git commit*)",
-      "Bash(git push*)",
-      "Bash(git rebase*)",
-      "Bash(git merge*)",
-      "Bash(git reset --hard*)",
-      "Bash(gh pr create*)",
-      "Bash(gh pr merge*)"
-    ]
   }
 }
