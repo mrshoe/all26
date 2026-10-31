@@ -1,0 +1,14 @@
+# For working on the simulator on your own computer, with Python 3.11:
+#
+#   uv venv --python 3.11 && uv pip install -r requirements.txt
+#
+# The cloud image already has all of these (ai/images/base/Dockerfile), at
+# the same versions. `python -m sim check` needs only mujoco and numpy.
+# This file isn't ai/src/requirements.txt, so launch doesn't install it.
+numpy==1.26.4
+mujoco==3.17.0
+pyarrow==25.0.0
+pillow
+imageio-ffmpeg==0.7.0
+# Rendering: about 1 GB, and only for Python 3.11.
+bpy==4.5.4
