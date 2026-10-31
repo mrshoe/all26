@@ -1,0 +1,4 @@
+# What `gcloud builds submit` leaves out of the upload.
+web/node_modules/
+web/dist/
+**/__pycache__/

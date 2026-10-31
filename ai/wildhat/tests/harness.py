@@ -122,6 +122,8 @@ class FakeGoogle:
         # Google accounts with access to the admin APIs (project Owners).
         self.mentors = {MENTOR}
         self._oob_codes: dict[str, str] = {}
+        # Where Firebase lets sign-in links return to.
+        self.authorized_domains = ["localhost", f"{PROJECT}.firebaseapp.com", f"{PROJECT}.web.app"]
         self._refresh_tokens: dict[str, str] = {}
         self._generation = 1_700_000_000_000_000
         self._next = 0
@@ -247,6 +249,13 @@ class FakeGoogle:
                 return self._send_oob_code(body)
             if path == "/v1/accounts:signInWithEmailLink":
                 return self._sign_in_with_email_link(body)
+        if path == f"/admin/v2/projects/{PROJECT}/config":
+            if not self._is_mentor(request):
+                return 403, "The caller does not have permission", None
+            if request["method"] == "PATCH":
+                assert request["query"] == {"updateMask": "authorizedDomains"}, request["query"]
+                self.authorized_domains = json.loads(request["body"])["authorizedDomains"]
+            return 200, {"name": f"projects/{PROJECT}/config", "authorizedDomains": self.authorized_domains}, None
         prefix = f"/v1/projects/{PROJECT}/accounts"
         if path.startswith(prefix):
             if not self._is_mentor(request):

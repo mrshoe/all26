@@ -542,11 +542,22 @@ IMAGE_REPO = f"{REGION}-docker.pkg.dev/{PROJECT_ID}/wildhat"
 IMAGE_BUILDER = f"image-builder@{PROJECT_ID}.iam.gserviceaccount.com"
 
 
-def cmd_build_image(args) -> int:
-    """Build ai/images/<name> and push it as <name>:<tag>.
+def image_folder(name: str) -> Path | None:
+    """Where an image's Dockerfile is: ai/images/<name>, or ai/<name> for an
+    app whose code lives next to it (the visualizer)."""
+    ai = terraform_dir().parent
+    for folder in (ai / "images" / name, ai / name):
+        if (folder / "Dockerfile").is_file():
+            return folder
+    return None
 
-    Terraform runs this (ai/terraform/jobs.tf) whenever the folder changes,
-    with a tag made from its contents, so an existing tag is already built.
+
+def cmd_build_image(args) -> int:
+    """Build ai/images/<name> (or ai/<name>) and push it as <name>:<tag>.
+
+    Terraform runs this (ai/terraform/jobs.tf, visualizer.tf) whenever the
+    folder changes, with a tag made from its contents, so an existing tag is
+    already built.
     """
     account = mentor_account()
     image = f"{IMAGE_REPO}/{args.name}:{args.tag}"
@@ -554,9 +565,10 @@ def cmd_build_image(args) -> int:
     if describe.returncode == 0:
         print(f"{image} is already built.")
         return 0
-    folder = terraform_dir().parent / "images" / args.name
-    if not (folder / "Dockerfile").is_file():
-        raise WildhatError(f"There's no Dockerfile in {folder}.")
+    folder = image_folder(args.name)
+    if folder is None:
+        ai = terraform_dir().parent
+        raise WildhatError(f"There's no Dockerfile in {ai / 'images' / args.name} or {ai / args.name}.")
 
     print(f"Building {image} with Cloud Build. This can take 10 minutes or more...")
     sys.stdout.flush()
@@ -574,6 +586,34 @@ def cmd_build_image(args) -> int:
     if build.returncode != 0:
         raise WildhatError(f"The image build failed:\n{build.stderr.strip()}")
     print(f"Built {image}.")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Firebase sign-in for web apps
+# ---------------------------------------------------------------------------
+
+AUTH_CONFIG = f"https://identitytoolkit.googleapis.com/admin/v2/projects/{PROJECT_ID}/config"
+
+
+def cmd_authorize_domain(args) -> int:
+    """Let sign-in links return to a web app at this domain.
+
+    Firebase only sends email links whose continue URL is on its list of
+    authorized domains. Terraform runs this for the visualizer
+    (ai/terraform/visualizer.tf), whose domain Cloud Run picks.
+    """
+    domain = args.domain.lower().removeprefix("https://").split("/")[0]
+    if not domain or "." not in domain:
+        raise WildhatError(f"{args.domain!r} isn't a domain, e.g. visualizer-abc123.a.run.app")
+    api = Api()
+    domains = api.json("GET", AUTH_CONFIG).get("authorizedDomains", [])
+    if domain in domains:
+        print(f"{domain} is already authorized for sign-in.")
+        return 0
+    api.json("PATCH", f"{AUTH_CONFIG}?updateMask=authorizedDomains",
+             {"authorizedDomains": [*domains, domain]})
+    print(f"Authorized {domain} for sign-in.")
     return 0
 
 
@@ -606,6 +646,11 @@ def add_parsers(sub) -> None:
     build = admin_sub.add_parser(
         "build-image", help="build a container image in ai/images (Terraform runs this)"
     )
-    build.add_argument("name", help="the folder in ai/images, e.g. base")
+    build.add_argument("name", help="the folder in ai/images, e.g. base, or in ai, e.g. visualizer")
     build.add_argument("tag", help="the tag to push it as")
     build.set_defaults(func=cmd_build_image)
+    authorize = admin_sub.add_parser(
+        "authorize-domain", help="let sign-in links return to a web app (Terraform runs this)"
+    )
+    authorize.add_argument("domain", help="e.g. visualizer-abc123.a.run.app")
+    authorize.set_defaults(func=cmd_authorize_domain)
