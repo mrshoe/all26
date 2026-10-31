@@ -2,11 +2,17 @@
 // frame, for a field of a table, for one object (or for the whole episode,
 // in tables like `sim` that have no objects).
 //
-//   poses|ball|z               the ball's height
-//   boxes|front/ball|height    the ball's box height in the front camera
+// Each series is shown as <table>.<camera>.<object>.<field>, with only the
+// parts its table has:
+//
+//   poses.ball.z               the ball's height
+//   boxes.front.ball.height    the ball's box height in the front camera
 //                              (ground truth; width, height, cx and cy are
 //                              worked out from x0 y0 x1 y1)
-//   sim||render_s              seconds spent rendering each frame
+//   sim.render_s               seconds spent rendering each frame
+//
+// Object names can hold dots (walls.0), so the key the plots keep is
+// table|subject|field, with camera/object as a boxes subject.
 
 import { Table } from "./api";
 
@@ -59,7 +65,7 @@ export class Catalog {
         const camera = this.name(t.camera[i] as number);
         const name = this.name(obj as number);
         const key = `${camera}/${name}`;
-        if (!seen.has(key)) seen.set(key, { key, label: `${name} in ${camera}` });
+        if (!seen.has(key)) seen.set(key, { key, label: `${camera}.${name}` });
       });
       return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
     }
@@ -81,9 +87,7 @@ export class Catalog {
 
   label(key: string): string {
     const [table, subject, field] = key.split("|");
-    if (!subject) return table === "sim" ? field : `${table} · ${field}`;
-    const [camera, name] = subject.split("/");
-    return name ? `${name} in ${camera} · ${field}` : `${subject} · ${field}`;
+    return [table, ...subject.split("/").filter(Boolean), field].join(".");
   }
 
   has(key: string): boolean {
