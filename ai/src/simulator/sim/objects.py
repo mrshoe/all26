@@ -16,7 +16,7 @@ from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
 
-from sim.geometry import quat_from_euler
+from sim.geometry import euler_from_quat, quat_from_euler
 
 Number = Union[float, Any]  # a float, or a Range
 Vec3 = Union[tuple, Any]
@@ -30,8 +30,9 @@ class Item:
     """Anything in the world."""
 
     position: Vec3 = (0.0, 0.0, 0.0)
-    # Degrees about x, then y, then z.
-    rotation: Vec3 = (0.0, 0.0, 0.0)
+    # Degrees about x, then y, then z. (A factory, so the class itself has no
+    # `rotation` and __getattr__ can work it out; see there.)
+    rotation: Vec3 = field(default_factory=lambda: (0.0, 0.0, 0.0))
     # What a detector should call it, e.g. "ball". Unlabeled things get no
     # boxes. Many objects can share a label.
     label: Optional[str] = None
@@ -52,6 +53,15 @@ class Item:
                 )
             world.changed(self, key, value)
         object.__setattr__(self, key, value)
+
+    def __getattr__(self, key):
+        # Only called for attributes the object doesn't have. While physics
+        # moves an object, it keeps just the quaternion each step, and the
+        # rotation in degrees is worked out the first time it's read.
+        if key == "rotation" and self.__dict__.get("_quat") is not None:
+            self.__dict__["rotation"] = euler_from_quat(self.__dict__["_quat"])
+            return self.__dict__["rotation"]
+        raise AttributeError(f"{type(self).__name__} has no attribute {key!r}")
 
     @property
     def quat(self) -> np.ndarray:

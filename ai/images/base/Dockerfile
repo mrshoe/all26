@@ -24,7 +24,8 @@ RUN apt-get update \
 
 RUN python -m pip install --no-cache-dir \
     torch==2.14.1 torchvision==0.29.1 ultralytics==8.4.187 \
-    numpy==1.26.4 bpy==4.5.4 mujoco==3.17.0 pyarrow==25.0.0 imageio-ffmpeg==0.7.0
+    numpy==1.26.4 scipy==1.17.1 bpy==4.5.4 mujoco==3.17.0 pyarrow==25.0.0 \
+    imageio-ffmpeg==0.7.0
 
 COPY wildhat_run.py /usr/local/bin/wildhat-run
 WORKDIR /work
