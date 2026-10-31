@@ -67,7 +67,7 @@ class Scenario(_Holder, Generic[S]):
     scene: S
     # Seconds of simulated time per episode.
     duration: float = 5.0
-    # Frames per second, for cameras and the logged signals.
+    # Frames per second, for cameras and the logged tables.
     fps: int = 10
     # Physics steps per second.
     physics_hz: int = 240

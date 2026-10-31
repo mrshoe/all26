@@ -87,6 +87,7 @@ def read_poses(world: World, backend) -> None:
         d["_quat"] = pose.quat
         d.pop("rotation", None)  # worked out if read (Item.__getattr__)
         d["velocity"] = tuple(float(v) for v in pose.velocity)
+        d["_spin"] = pose.spin
 
 
 @dataclass
@@ -116,15 +117,22 @@ def run(scenario_class: type[Scenario], seed: int, backend_name: str,
     read_poses(world, backend)
     try:
         for frame in range(frames):
+            # Seconds spent on each part of this frame, for the sim table.
+            timing = {"step_s": 0.0, "physics_s": 0.0, "render_s": 0.0}
             if frame:
                 for s in range(steps):
                     t = ((frame - 1) * steps + s) * dt
+                    a = time.perf_counter()
                     scenario.step(t, world.step_rng)
                     apply_changes(world, backend)
+                    b = time.perf_counter()
                     backend.step(dt)
                     read_poses(world, backend)
+                    timing["step_s"] += b - a
+                    timing["physics_s"] += time.perf_counter() - b
             t = frame / scenario.fps
             poses, pictures = {}, {}
+            a = time.perf_counter()
             for cam in world.cameras:
                 position, quat = camera_pose(cam)
                 poses[cam.name] = (position, quat)
@@ -136,8 +144,9 @@ def run(scenario_class: type[Scenario], seed: int, backend_name: str,
                 picture = backend.render(cam, position, quat)
                 if picture is not None:
                     pictures[cam.name] = picture
+            timing["render_s"] = time.perf_counter() - a
             if logger:
-                logger.frame(frame, t, poses, pictures)
+                logger.frame(frame, t, poses, pictures, timing)
             episode.frames += 1
             if progress and pictures:
                 print(f"sim: frame {frame + 1}/{frames} ({time.time() - started:.0f}s)", flush=True)

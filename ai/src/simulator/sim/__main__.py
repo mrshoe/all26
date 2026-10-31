@@ -63,9 +63,11 @@ def cmd_run(args) -> int:
     print(f"sim: {name}, seed {seed}, {args.backend} backend, writing to {out}", flush=True)
     result = runner.run(scenario, seed, args.backend, make_logger, progress=True)
     episode = logger.finish()
-    previews = PostProcessor(out, episode).run()
+    previews = PostProcessor(out).run()
     print(f"sim: {result.frames} frames in {result.seconds:.0f}s; made {len(previews)} previews", flush=True)
-    records.record(episode, previews)
+    world = result.world
+    cameras = [c.name for c in world.cameras] if args.backend != "physics" else []
+    records.record(episode, previews, cameras, [i.label for i in world.labeled()])
     return 0
 
 

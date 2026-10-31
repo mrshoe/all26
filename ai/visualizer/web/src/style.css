@@ -285,19 +285,51 @@ th {
   min-height: 60px;
 }
 
-.picker summary {
-  cursor: pointer;
-  color: var(--accent);
+.pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
 }
 
-.choices {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 2px 12px;
-  max-height: 220px;
-  overflow: auto;
+.pick select {
+  max-width: 180px;
   font-size: 13px;
-  padding: 6px 0;
+  padding: 3px 6px;
+}
+
+.pick button {
+  font-size: 13px;
+  padding: 3px 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.chip .linkish {
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 
 .objects {

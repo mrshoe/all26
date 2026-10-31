@@ -23,7 +23,8 @@ from sim.world import World
 class Pose:
     position: np.ndarray  # (x, y, z)
     quat: np.ndarray  # (w, x, y, z)
-    velocity: np.ndarray  # (x, y, z)
+    velocity: np.ndarray  # (x, y, z), m/s
+    spin: np.ndarray  # angular velocity (x, y, z) in the world frame, rad/s
 
 
 @dataclass

@@ -22,6 +22,13 @@ def euler_from_quat(q) -> tuple[float, float, float]:
     return tuple(float(a) for a in Rotation.from_quat(q, scalar_first=True).as_euler("xyz", degrees=True))
 
 
+def spin_between(q0, q1, dt: float) -> np.ndarray:
+    """The angular velocity (rad/s, world frame) that turns q0 into q1 in dt."""
+    r0 = Rotation.from_quat(q0, scalar_first=True)
+    r1 = Rotation.from_quat(q1, scalar_first=True)
+    return (r1 * r0.inv()).as_rotvec() / dt
+
+
 def quat_looking_at(eye, target) -> np.ndarray:
     """A camera at `eye` looking at `target`, with +z up in the world."""
     forward = np.asarray(target, dtype=float) - np.asarray(eye, dtype=float)

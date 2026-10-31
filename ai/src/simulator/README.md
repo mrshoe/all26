@@ -101,15 +101,22 @@ wildhat launch --episodes 20 --timeout 2h -- python -m sim run scenarios/yellow_
 
 | File | What |
 |---|---|
-| `episode.json` | Scenario, Scene, seed, every object's drawn settings, cameras and their intrinsics, signal names |
+| `episode.json` | Scenario, Scene, backend, seed, timing, and which tables there are |
+| `objects.parquet` | Every object: id (the one in the masks), name, type, label, static, and what was drawn |
+| `cameras.parquet` | Each camera's resolution and intrinsics |
+| `sim.parquet` | Per frame: time, and how long `step()`, physics, rendering and logging took |
+| `poses.parquet` | Per frame, each moving object, camera and light: position, rotation, linear and angular velocity (static things once, at frame 0) |
+| `images.parquet` | Per frame, each camera's picture and mask |
+| `boxes.parquet` | One row per labeled object seen by a camera: its box in pixels and how many pixels it covers |
 | `cam/<camera>/000000.jpg` | What each camera saw, per frame |
-| `mask/<camera>/000000.png` | Which object each pixel shows (16-bit object ids, from `objects` in episode.json) |
-| `signals.parquet` | Per frame: time, poses of moving objects and cameras, and `<camera>.<object>.x0/y0/x1/y1/pixels` boxes |
+| `mask/<camera>/000000.png` | Which object each pixel shows (16-bit object ids, from `objects`) |
 | `preview/<camera>.mp4`, `.boxes.mp4` | Small preview videos for the visualizer, without and with boxes |
 
-The shared `Logger` and `PostProcessor` (`ai/src/shared/`) write these, as
-they will on the robot; `sim/logger.py` turns the simulation into their
-signals and images. `ai/src/shared/episodes.py` reads them back.
+Tables join on `frame` and `object` (a camera is an object too). The
+schemas are in `ai/src/shared/logger.py`: the shared `Logger` and
+`PostProcessor` write these, as they will on the robot, and
+`sim/logger.py` turns the simulation into their rows.
+`ai/src/shared/episodes.py` reads them back.
 
 ## Backends
 

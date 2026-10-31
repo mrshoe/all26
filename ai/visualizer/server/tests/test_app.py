@@ -35,6 +35,12 @@ def verify(token):
     return TOKENS[token]
 
 
+def parquet(columns: dict) -> bytes:
+    out = io.BytesIO()
+    pq.write_table(pa.table(columns), out)
+    return out.getvalue()
+
+
 class FakeStore:
     def __init__(self):
         self.docs = {
@@ -45,11 +51,16 @@ class FakeStore:
         }
         self.episode_docs = {"r1": [{"index": 0, "status": "succeeded"}, {"index": 1, "status": "running"}], "r2": []}
         self.objects = {}
-        signals = io.BytesIO()
-        pq.write_table(pa.table({"frame": [0, 1], "ball.z": [0.5, float("nan")]}), signals)
         prefix = "runs/kai-morales/r1/episode-0/"
-        self.objects[prefix + "episode.json"] = json.dumps({"cameras": {"front": {}}, "frames": 2}).encode()
-        self.objects[prefix + "signals.parquet"] = signals.getvalue()
+        self.objects[prefix + "episode.json"] = json.dumps(
+            {"format": 2, "frames": 2, "tables": ["objects", "cameras", "poses", "images"]}).encode()
+        self.objects[prefix + "objects.parquet"] = parquet({"object": [1, 2], "name": ["ball", "front"]})
+        self.objects[prefix + "cameras.parquet"] = parquet({"object": [2], "width": [640]})
+        self.objects[prefix + "poses.parquet"] = parquet({"frame": [0, 1], "object": [1, 1], "z": [0.5, float("nan")]})
+        # Format 1, from before the tables.
+        old = "runs/kai-morales/r1/episode-2/"
+        self.objects[old + "episode.json"] = json.dumps({"cameras": {"side": {}}, "frames": 2}).encode()
+        self.objects[old + "signals.parquet"] = parquet({"frame": [0, 1]})
 
     def runs(self, user, limit):
         found = [{"id": k, **v} for k, v in self.docs.items() if not user or v["launched_by"] == user]
@@ -105,12 +116,20 @@ class TestApi(unittest.TestCase):
 
     def test_an_episode(self):
         ep = self.get("/api/runs/r1/episodes/0").json()
+        self.assertEqual(ep["format"], 2)
         self.assertEqual(ep["info"]["frames"], 2)
-        self.assertEqual(ep["signals"], {"frame": [0, 1], "ball.z": [0.5, None]})
+        self.assertEqual(sorted(ep["tables"]), ["cameras", "objects", "poses"])  # not images
+        self.assertEqual(ep["tables"]["poses"], {"frame": [0, 1], "object": [1, 1], "z": [0.5, None]})
+        self.assertEqual(list(ep["previews"]), ["front"])
         self.assertEqual(ep["previews"]["front"], {
             "plain": "https://signed.example/runs/kai-morales/r1/episode-0/preview/front.mp4?type=video/mp4",
             "boxes": "https://signed.example/runs/kai-morales/r1/episode-0/preview/front.boxes.mp4?type=video/mp4",
         })
+
+    def test_an_old_episode_still_has_its_videos(self):
+        ep = self.get("/api/runs/r1/episodes/2").json()
+        self.assertEqual((ep["format"], ep["tables"]), (1, {}))
+        self.assertEqual(list(ep["previews"]), ["side"])
 
     def test_an_episode_without_data_yet(self):
         response = self.get("/api/runs/r1/episodes/1")

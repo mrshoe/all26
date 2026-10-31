@@ -57,7 +57,7 @@ def patch(doc: str, fields: dict) -> None:
         pass
 
 
-def record(episode: dict, previews: list[str]) -> None:
+def record(episode: dict, previews: list[str], cameras: list[str], labels: list[str]) -> None:
     run_doc = os.environ.get("WILDHAT_RUN_DOC")
     if not run_doc:
         return
@@ -68,8 +68,8 @@ def record(episode: dict, previews: list[str]) -> None:
         "seed": episode["seed"],
         "frames": episode["frames"],
         "fps": episode["fps"],
-        "cameras": list(episode["cameras"]),
-        "labels": sorted(set(episode["labels"].values())),
+        "cameras": cameras,
+        "labels": sorted(set(labels)),
         "previews": previews,
     }
     try:

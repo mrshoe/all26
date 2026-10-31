@@ -42,20 +42,26 @@ export interface RunDetail extends Run {
   episodes_detail: EpisodeRecord[];
 }
 
+/** A table as columns: {column: values}. */
+export type Table = Record<string, (number | string | boolean | null)[]>;
+
 export interface EpisodeData {
   run: string;
   index: number;
+  /** 1: from before the tables (only videos); 2: the tables below. */
+  format: number;
   info: {
     scenario: string;
     scene: string;
     seed: number;
     fps: number;
     frames: number;
-    cameras: Record<string, { width: number; height: number; fov: number }>;
-    labels: Record<string, string>;
-    objects: Record<string, Record<string, unknown>>;
+    tables?: string[];
+    // Format 1 only.
+    objects?: Record<string, Record<string, unknown>>;
   };
-  signals: Record<string, (number | null)[]>;
+  /** objects, cameras, sim, poses, boxes … (format 2; empty for format 1). */
+  tables: Record<string, Table>;
   previews: Record<string, { plain: string; boxes: string }>;
 }
 
