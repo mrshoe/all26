@@ -24,7 +24,7 @@ from sim import runner
 
 
 def cmd_check(args) -> int:
-    # Only MuJoCo and numpy, so it runs on any laptop.
+    # Only MuJoCo, numpy and scipy, so it runs on any laptop.
     from sim.world import jsonable
 
     scenario, name = runner.load(args.scenario)

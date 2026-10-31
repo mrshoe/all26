@@ -101,6 +101,23 @@ class TestPhysics(unittest.TestCase):
         self.assertGreater(z[61], 1.9)  # teleported at 1s
         self.assertGreater(z[125], 0.3)  # kicked up at 2s
 
+    def test_rotation_is_read_from_physics(self):
+        seen = []
+
+        class Spin(drop(0.0)):
+            def setup(self, rng):
+                super().setup(rng)
+                self.ball.velocity = (1.0, 0, 0)  # rolls, so it turns
+
+            def step(self, t, rng):
+                if math.isclose(t, 2.0, abs_tol=1e-9):
+                    seen.append((self.ball.rotation, self.ball.quat.copy()))
+
+        heights(Spin)
+        (rotation, quat), = seen
+        np.testing.assert_allclose(quat_from_euler(rotation), quat, atol=1e-9)
+        self.assertGreater(max(abs(a) for a in rotation), 1)
+
     def test_static_things_cant_move(self):
         class MoveWall(drop(0.0)):
             def setup(self, rng):

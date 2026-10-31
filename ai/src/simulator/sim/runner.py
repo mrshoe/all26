@@ -21,7 +21,7 @@ from typing import Optional
 import numpy as np
 
 from sim import backends
-from sim.geometry import euler_from_quat, intrinsics, project, quat_from_euler, quat_looking_at
+from sim.geometry import intrinsics, project, quat_from_euler, quat_looking_at
 from sim.objects import Camera, Item
 from sim.world import Scenario, World, build
 
@@ -85,7 +85,7 @@ def read_poses(world: World, backend) -> None:
         d = item.__dict__
         d["position"] = tuple(float(v) for v in pose.position)
         d["_quat"] = pose.quat
-        d["rotation"] = euler_from_quat(pose.quat)
+        d.pop("rotation", None)  # worked out if read (Item.__getattr__)
         d["velocity"] = tuple(float(v) for v in pose.velocity)
 
 
