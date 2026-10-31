@@ -107,7 +107,9 @@ wildhat launch --episodes 20 --timeout 2h -- python -m sim run scenarios/yellow_
 | `signals.parquet` | Per frame: time, poses of moving objects and cameras, and `<camera>.<object>.x0/y0/x1/y1/pixels` boxes |
 | `preview/<camera>.mp4`, `.boxes.mp4` | Small preview videos for the visualizer, without and with boxes |
 
-`ai/src/shared/episodes.py` reads them back.
+The shared `Logger` and `PostProcessor` (`ai/src/shared/`) write these, as
+they will on the robot; `sim/logger.py` turns the simulation into their
+signals and images. `ai/src/shared/episodes.py` reads them back.
 
 ## Backends
 

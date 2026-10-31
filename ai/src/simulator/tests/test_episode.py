@@ -5,7 +5,6 @@ checks the real one."""
 import json
 import os
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,11 +18,10 @@ from sim import backends, records, runner
 from sim.backends import Picture
 from sim.backends.physics import Physics
 from sim.geometry import intrinsics, project
-from sim.logger import Logger
-from sim.postprocess import PostProcessor
+from sim.logger import SimLogger
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))
-import episodes  # noqa: E402  (ai/src/shared)
+from shared import episodes  # noqa: E402  (ai/src/shared, on the path once sim is imported)
+from shared.postprocess import PostProcessor  # noqa: E402
 
 
 class Discs(Physics):
@@ -65,7 +63,7 @@ def run_episode(folder, seed=4):
     holder = {}
 
     def make(world):
-        holder["logger"] = Logger(folder, world, info, render=True)
+        holder["logger"] = SimLogger(folder, world, info, render=True)
         return holder["logger"]
 
     with mock.patch.object(backends, "get", lambda name: Discs()):
