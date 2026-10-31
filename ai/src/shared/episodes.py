@@ -1,10 +1,10 @@
-"""Reading a simulated episode's folder, as the simulator's Logger writes it
-(ai/src/simulator/sim/logger.py), e.g. after `wildhat download`:
+"""Reading an episode's folder, as `logger.Logger` writes it, e.g. after
+`wildhat download`:
 
     ep = Episode("runs/20261030-2130-abcd/episode-0")
     ep.cameras                  ["front"]
     ep.image("front", 12)       height x width x 3 uint8
-    ep.mask("front", 12)        height x width uint16 object ids
+    ep.mask("front", 12)        height x width uint16 object ids (simulation)
     ep.boxes("front", 12)       [Box(label="ball", name="ball", x0=..., ...)]
     ep.signals["ball.z"]        one value per frame
 

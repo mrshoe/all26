@@ -1,10 +1,12 @@
-"""`PostProcessor`: after an episode, make the previews the visualizer plays.
+"""`PostProcessor`: after an episode, make the previews the visualizer plays,
+from a folder `logger.Logger` wrote. The simulator runs it after each
+episode, and the robot's upload tool before uploading.
 
     preview/<camera>.mp4        the camera's frames as a small H.264 video
     preview/<camera>.boxes.mp4  the same, with labeled objects' boxes drawn
 
 Previews are low bitrate on purpose: the visualizer streams them out of the
-bucket, and every GB downloaded costs (../../INFRA.md). The full-quality
+bucket, and every GB downloaded costs (ai/INFRA.md). The full-quality
 frames are still in cam/.
 """
 

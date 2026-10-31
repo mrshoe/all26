@@ -45,9 +45,9 @@ def cmd_check(args) -> int:
 
 
 def cmd_run(args) -> int:
+    from shared.postprocess import PostProcessor
     from sim import records
-    from sim.logger import Logger
-    from sim.postprocess import PostProcessor
+    from sim.logger import SimLogger
 
     scenario, name = runner.load(args.scenario)
     seed = args.seed if args.seed is not None else int(os.environ.get("WILDHAT_SEED", "0"))
@@ -57,7 +57,7 @@ def cmd_run(args) -> int:
 
     def make_logger(world):
         nonlocal logger
-        logger = Logger(out, world, info, render=args.backend != "physics")
+        logger = SimLogger(out, world, info, render=args.backend != "physics")
         return logger
 
     print(f"sim: {name}, seed {seed}, {args.backend} backend, writing to {out}", flush=True)
