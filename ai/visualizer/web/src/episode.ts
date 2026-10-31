@@ -1,11 +1,22 @@
 // One episode: a camera's video, with or without boxes, and plots of its
 // signals with a playhead that follows the video. Click a plot to jump there.
+// It fills the run page's main pane (runs.ts).
 
 import uPlot from "uplot";
 import { api, EpisodeData } from "./api";
-import { h, link } from "./dom";
+import { h } from "./dom";
 
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2];
+
+/** What the viewer chose, kept from one episode to the next. */
+export interface Prefs {
+  camera?: string;
+  boxes: boolean;
+  speed: number;
+  plots?: string[][];
+}
+
+export const defaultPrefs = (): Prefs => ({ boxes: true, speed: 1 });
 
 type Signals = Record<string, (number | null)[]>;
 
@@ -74,6 +85,11 @@ class Plot {
     return Math.max(300, this.holder.clientWidth);
   }
 
+  /** The signals it shows. */
+  shown(): string[] {
+    return [...this.chosen];
+  }
+
   draw(): void {
     this.plot?.destroy();
     this.plot = null;
@@ -132,7 +148,13 @@ class Plot {
   }
 }
 
-export async function episodePage(runId: string, index: number): Promise<{ element: HTMLElement; stop: () => void }> {
+export interface EpisodeView {
+  element: HTMLElement;
+  /** Stop playing, and save the viewer's choices to the Prefs. */
+  stop: () => void;
+}
+
+export async function episodeView(runId: string, index: number, prefs: Prefs): Promise<EpisodeView> {
   const ep: EpisodeData = await api.episode(runId, index);
   const info = ep.info;
   const fps = info.fps;
@@ -141,11 +163,12 @@ export async function episodePage(runId: string, index: number): Promise<{ eleme
   const time = (signals.time ?? []) as number[];
   const labeled = Object.keys(info.labels);
 
-  let camera = cameras[0];
-  let boxes = true;
+  let camera = prefs.camera && cameras.includes(prefs.camera) ? prefs.camera : cameras[0];
+  let boxes = prefs.boxes;
   const video = h("video", { muted: true, playsInline: true, preload: "auto", class: "video" });
   const source = () => (camera ? (boxes ? ep.previews[camera].boxes : ep.previews[camera].plain) : "");
   video.src = source();
+  video.defaultPlaybackRate = video.playbackRate = prefs.speed;
 
   const frameOf = () => Math.min(info.frames - 1, Math.floor(video.currentTime * fps + 1e-6));
   const playhead = () => frameOf() / fps;
@@ -176,8 +199,10 @@ export async function episodePage(runId: string, index: number): Promise<{ eleme
   const readout = h("span", { class: "mono readout" });
   const playButton = h("button", { onclick: () => (video.paused ? video.play() : video.pause()) }, "Play");
   const speed = h("select", {
-    onchange: (e: Event) => (video.playbackRate = Number((e.target as HTMLSelectElement).value)),
-  }, ...SPEEDS.map((s) => h("option", { value: s, selected: s === 1 }, `${s}×`)));
+    onchange: (e: Event) => {
+      prefs.speed = video.playbackRate = Number((e.target as HTMLSelectElement).value);
+    },
+  }, ...SPEEDS.map((s) => h("option", { value: s, selected: s === prefs.speed }, `${s}×`)));
 
   function update() {
     const frame = frameOf();
@@ -202,21 +227,23 @@ export async function episodePage(runId: string, index: number): Promise<{ eleme
     const playing = !video.paused;
     video.src = source();
     video.addEventListener("loadedmetadata", () => {
+      video.playbackRate = prefs.speed;
       video.currentTime = at;
       if (playing) video.play();
     }, { once: true });
   };
 
   const cameraPicker = cameras.length > 1
-    ? h("select", { onchange: (e: Event) => { camera = (e.target as HTMLSelectElement).value; swap(); } },
-        ...cameras.map((c) => h("option", { value: c }, c)))
+    ? h("select", { onchange: (e: Event) => { prefs.camera = camera = (e.target as HTMLSelectElement).value; swap(); } },
+        ...cameras.map((c) => h("option", { value: c, selected: c === camera }, c)))
     : h("span", null, camera ? `Camera: ${camera}` : "No cameras");
   const boxToggle = h("label", null,
-    h("input", { type: "checkbox", checked: boxes, onchange: (e: Event) => { boxes = (e.target as HTMLInputElement).checked; swap(); } }),
+    h("input", { type: "checkbox", checked: boxes, onchange: (e: Event) => { prefs.boxes = boxes = (e.target as HTMLInputElement).checked; swap(); } }),
     " Boxes");
 
   const keys = (e: KeyboardEvent) => {
     if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "SELECT") return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === " ") { e.preventDefault(); video.paused ? video.play() : video.pause(); }
     if (e.key === "ArrowRight") { video.pause(); seek((frameOf() + 1) / fps); }
     if (e.key === "ArrowLeft") { video.pause(); seek((frameOf() - 1) / fps); }
@@ -225,7 +252,6 @@ export async function episodePage(runId: string, index: number): Promise<{ eleme
 
   const objects = Object.entries(info.objects);
   const element = h("section", { class: "episode" },
-    h("p", null, link(`/runs/${runId}`, `← Run ${runId}`)),
     h("h1", null, `Episode ${index}`),
     h("p", { class: "muted" }, `${info.scenario} in ${info.scene} · seed `, h("span", { class: "mono" }, String(info.seed)),
       ` · ${info.frames} frames at ${fps} fps`),
@@ -260,15 +286,20 @@ export async function episodePage(runId: string, index: number): Promise<{ eleme
     ),
   );
 
-  // Two plots to start: where the labeled objects are, and how big their
-  // boxes are in the first camera.
-  addPlot(labeled.map((o) => `${o}.z`));
-  if (camera) addPlot(labeled.map((o) => `${camera}.${o}.height`));
+  if (prefs.plots) {
+    prefs.plots.forEach(addPlot);
+  } else {
+    // Two plots to start: where the labeled objects are, and how big their
+    // boxes are in the camera.
+    addPlot(labeled.map((o) => `${o}.z`));
+    if (camera) addPlot(labeled.map((o) => `${camera}.${o}.height`));
+  }
   update();
 
   return {
     element,
     stop: () => {
+      prefs.plots = plots.map((p) => p.shown());
       cancelAnimationFrame(frameRequest);
       document.removeEventListener("keydown", keys);
       video.pause();
