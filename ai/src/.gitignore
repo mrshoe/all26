@@ -1,3 +1,5 @@
 # Never uploaded by wildhat launch.
 __pycache__/
 *.swp
+# Local `python -m sim run` output.
+simulator/out/
