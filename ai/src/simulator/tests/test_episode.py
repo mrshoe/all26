@@ -69,7 +69,7 @@ def run_episode(folder, seed=4):
     with mock.patch.object(backends, "get", lambda name: Discs()):
         runner.run(Roll, seed, "discs", make)
     episode = holder["logger"].finish()
-    return episode, PostProcessor(folder, episode).run()
+    return episode, PostProcessor(folder).run()
 
 
 class TestEpisode(unittest.TestCase):
@@ -86,33 +86,80 @@ class TestEpisode(unittest.TestCase):
         for preview in previews:
             self.assertGreater((self.folder / preview).stat().st_size, 1000)
         saved = json.loads((self.folder / "episode.json").read_text())
+        self.assertEqual(saved["format"], 2)
         self.assertEqual(saved["seed"], 4)
-        self.assertEqual(saved["labels"], {"ball": "ball"})
-        self.assertEqual(saved["cameras"]["front"]["width"], 320)
-        # As drawn, not where it ended up.
-        self.assertEqual(saved["objects"]["ball"]["position"], [0, 3, 0.5])
+        self.assertEqual(saved["tables"], ["objects", "cameras", "poses", "images", "boxes", "sim"])
+        for table in saved["tables"]:
+            self.assertTrue((self.folder / f"{table}.parquet").exists())
 
-    def test_signals_and_boxes(self):
+    def test_objects_and_cameras(self):
         run_episode(self.folder)
-        signals = pq.read_table(self.folder / "signals.parquet").to_pydict()
-        self.assertEqual(signals["frame"], list(range(20)))
-        self.assertAlmostEqual(signals["time"][5], 0.5)
-        self.assertAlmostEqual(signals["ball.z"][0], 0.5)
-        self.assertAlmostEqual(signals["ball.z"][-1], 0.1, delta=0.005)
-        x0, x1 = signals["front.ball.x0"][0], signals["front.ball.x1"][0]
-        self.assertLess(x0, 160)
-        self.assertGreater(x1, 160)
-        self.assertGreater(signals["front.ball.pixels"][0], 50)
+        objects = {r["name"]: r for r in pq.read_table(self.folder / "objects.parquet").to_pylist()}
+        self.assertEqual(sorted(objects), ["ball", "floor", "front"])
+        ball = objects["ball"]
+        self.assertEqual((ball["type"], ball["label"], ball["static"]), ("Sphere", "ball", False))
+        self.assertTrue(objects["floor"]["static"])
+        self.assertFalse(objects["front"]["static"])
+        # As drawn, not where it ended up.
+        self.assertEqual(json.loads(ball["settings"])["position"], [0, 3, 0.5])
+        cameras = pq.read_table(self.folder / "cameras.parquet").to_pylist()
+        self.assertEqual(cameras[0]["object"], objects["front"]["object"])
+        self.assertEqual((cameras[0]["width"], cameras[0]["height"]), (320, 240))
+
+    def test_poses(self):
+        run_episode(self.folder)
+        ids = {r["name"]: r["object"] for r in pq.read_table(self.folder / "objects.parquet").to_pylist()}
+        poses = pq.read_table(self.folder / "poses.parquet").to_pylist()
+        ball = [r for r in poses if r["object"] == ids["ball"]]
+        self.assertEqual([r["frame"] for r in ball], list(range(20)))
+        self.assertAlmostEqual(ball[0]["z"], 0.5)
+        self.assertAlmostEqual(ball[-1]["z"], 0.1, delta=0.005)
+        # Static: frame 0 only.
+        self.assertEqual([r["frame"] for r in poses if r["object"] == ids["floor"]], [0])
+        # The camera doesn't move, so its velocities are 0.
+        front = [r for r in poses if r["object"] == ids["front"]]
+        self.assertEqual(len(front), 20)
+        self.assertEqual(max(abs(r["vx"]) + abs(r["wz"]) for r in front), 0)
+
+    def test_rolling_spins(self):
+        run_episode(self.folder)
+        ids = {r["name"]: r["object"] for r in pq.read_table(self.folder / "objects.parquet").to_pylist()}
+        last = [r for r in pq.read_table(self.folder / "poses.parquet").to_pylist() if r["object"] == ids["ball"]][-1]
+        # Rolling along x on the floor: spinning about y at speed / radius.
+        self.assertAlmostEqual(last["wy"], last["vx"] / 0.1, delta=0.05 * abs(last["vx"] / 0.1) + 0.05)
+
+    def test_sim_and_images(self):
+        run_episode(self.folder)
+        sim = pq.read_table(self.folder / "sim.parquet").to_pydict()
+        self.assertEqual(sim["frame"], list(range(20)))
+        self.assertAlmostEqual(sim["time"][5], 0.5)
+        self.assertGreater(sum(sim["physics_s"]), 0)
+        self.assertGreater(sum(sim["render_s"]), 0)
+        self.assertEqual(sim["model_ms"], [None] * 20)
+        images = pq.read_table(self.folder / "images.parquet").to_pylist()
+        self.assertEqual(images[3]["image"], "cam/front/000003.jpg")
+        self.assertEqual(images[3]["mask"], "mask/front/000003.png")
+
+    def test_boxes(self):
+        run_episode(self.folder)
+        boxes = pq.read_table(self.folder / "boxes.parquet").to_pylist()
+        first = boxes[0]
+        self.assertEqual((first["frame"], first["label"], first["source"], first["score"]), (0, "ball", "truth", None))
+        self.assertLess(first["x0"], 160)
+        self.assertGreater(first["x1"], 160)
+        self.assertGreater(first["pixels"], 50)
 
     def test_the_same_seed_gives_the_same_data(self):
         other = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, other)
         run_episode(self.folder)
         run_episode(other)
-        self.assertEqual(
-            pq.read_table(self.folder / "signals.parquet").to_pydict(),
-            pq.read_table(other / "signals.parquet").to_pydict(),
-        )
+        for table in ("objects", "cameras", "poses", "images", "boxes"):
+            self.assertEqual(pq.read_table(self.folder / f"{table}.parquet").to_pydict(),
+                             pq.read_table(other / f"{table}.parquet").to_pydict(), table)
+        # The sim table's timings differ, but not its times.
+        self.assertEqual(pq.read_table(self.folder / "sim.parquet")["time"].to_pylist(),
+                         pq.read_table(other / "sim.parquet")["time"].to_pylist())
 
     def test_reading_it_back(self):
         run_episode(self.folder)
@@ -122,15 +169,17 @@ class TestEpisode(unittest.TestCase):
         self.assertEqual(ep.image("front", 3).shape, (240, 320, 3))
         self.assertEqual(ep.mask("front", 3).dtype, np.uint16)
         boxes = ep.boxes("front", 0)
-        self.assertEqual([b.label for b in boxes], ["ball"])
+        self.assertEqual([(b.label, b.name) for b in boxes], [("ball", "ball")])
         self.assertLess(boxes[0].x0, boxes[0].x1)
+        self.assertEqual(ep.objects["ball"]["settings"]["radius"], 0.1)
+        self.assertEqual(ep.boxes("front", 0, source="some-model"), [])
 
     def test_records(self):
         episode, previews = run_episode(self.folder)
         sent = []
         env = {"WILDHAT_RUN_DOC": "projects/p/databases/(default)/documents/runs/r1", "WILDHAT_EPISODE": "2"}
         with mock.patch.dict(os.environ, env), mock.patch.object(records, "patch", lambda doc, f: sent.append((doc, f))):
-            records.record(episode, previews)
+            records.record(episode, previews, ["front"], ["ball"])
         (run_doc, run), (ep_doc, mine) = sent
         self.assertEqual(run_doc, env["WILDHAT_RUN_DOC"])
         self.assertEqual(run, {"sim": {"scenario": "tests:Roll", "scene": "Plain", "backend": "discs"}})
@@ -142,7 +191,7 @@ class TestEpisode(unittest.TestCase):
     def test_no_records_outside_the_cloud(self):
         episode, previews = run_episode(self.folder)
         with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(records, "patch") as patch:
-            records.record(episode, previews)
+            records.record(episode, previews, ["front"], ["ball"])
         patch.assert_not_called()
 
     def test_firestore_values(self):

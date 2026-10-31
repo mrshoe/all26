@@ -5,6 +5,7 @@
 import uPlot from "uplot";
 import { api, EpisodeData } from "./api";
 import { h } from "./dom";
+import { Catalog, seriesKey } from "./tables";
 
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2];
 
@@ -18,64 +19,50 @@ export interface Prefs {
 
 export const defaultPrefs = (): Prefs => ({ boxes: true, speed: 1 });
 
-type Signals = Record<string, (number | null)[]>;
-
-/** The logged signals, plus box sizes and centers worked out from the boxes. */
-function withDerived(signals: Signals): Signals {
-  const out: Signals = { ...signals };
-  for (const key of Object.keys(signals)) {
-    if (!key.endsWith(".x0")) continue;
-    const base = key.slice(0, -3);
-    const [x0, y0, x1, y1] = ["x0", "y0", "x1", "y1"].map((c) => signals[`${base}.${c}`]);
-    if (!x0 || !y0 || !x1 || !y1) continue;
-    const each = (f: (i: number) => number) =>
-      x0.map((_, i) => (x0[i] === null || y0[i] === null || x1[i] === null || y1[i] === null ? null : f(i)));
-    out[`${base}.width`] = each((i) => x1[i]! - x0[i]!);
-    out[`${base}.height`] = each((i) => y1[i]! - y0[i]!);
-    out[`${base}.cx`] = each((i) => (x0[i]! + x1[i]!) / 2);
-    out[`${base}.cy`] = each((i) => (y0[i]! + y1[i]!) / 2);
-  }
-  return out;
-}
-
 const COLORS = ["#2a7de1", "#e1572a", "#2aa876", "#a14ad9", "#d9a20f", "#d94a8c"];
 
+/** A plot of chosen series: pick a table, then an object, then a field. */
 class Plot {
   element: HTMLElement;
   private plot: uPlot | null = null;
   private chosen: string[];
   private holder = h("div", { class: "plot" });
+  private chips = h("div", { class: "chips" });
 
   constructor(
-    private signals: Signals,
-    private time: number[],
+    private catalog: Catalog,
     chosen: string[],
     private playhead: () => number,
     private seek: (t: number) => void,
     remove: () => void,
   ) {
-    this.chosen = chosen.filter((s) => s in signals);
-    const names = Object.keys(signals).filter((s) => s !== "frame" && s !== "time");
-    const picker = h("details", { class: "picker" },
-      h("summary", null, "Signals"),
-      h("div", { class: "choices" },
-        ...names.map((name) =>
-          h("label", null,
-            h("input", {
-              type: "checkbox",
-              checked: this.chosen.includes(name),
-              onchange: (e: Event) => {
-                const on = (e.target as HTMLInputElement).checked;
-                this.chosen = on ? [...this.chosen, name] : this.chosen.filter((s) => s !== name);
-                this.draw();
-              },
-            }),
-            " ", name),
-        ),
-      ),
-    );
+    this.chosen = chosen.filter((key) => catalog.has(key));
+    const tables = catalog.plottable();
+    const table = h("select", { "aria-label": "Table" }, ...tables.map((t) => h("option", { value: t }, t)));
+    const subject = h("select", { "aria-label": "Object" });
+    const field = h("select", { "aria-label": "Field" });
+    const fill = () => {
+      const subjects = catalog.subjects(table.value);
+      subject.replaceChildren(...subjects.map((s) => h("option", { value: s.key }, s.label)));
+      subject.hidden = subjects.length === 1 && subjects[0].key === "";
+      field.replaceChildren(...catalog.fields(table.value).map((f) => h("option", { value: f }, f)));
+    };
+    table.addEventListener("change", fill);
+    if (tables.includes("poses")) table.value = "poses";
+    fill();
+    const add = h("button", {
+      onclick: () => {
+        const key = seriesKey(table.value, subject.value, field.value);
+        if (!field.value || this.chosen.includes(key)) return;
+        this.chosen = [...this.chosen, key];
+        this.draw();
+      },
+    }, "Add");
     this.element = h("div", { class: "plot-card" },
-      h("div", { class: "plot-bar" }, picker, h("button", { class: "linkish", onclick: remove }, "Remove plot")),
+      h("div", { class: "plot-bar" },
+        h("div", { class: "pick" }, table, subject, field, add),
+        h("button", { class: "linkish", onclick: remove }, "Remove plot")),
+      this.chips,
       this.holder,
     );
     new ResizeObserver(() => this.plot?.setSize({ width: this.width(), height: 220 })).observe(this.holder);
@@ -93,8 +80,16 @@ class Plot {
   draw(): void {
     this.plot?.destroy();
     this.plot = null;
+    this.chips.replaceChildren(...this.chosen.map((key, i) =>
+      h("span", { class: "chip" },
+        h("span", { class: "swatch", style: `background:${COLORS[i % COLORS.length]}` }),
+        this.catalog.label(key),
+        h("button", {
+          class: "linkish", title: "Remove", "aria-label": `Remove ${this.catalog.label(key)}`,
+          onclick: () => { this.chosen = this.chosen.filter((k) => k !== key); this.draw(); },
+        }, "×"))));
     if (!this.chosen.length) {
-      this.holder.replaceChildren(h("p", { class: "muted" }, "Pick signals to plot."));
+      this.holder.replaceChildren(h("p", { class: "muted" }, "Pick a table, object and field, then Add."));
       return;
     }
     this.holder.replaceChildren();
@@ -105,8 +100,8 @@ class Plot {
       axes: [{ label: "seconds", stroke: "currentColor" }, { stroke: "currentColor" }],
       series: [
         { label: "t", value: (_u, v) => (v == null ? "" : v.toFixed(2)) },
-        ...this.chosen.map((name, i) => ({
-          label: name,
+        ...this.chosen.map((key, i) => ({
+          label: this.catalog.label(key),
           stroke: COLORS[i % COLORS.length],
           width: 2,
           spanGaps: false,
@@ -131,7 +126,7 @@ class Plot {
         ],
       },
     };
-    const data = [this.time, ...this.chosen.map((name) => this.signals[name])] as uPlot.AlignedData;
+    const data = [this.catalog.time, ...this.chosen.map((key) => this.catalog.values(key))] as uPlot.AlignedData;
     this.plot = new uPlot(opts, data, this.holder);
     this.plot.over.addEventListener("click", (e) => {
       const t = this.plot!.posToVal((e as MouseEvent).offsetX, "x");
@@ -159,9 +154,10 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   const info = ep.info;
   const fps = info.fps;
   const cameras = Object.keys(ep.previews);
-  const signals = withDerived(ep.signals);
-  const time = (signals.time ?? []) as number[];
-  const labeled = Object.keys(info.labels);
+  // Format 1 episodes, from before the tables, only have their videos.
+  const catalog = ep.format >= 2 ? new Catalog(ep.tables, info.frames, fps) : null;
+  const objects = ep.tables.objects;
+  const labeled = objects ? objects.name.filter((_, i) => objects.label[i]) as string[] : [];
 
   let camera = prefs.camera && cameras.includes(prefs.camera) ? prefs.camera : cameras[0];
   let boxes = prefs.boxes;
@@ -182,7 +178,8 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   const plots: Plot[] = [];
   const plotArea = h("div", { class: "plots" });
   const addPlot = (chosen: string[]) => {
-    const plot: Plot = new Plot(signals, time, chosen, playhead, seek, () => {
+    if (!catalog) return;
+    const plot: Plot = new Plot(catalog, chosen, playhead, seek, () => {
       plot.destroy();
       plot.element.remove();
       plots.splice(plots.indexOf(plot), 1);
@@ -250,7 +247,14 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   };
   document.addEventListener("keydown", keys);
 
-  const objects = Object.entries(info.objects);
+  // What was drawn for each object: settings, by name.
+  const drawn: [string, string, string | null, string][] = objects
+    ? objects.name.map((name, i) => [name as string, objects.type[i] as string, objects.label[i] as string | null,
+        objects.settings[i] as string])
+    : Object.entries(info.objects ?? {}).map(([name, o]) => {
+        const { type, id: _id, label, ...rest } = o as Record<string, unknown>;
+        return [name, String(type), (label as string | null) ?? null, JSON.stringify(rest)];
+      });
   const element = h("section", { class: "episode" },
     h("h1", null, `Episode ${index}`),
     h("p", { class: "muted" }, `${info.scenario} in ${info.scene} · seed `, h("span", { class: "mono" }, String(info.seed)),
@@ -266,22 +270,23 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
           scrub, speed, readout,
         ),
       ),
-      h("div", { class: "side" },
-        plotArea,
-        h("button", { onclick: () => addPlot([]) }, "+ Add plot"),
-      ),
+      catalog
+        ? h("div", { class: "side" },
+            plotArea,
+            h("button", { onclick: () => addPlot([]) }, "+ Add plot"),
+          )
+        : h("div", { class: "side" },
+            h("p", { class: "muted" }, "This episode was logged before the episode tables, so there's nothing to plot. Its videos still play.")),
     ),
     h("details", { class: "objects" },
-      h("summary", null, `What was drawn for this episode (${objects.length} objects)`),
+      h("summary", null, `What was drawn for this episode (${drawn.length} objects)`),
       h("table", null,
         h("thead", null, h("tr", null, h("th", null, "Object"), h("th", null, "Type"), h("th", null, "Settings"))),
-        h("tbody", null, ...objects.map(([name, o]) => {
-          const { type, id: _id, label, ...rest } = o as Record<string, unknown>;
-          return h("tr", null,
-            h("td", null, name, label ? h("span", { class: "tag" }, String(label)) : null),
-            h("td", null, String(type)),
-            h("td", { class: "mono small" }, JSON.stringify(rest)));
-        })),
+        h("tbody", null, ...drawn.map(([name, type, label, settings]) =>
+          h("tr", null,
+            h("td", null, name, label ? h("span", { class: "tag" }, label) : null),
+            h("td", null, type),
+            h("td", { class: "mono small" }, settings)))),
       ),
     ),
   );
@@ -291,15 +296,15 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   } else {
     // Two plots to start: where the labeled objects are, and how big their
     // boxes are in the camera.
-    addPlot(labeled.map((o) => `${o}.z`));
-    if (camera) addPlot(labeled.map((o) => `${camera}.${o}.height`));
+    addPlot(labeled.map((o) => seriesKey("poses", o, "z")));
+    if (camera) addPlot(labeled.map((o) => seriesKey("boxes", `${camera}/${o}`, "height")));
   }
   update();
 
   return {
     element,
     stop: () => {
-      prefs.plots = plots.map((p) => p.shown());
+      if (catalog) prefs.plots = plots.map((p) => p.shown());
       cancelAnimationFrame(frameRequest);
       document.removeEventListener("keydown", keys);
       video.pause();

@@ -49,7 +49,7 @@ class Heights:
     def __init__(self, world):
         self.world, self.z = world, []
 
-    def frame(self, index, t, cameras, pictures):
+    def frame(self, index, t, cameras, pictures, timing):
         self.z.append(self.world.scenario.ball.position[2])
 
 

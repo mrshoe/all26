@@ -108,6 +108,8 @@ class Physics:
                 position=self.data.xpos[body].copy(),
                 quat=self.data.xquat[body].copy(),
                 velocity=self.data.qvel[v : v + 3].copy(),
+                # A free joint's angular velocity is in the body's own frame.
+                spin=self.data.xmat[body].reshape(3, 3) @ self.data.qvel[v + 3 : v + 6],
             )
         return out
 

@@ -4,7 +4,7 @@
     GET /api/me                             who's signed in
     GET /api/runs?user=&sim=&limit=         runs, newest first
     GET /api/runs/<run>                     a run and its episodes
-    GET /api/runs/<run>/episodes/<n>        an episode's episode.json, signals,
+    GET /api/runs/<run>/episodes/<n>        an episode's episode.json, tables,
                                             and links to its preview videos
 
 Everything under /api but /api/config needs a Firebase ID token, from the
@@ -202,19 +202,29 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
         if info is None:
             raise HTTPException(404, f"Episode {index} of {run_id} has no episode.json (yet).")
         info = json.loads(info)
-        signals = store.read(prefix + "signals.parquet")
+        tables: dict[str, dict] = {}
+        if info.get("format", 1) >= 2:
+            # Pictures' paths aren't needed: the browser plays the previews.
+            names = [t for t in info.get("tables", []) if t != "images"]
+            found = pool.map(lambda t: store.read(f"{prefix}{t}.parquet"), names)
+            tables = {t: read_table(data) for t, data in zip(names, found) if data is not None}
+            cameras = camera_names(tables)
+        else:
+            # Format 1, from before the tables: only its videos can be shown.
+            cameras = list(info.get("cameras", {}))
         previews = {
             camera: {
                 "plain": store.signed_url(f"{prefix}preview/{camera}.mp4", "video/mp4"),
                 "boxes": store.signed_url(f"{prefix}preview/{camera}.boxes.mp4", "video/mp4"),
             }
-            for camera in info.get("cameras", {})
+            for camera in cameras
         }
         return {
             "run": run_id,
             "index": index,
+            "format": info.get("format", 1),
             "info": info,
-            "signals": read_signals(signals) if signals else {},
+            "tables": tables,
             "previews": previews,
         }
 
@@ -247,13 +257,22 @@ def summarize(run: dict, episodes: list[dict]) -> dict:
     return {**run, "status_counts": counts}
 
 
-def read_signals(data: bytes) -> dict[str, list]:
+def read_table(data: bytes) -> dict[str, list]:
+    """A parquet table as {column: values}, NaN as null."""
     import io
 
     import pyarrow.parquet as pq
 
     columns = pq.read_table(io.BytesIO(data)).to_pydict()
     return {k: [None if isinstance(v, float) and math.isnan(v) else v for v in vs] for k, vs in columns.items()}
+
+
+def camera_names(tables: dict[str, dict]) -> list[str]:
+    """The cameras' names, from the cameras and objects tables."""
+    if "cameras" not in tables or "objects" not in tables:
+        return []
+    names = dict(zip(tables["objects"]["object"], tables["objects"]["name"]))
+    return [names[i] for i in tables["cameras"]["object"] if i in names]
 
 
 def plain(value: Any) -> Any:
