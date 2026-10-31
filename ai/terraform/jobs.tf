@@ -130,7 +130,9 @@ resource "google_cloud_run_v2_job" "cpu" {
       containers {
         image = local.base_image
         resources {
-          limits = { cpu = "2", memory = "8Gi" }
+          # Cycles renders on every core, so 4 halves an episode. 5 x 4 vCPU
+          # and 5 x 8 GB are exactly the CPU and memory quotas.
+          limits = { cpu = "4", memory = "8Gi" }
         }
       }
     }
