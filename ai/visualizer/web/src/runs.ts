@@ -1,7 +1,7 @@
 // The list of runs, and a run's page: its episodes, and the chosen one.
 
 import { api, Me, Run, SignInNeeded } from "./api";
-import { duration, h, link, navigate, when } from "./dom";
+import { duration, h, icon, link, navigate, when } from "./dom";
 import { defaultPrefs, episodeView, EpisodeView } from "./episode";
 
 const FILTERS = "wildhat.filters";
@@ -57,24 +57,30 @@ export async function runsPage(me: Me): Promise<HTMLElement> {
     }
   }
 
-  const toggle = (label: string, key: "mine" | "sim") =>
-    h("label", null,
-      h("input", {
-        type: "checkbox",
-        checked: filters[key],
-        onchange: (e: Event) => {
-          filters[key] = (e.target as HTMLInputElement).checked;
-          refresh();
-        },
-      }),
-      " ", label);
+  // A chip that's lit while its filter is on, like the Hattracker's.
+  const toggle = (label: string, key: "mine" | "sim") => {
+    const chip = h("button", {
+      type: "button",
+      class: "chip",
+      "aria-pressed": String(filters[key]),
+      onclick: () => {
+        filters[key] = !filters[key];
+        chip.setAttribute("aria-pressed", String(filters[key]));
+        refresh();
+      },
+    }, label);
+    return chip;
+  };
 
   await refresh();
   return h("section", null,
-    h("div", { class: "toolbar" }, h("h1", null, "Runs"), toggle("Only mine", "mine"), toggle("Only simulations", "sim"), count),
-    h("table", { class: "runs" },
-      h("thead", null, h("tr", null, ...["Run", "Who", "When", "What", "Episodes", "Status"].map((t) => h("th", null, t)))),
-      body,
+    h("div", { class: "toolbar" }, h("h1", null, "Runs"),
+      h("div", { class: "chips" }, toggle("Only mine", "mine"), toggle("Only simulations", "sim")), count),
+    h("div", { class: "table-wrap" },
+      h("table", { class: "runs" },
+        h("thead", null, h("tr", null, ...["Run", "Who", "When", "What", "Episodes", "Status"].map((t) => h("th", null, t)))),
+        body,
+      ),
     ),
   );
 }
@@ -198,7 +204,7 @@ export async function runView(id: string): Promise<RunView> {
   const what = run.sim ? `${run.sim.scenario.split(":").pop()} in ${run.sim.scene}` : run.command.join(" ");
   const element = h("section", { class: "run" },
     h("aside", { class: "sidebar" },
-      h("p", null, link("/", "← Runs")),
+      h("p", null, link("/", icon("back"), "Runs")),
       h("h1", { class: "run-id mono" }, run.id),
       h("p", { class: "muted" }, what),
       facts,

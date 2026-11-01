@@ -11,7 +11,8 @@ import "uplot/dist/uPlot.min.css";
 import "./style.css";
 import { api, Me, SignInNeeded } from "./api";
 import * as auth from "./auth";
-import { h, link, setRouter } from "./dom";
+import logo from "./assets/wildhats-logo.png";
+import { h, icon, link, setRouter } from "./dom";
 import { RunView, runView, runsPage } from "./runs";
 
 const app = document.getElementById("app")!;
@@ -22,15 +23,22 @@ let cleanup: (() => void) | null = null;
 let shown: { id: string; view: RunView } | null = null;
 
 function header(): HTMLElement {
-  return h("header", null,
-    link("/", h("strong", null, "Wildhat"), " visualizer"),
-    me && h("span", { class: "who" }, me.handle, " · ",
-      h("button", { class: "linkish", onclick: () => { auth.signOut(); me = null; route(); } }, "Sign out")),
+  const home = link("/", h("img", { class: "header__logo", src: logo, alt: "" }),
+    h("span", { class: "header__title" }, "Team 100 ", h("span", null, "Visualizer")));
+  home.className = "header__home";
+  return h("header", { class: "header" },
+    home,
+    h("span", { class: "header__spacer" }),
+    me && h("span", { class: "header__me" }, me.handle),
+    me && h("button", {
+      class: "btn btn--sm",
+      onclick: () => { auth.signOut(); me = null; route(); },
+    }, icon("signout"), "Sign out"),
   );
 }
 
 function show(...content: Node[]): void {
-  app.replaceChildren(header(), h("main", null, ...content));
+  app.replaceChildren(header(), h("main", { class: "main" }, ...content));
 }
 
 function leave(): void {
@@ -40,7 +48,7 @@ function leave(): void {
 }
 
 function signInPage(message = ""): void {
-  const email = h("input", { type: "email", placeholder: "you@school.org", required: true, autocomplete: "email" });
+  const email = h("input", { id: "si-email", type: "email", placeholder: "you@school.org", required: true, autocomplete: "email" });
   const status = h("p", { class: "muted" }, message);
   const form = h("form", {
     class: "signin",
@@ -55,12 +63,19 @@ function signInPage(message = ""): void {
       }
     },
   },
-    h("h1", null, "Sign in"),
-    h("p", null, "With the email address on the team roster, the same as ", h("code", null, "wildhat login"), "."),
-    h("div", { class: "row" }, email, h("button", { type: "submit" }, "Send me a link")),
+    h("div", { class: "field" }, h("label", { for: "si-email" }, "Email"), email),
+    h("button", { type: "submit", class: "btn btn--primary" }, "Send me a link"),
     status,
   );
-  show(form);
+  show(h("div", { class: "center" },
+    h("img", { src: logo, alt: "" }),
+    h("div", null,
+      h("h1", { class: "center__title" }, "Team 100 Visualizer"),
+      h("p", { class: "muted" }, "Sign in with the email address on the team roster, the same as ",
+        h("code", null, "wildhat login"), "."),
+    ),
+    form,
+  ));
   email.focus();
 }
 

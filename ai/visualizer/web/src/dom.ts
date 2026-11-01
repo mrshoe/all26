@@ -24,6 +24,48 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
+// Line icons in the Hattracker's style: a 16-unit box, drawn in the text
+// color with round ends. Shapes marked solid are filled instead.
+const ICONS: Record<string, [string, "solid"?][]> = {
+  back: [["M10 3.5 5.5 8l4.5 4.5"]],
+  play: [["M5 3.2v9.6a.5.5 0 0 0 .76.43l7.6-4.8a.5.5 0 0 0 0-.86l-7.6-4.8A.5.5 0 0 0 5 3.2z", "solid"]],
+  pause: [["M4.5 3h2.4v10H4.5zM9.1 3h2.4v10H9.1z", "solid"]],
+  previous: [["M3.5 3.5v9"], ["M12.5 3.6v8.8a.4.4 0 0 1-.62.33L5.6 8.33a.4.4 0 0 1 0-.66l6.28-4.4a.4.4 0 0 1 .62.33z", "solid"]],
+  next: [["M12.5 3.5v9"], ["M3.5 3.6v8.8a.4.4 0 0 0 .62.33l6.28-4.4a.4.4 0 0 0 0-.66L4.12 3.27a.4.4 0 0 0-.62.33z", "solid"]],
+  plus: [["M8 3v10M3 8h10"]],
+  close: [["M4 4l8 8M12 4l-8 8"]],
+  signout: [["M6.5 2.5h-3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3"], ["M10 5l3 3-3 3M13 8H6"]],
+};
+
+export type IconName = keyof typeof ICONS;
+
+/** An icon to put beside a label, or alone in a button with an aria-label. */
+export function icon(name: IconName, size = 16): SVGSVGElement {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("width", String(size));
+  svg.setAttribute("height", String(size));
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.classList.add("icon");
+  for (const [d, solid] of ICONS[name]) {
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", d);
+    if (solid) {
+      path.setAttribute("fill", "currentColor");
+    } else {
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", "1.5");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+    }
+    svg.append(path);
+  }
+  return svg;
+}
+
 /** A link that changes page without reloading. */
 export function link(href: string, ...children: Child[]): HTMLAnchorElement {
   return h("a", {
