@@ -1,29 +1,46 @@
-:root {
-  --bg: #ffffff;
-  --panel: #f5f6f8;
-  --text: #1c1e21;
-  --muted: #6b7280;
-  --line: #dfe2e6;
-  --accent: #2a7de1;
-  --error: #b42318;
-  --ok: #1a7f37;
-  --warn: #9a6700;
-  color-scheme: light;
-}
+/*
+ * The team's look, from the Hattracker (Team-100-Project-Planner,
+ * src/styles/theme.css): warm near-black surfaces, the Wildhats orange as
+ * the one accent, white type. Dark only, like the Hattracker. Keep the
+ * colors in step with it.
+ *
+ * Orange is for fills, links and focus rings. Text on an orange fill is
+ * black: white on #F75E20 is only 3.2:1.
+ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15171a;
-    --panel: #1e2125;
-    --text: #e6e8eb;
-    --muted: #9aa1ab;
-    --line: #30343a;
-    --accent: #6aa8f0;
-    --error: #f97066;
-    --ok: #4ac26b;
-    --warn: #d4a72c;
-    color-scheme: dark;
-  }
+:root {
+  --brand-orange: #f75e20;
+  --brand-orange-hover: #ff7038;
+  --brand-orange-dim: rgba(247, 94, 32, 0.14);
+  --brand-black: #000000;
+
+  --bg: #100d0b;
+  --surface: #1c1614;
+  --surface-raised: #251e1b;
+  --surface-hover: #2c2522;
+  --border: #362d29;
+  --border-strong: #463c37;
+
+  --text: #f3f2f2;
+  --text-muted: #a8a09d;
+  --text-faint: #786c68;
+  --on-brand: var(--brand-black);
+
+  --danger: #ff5c5c;
+  --warn: #ffb340;
+  --ok: #46c98b;
+
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Controls: the Hattracker's compact 36px, not its 44px phone targets,
+     since this is used at a desk. */
+  --control: 36px;
+
+  color-scheme: dark;
+  accent-color: var(--brand-orange);
 }
 
 * {
@@ -34,11 +51,28 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 a {
-  color: var(--accent);
+  color: var(--brand-orange);
   text-decoration: none;
 }
 
@@ -46,65 +80,214 @@ a:hover {
   text-decoration: underline;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
+a:has(.icon) {
+  display: inline-flex;
   align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--line);
+  gap: 4px;
 }
 
-header a {
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+h1 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 4px 0 12px;
+}
+
+.icon {
+  flex: none;
+}
+
+/* ---------- shell ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  /* Team stripe, as in the Hattracker. */
+  border-top: 3px solid var(--brand-orange);
+  border-bottom: 1px solid var(--border);
+}
+
+.header__home {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--text);
 }
 
-main {
+.header__home:hover {
+  text-decoration: none;
+}
+
+.header__logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex: none;
+}
+
+.header__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.header__title span {
+  color: var(--brand-orange);
+}
+
+.header__spacer {
+  flex: 1;
+}
+
+.header__me {
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 22ch;
+}
+
+@media (max-width: 600px) {
+  .header__me {
+    display: none;
+  }
+}
+
+.main {
   padding: 16px;
   max-width: 1800px;
   margin: 0 auto;
 }
 
-h1 {
-  font-size: 22px;
-  margin: 4px 0 12px;
+/* ---------- buttons and fields ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--control);
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-button,
+.btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: var(--on-brand);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--brand-orange-hover);
+  border-color: var(--brand-orange-hover);
+}
+
+.btn--sm {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.btn--icon {
+  min-width: var(--control);
+  padding: 0 8px;
+}
+
+/* For what's beside the content, not the content: Remove plot. */
+.btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn--quiet:hover:not(:disabled) {
+  color: var(--text);
+}
+
 select,
 input[type="email"] {
-  font: inherit;
+  min-height: var(--control);
+  padding: 4px 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
   color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 5px 10px;
 }
 
-button {
+input[type="email"] {
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
   cursor: pointer;
 }
 
-button:hover {
-  border-color: var(--accent);
+.field {
+  margin-bottom: 4px;
 }
 
-.linkish {
-  background: none;
-  border: none;
-  color: var(--accent);
-  padding: 0;
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
 }
+
+.field input {
+  width: 100%;
+}
+
+/* ---------- small pieces ---------- */
 
 .muted {
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .error {
-  color: var(--error);
+  background: rgba(255, 92, 92, 0.12);
+  border-left: 3px solid var(--danger);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--text);
 }
 
 .mono {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--mono);
 }
 
 .small {
@@ -115,35 +298,137 @@ button:hover {
   text-align: right;
 }
 
-.who {
-  color: var(--muted);
-}
-
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px 16px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .toolbar h1 {
   margin: 0;
 }
 
-.signin {
-  max-width: 480px;
-  margin: 48px auto;
-}
-
-.signin .row {
+/* Filter chips, lit while on (runs page). */
+.chips {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.signin input {
-  flex: 1;
-  min-width: 0;
+.chip {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--brand-orange-dim);
+  border-color: var(--brand-orange);
+  color: var(--text);
+}
+
+/* Status pills: running, succeeded, ... */
+.statuses {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.status.succeeded {
+  color: var(--ok);
+  background: rgba(70, 201, 139, 0.12);
+}
+
+.status.failed {
+  color: var(--danger);
+  background: rgba(255, 92, 92, 0.12);
+}
+
+.status.running,
+.status.stopped {
+  color: var(--warn);
+  background: rgba(255, 179, 64, 0.12);
+}
+
+.tag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--brand-orange-dim);
+  color: var(--brand-orange);
+}
+
+/* ---------- sign-in ---------- */
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-height: 60vh;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.center img {
+  width: 96px;
+}
+
+.center__title {
+  margin: 0 0 4px;
+  font-size: 24px;
+}
+
+.center .muted {
+  margin: 0;
+  max-width: 360px;
+}
+
+.signin {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+}
+
+.signin .muted {
+  font-size: 13px;
+}
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 table {
@@ -154,20 +439,31 @@ table {
 th,
 td {
   text-align: left;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--line);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
+  font-size: 14px;
 }
 
 th {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
-  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface);
 }
 
-.runs {
-  display: block;
-  overflow-x: auto;
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background: var(--surface);
+}
+
+td.small {
+  font-size: 12px;
 }
 
 .what {
@@ -175,34 +471,6 @@ th {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.statuses {
-  display: inline-flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.status {
-  font-size: 12px;
-  padding: 1px 7px;
-  border-radius: 10px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  white-space: nowrap;
-}
-
-.status.succeeded {
-  color: var(--ok);
-}
-
-.status.failed {
-  color: var(--error);
-}
-
-.status.running,
-.status.stopped {
-  color: var(--warn);
 }
 
 .facts {
@@ -213,7 +481,7 @@ th {
 }
 
 .facts dt {
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .facts dd {
@@ -221,140 +489,7 @@ th {
   overflow-wrap: anywhere;
 }
 
-.player {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 16px;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .player {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.video {
-  width: 100%;
-  background: #000;
-  border-radius: 6px;
-  display: block;
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.scrub {
-  flex: 1;
-  min-width: 120px;
-}
-
-.readout {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.plots {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.plot-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px;
-}
-
-.plot-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.plot {
-  width: 100%;
-  min-height: 60px;
-}
-
-.pick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-}
-
-.pick select {
-  max-width: 180px;
-  font-size: 13px;
-  padding: 3px 6px;
-}
-
-.pick button {
-  font-size: 13px;
-  padding: 3px 10px;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 4px;
-  font-size: 13px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 1px 4px 1px 8px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
-}
-
-.chip .linkish {
-  color: var(--muted);
-  padding: 0 4px;
-}
-
-.swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-}
-
-.objects {
-  margin-top: 24px;
-}
-
-.objects summary {
-  cursor: pointer;
-  color: var(--accent);
-}
-
-.tag {
-  margin-left: 6px;
-  font-size: 11px;
-  padding: 0 6px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-}
-
-.u-legend {
-  font-size: 12px;
-}
-
-/* A run: its episodes down the left, the chosen one on the right. */
+/* ---------- a run: episodes down the left, the chosen one on the right ---------- */
 
 .run {
   display: grid;
@@ -383,16 +518,19 @@ th {
 }
 
 .sidebar h2 {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
-  margin: 14px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 16px 0 6px;
 }
 
-.facts-box summary {
+details > summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--brand-orange);
   font-size: 13px;
+  font-weight: 600;
 }
 
 .facts-box .facts {
@@ -412,30 +550,33 @@ th {
   padding: 0;
   overflow-y: auto;
   min-height: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .playlist li + li {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .playlist a {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 2px 8px;
-  padding: 7px 10px;
+  padding: 8px 12px;
   color: var(--text);
 }
 
 .playlist a:hover {
-  background: var(--panel);
+  background: var(--surface-hover);
   text-decoration: none;
 }
 
+/* Like a Hattracker card: an orange stripe down its left. */
 .playlist li.selected a {
-  background: var(--panel);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--surface-raised);
+  box-shadow: inset 3px 0 0 var(--brand-orange);
 }
 
 .ep-name {
@@ -445,7 +586,7 @@ th {
 .ep-meta {
   grid-column: 1 / -1;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .episode-pane h1 {
@@ -465,4 +606,139 @@ th {
   .playlist {
     max-height: 220px;
   }
+}
+
+/* ---------- an episode: the video and its plots ---------- */
+
+.player {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .player {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.video {
+  width: 100%;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: block;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.scrub {
+  flex: 1;
+  min-width: 120px;
+}
+
+.readout {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.plots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.plot-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+}
+
+.plot-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.plot {
+  width: 100%;
+  min-height: 60px;
+  color: var(--text-muted);
+}
+
+.pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pick select {
+  max-width: 180px;
+  min-height: 30px;
+  font-size: 13px;
+  padding: 2px 6px;
+}
+
+/* The plotted series, each with its color and a remove button. */
+.series-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+
+.series {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-raised);
+}
+
+.series__remove {
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.series__remove:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.objects {
+  margin-top: 24px;
+}
+
+.objects .table-wrap {
+  margin-top: 8px;
+}
+
+.u-legend {
+  font-size: 12px;
+  color: var(--text-muted);
 }

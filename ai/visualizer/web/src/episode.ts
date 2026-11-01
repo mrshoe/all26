@@ -4,7 +4,7 @@
 
 import uPlot from "uplot";
 import { api, EpisodeData } from "./api";
-import { h } from "./dom";
+import { h, icon } from "./dom";
 import { Catalog, seriesKey } from "./tables";
 
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2];
@@ -19,7 +19,12 @@ export interface Prefs {
 
 export const defaultPrefs = (): Prefs => ({ boxes: false, speed: 1 });
 
-const COLORS = ["#2a7de1", "#e1572a", "#2aa876", "#a14ad9", "#d9a20f", "#d94a8c"];
+// The Hattracker's subteam colors, which read well on its dark surfaces.
+// None is orange, so the playhead (the brand orange) stands apart.
+const COLORS = ["#4da3ff", "#46c98b", "#b98cff", "#ffb340", "#ff7ab0", "#e8e4e1"];
+const PLAYHEAD = "#f75e20";
+const GRID = "rgba(243, 242, 242, 0.08)";
+const AXIS = "#a8a09d";
 
 /** A plot of chosen series: pick a table, then an object, then a field. */
 class Plot {
@@ -27,7 +32,7 @@ class Plot {
   private plot: uPlot | null = null;
   private chosen: string[];
   private holder = h("div", { class: "plot" });
-  private chips = h("div", { class: "chips" });
+  private chips = h("div", { class: "series-list" });
 
   constructor(
     private catalog: Catalog,
@@ -51,17 +56,18 @@ class Plot {
     if (tables.includes("poses")) table.value = "poses";
     fill();
     const add = h("button", {
+      class: "btn btn--sm",
       onclick: () => {
         const key = seriesKey(table.value, subject.value, field.value);
         if (!field.value || this.chosen.includes(key)) return;
         this.chosen = [...this.chosen, key];
         this.draw();
       },
-    }, "Add");
+    }, icon("plus", 14), "Add");
     this.element = h("div", { class: "plot-card" },
       h("div", { class: "plot-bar" },
         h("div", { class: "pick" }, table, subject, field, add),
-        h("button", { class: "linkish", onclick: remove }, "Remove plot")),
+        h("button", { class: "btn btn--sm btn--quiet", onclick: remove }, icon("close", 14), "Remove plot")),
       this.chips,
       this.holder,
     );
@@ -81,13 +87,13 @@ class Plot {
     this.plot?.destroy();
     this.plot = null;
     this.chips.replaceChildren(...this.chosen.map((key, i) =>
-      h("span", { class: "chip" },
+      h("span", { class: "series" },
         h("span", { class: "swatch", style: `background:${COLORS[i % COLORS.length]}` }),
         this.catalog.label(key),
         h("button", {
-          class: "linkish", title: "Remove", "aria-label": `Remove ${this.catalog.label(key)}`,
+          class: "series__remove", title: "Remove", "aria-label": `Remove ${this.catalog.label(key)}`,
           onclick: () => { this.chosen = this.chosen.filter((k) => k !== key); this.draw(); },
-        }, "×"))));
+        }, icon("close", 12)))));
     if (!this.chosen.length) {
       this.holder.replaceChildren(h("p", { class: "muted" }, "Pick a table, object and field, then Add."));
       return;
@@ -97,7 +103,10 @@ class Plot {
       width: this.width(),
       height: 220,
       scales: { x: { time: false } },
-      axes: [{ label: "seconds", stroke: "currentColor" }, { stroke: "currentColor" }],
+      axes: [
+        { label: "seconds", stroke: AXIS, grid: { stroke: GRID }, ticks: { stroke: GRID } },
+        { stroke: AXIS, grid: { stroke: GRID }, ticks: { stroke: GRID } },
+      ],
       series: [
         { label: "t", value: (_u, v) => (v == null ? "" : v.toFixed(2)) },
         ...this.chosen.map((key, i) => ({
@@ -115,7 +124,7 @@ class Plot {
             const x = u.valToPos(this.playhead(), "x", true);
             const ctx = u.ctx;
             ctx.save();
-            ctx.strokeStyle = "#e11d48";
+            ctx.strokeStyle = PLAYHEAD;
             ctx.lineWidth = 2 * devicePixelRatio;
             ctx.beginPath();
             ctx.moveTo(x, u.bbox.top);
@@ -194,7 +203,10 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     oninput: (e: Event) => seek(Number((e.target as HTMLInputElement).value) / fps),
   });
   const readout = h("span", { class: "mono readout" });
-  const playButton = h("button", { onclick: () => (video.paused ? video.play() : video.pause()) }, "Play");
+  const playButton = h("button", {
+    class: "btn btn--primary btn--icon", "aria-label": "Play", title: "Play (space)",
+    onclick: () => (video.paused ? video.play() : video.pause()),
+  }, icon("play"));
   const speed = h("select", {
     onchange: (e: Event) => {
       prefs.speed = video.playbackRate = Number((e.target as HTMLSelectElement).value);
@@ -206,9 +218,13 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     scrub.value = String(frame);
     readout.textContent = `frame ${frame + 1}/${info.frames} · ${(frame / fps).toFixed(2)} s`;
     // Only when it changes: this runs every animation frame while playing,
-    // and replacing the button's text mid-click swallows the click.
+    // and replacing the button's icon mid-click swallows the click.
     const label = video.paused ? "Play" : "Pause";
-    if (playButton.textContent !== label) playButton.textContent = label;
+    if (playButton.getAttribute("aria-label") !== label) {
+      playButton.setAttribute("aria-label", label);
+      playButton.title = `${label} (space)`;
+      playButton.replaceChildren(icon(video.paused ? "play" : "pause"));
+    }
     for (const plot of plots) plot.refresh();
   }
 
@@ -236,8 +252,8 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   const cameraPicker = cameras.length > 1
     ? h("select", { onchange: (e: Event) => { prefs.camera = camera = (e.target as HTMLSelectElement).value; swap(); } },
         ...cameras.map((c) => h("option", { value: c, selected: c === camera }, c)))
-    : h("span", null, camera ? `Camera: ${camera}` : "No cameras");
-  const boxToggle = h("label", null,
+    : h("span", { class: "muted" }, camera ? `Camera: ${camera}` : "No cameras");
+  const boxToggle = h("label", { class: "check" },
     h("input", { type: "checkbox", checked: boxes, onchange: (e: Event) => { prefs.boxes = boxes = (e.target as HTMLInputElement).checked; swap(); } }),
     " Boxes");
 
@@ -267,29 +283,37 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
         h("div", { class: "toolbar" }, cameraPicker, boxToggle),
         video,
         h("div", { class: "controls" },
-          h("button", { onclick: () => { video.pause(); seek((frameOf() - 1) / fps); }, title: "Previous frame (←)" }, "◀"),
+          h("button", {
+            class: "btn btn--icon", title: "Previous frame (←)", "aria-label": "Previous frame",
+            onclick: () => { video.pause(); seek((frameOf() - 1) / fps); },
+          }, icon("previous")),
           playButton,
-          h("button", { onclick: () => { video.pause(); seek((frameOf() + 1) / fps); }, title: "Next frame (→)" }, "▶"),
+          h("button", {
+            class: "btn btn--icon", title: "Next frame (→)", "aria-label": "Next frame",
+            onclick: () => { video.pause(); seek((frameOf() + 1) / fps); },
+          }, icon("next")),
           scrub, speed, readout,
         ),
       ),
       catalog
         ? h("div", { class: "side" },
             plotArea,
-            h("button", { onclick: () => addPlot([]) }, "+ Add plot"),
+            h("button", { class: "btn", onclick: () => addPlot([]) }, icon("plus"), "Add plot"),
           )
         : h("div", { class: "side" },
             h("p", { class: "muted" }, "This episode was logged before the episode tables, so there's nothing to plot. Its videos still play.")),
     ),
     h("details", { class: "objects" },
       h("summary", null, `What was drawn for this episode (${drawn.length} objects)`),
-      h("table", null,
-        h("thead", null, h("tr", null, h("th", null, "Object"), h("th", null, "Type"), h("th", null, "Settings"))),
-        h("tbody", null, ...drawn.map(([name, type, label, settings]) =>
-          h("tr", null,
-            h("td", null, name, label ? h("span", { class: "tag" }, label) : null),
-            h("td", null, type),
-            h("td", { class: "mono small" }, settings)))),
+      h("div", { class: "table-wrap" },
+        h("table", null,
+          h("thead", null, h("tr", null, h("th", null, "Object"), h("th", null, "Type"), h("th", null, "Settings"))),
+          h("tbody", null, ...drawn.map(([name, type, label, settings]) =>
+            h("tr", null,
+              h("td", null, name, label ? h("span", { class: "tag" }, label) : null),
+              h("td", null, type),
+              h("td", { class: "mono small" }, settings)))),
+        ),
       ),
     ),
   );
