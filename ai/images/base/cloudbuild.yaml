@@ -1,0 +1,12 @@
+# Used by `wildhat admin build-image`, which sets _IMAGE.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: [build, --tag, $_IMAGE, .]
+images: [$_IMAGE]
+# PyTorch with CUDA is several GB to download and push.
+timeout: 3600s
+options:
+  # The default machine. New projects aren't allowed bigger ones ("due to
+  # quota restrictions, Cloud Build cannot run builds of this machine type").
+  # Builds run as the image-builder account, which has no logs bucket.
+  logging: CLOUD_LOGGING_ONLY
