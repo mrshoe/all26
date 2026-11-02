@@ -26,7 +26,7 @@ from scipy.spatial.transform import Rotation
 
 from sim import assets
 from sim.geometry import quat_from_euler
-from sim.objects import Background, Camera, Floor, Item, Light, Prop, Solid, Vec3, Wall
+from sim.objects import Background, Camera, Floor, GamePiece, Item, Light, Prop, Solid, Vec3, Wall
 from sim.randomness import Range, resolve
 
 T = TypeVar("T", bound=Union[Item, "Group", list])
@@ -410,10 +410,12 @@ def check(world: World) -> None:
         if not 1 <= cam.fov < 180:
             raise ValueError(f"{cam.name}: fov is in degrees, between 1 and 180")
     for prop in world.of_type(Prop):
-        if prop.asset not in assets.library.models:
-            raise ValueError(f"{prop.name}: no model {prop.asset!r} in the asset catalog. assets.find() lists them.")
-        if not prop.static:
-            raise ValueError(f"{prop.name}: props are static for now")
+        try:
+            assets.info(prop.asset)
+        except KeyError as e:
+            raise ValueError(f"{prop.name}: {e.args[0]}") from None
+        if not prop.static and not isinstance(prop, GamePiece):
+            raise ValueError(f"{prop.name}: props are static. GamePiece is the kind that moves.")
         if not prop.scale > 0:
             raise ValueError(f"{prop.name}: scale must be above 0")
     if len(world.of_type(Background)) > 1:

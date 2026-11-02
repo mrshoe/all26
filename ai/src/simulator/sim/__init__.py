@@ -10,11 +10,11 @@ if _SRC not in sys.path:
     sys.path.append(_SRC)
 
 from sim import assets
-from sim.objects import Background, Box, Camera, Floor, Light, Prop, Sphere, Wall
+from sim.objects import Background, Box, Camera, Floor, GamePiece, Light, Prop, Sphere, Wall
 from sim.randomness import Range
 from sim.world import Group, Scenario, Scene
 
 __all__ = [
-    "Background", "Box", "Camera", "Floor", "Group", "Light", "Prop", "Range", "Scenario", "Scene", "Sphere",
+    "Background", "Box", "Camera", "Floor", "GamePiece", "Group", "Light", "Prop", "Range", "Scenario", "Scene", "Sphere",
     "Wall", "assets",
 ]

@@ -1,13 +1,19 @@
-"""Models to put in a Scene, from the asset catalog, for `Prop`.
+"""Models to put in a Scene, from the asset catalogs, for `Prop`.
 
     from sim import assets
     assets.find("chair")                  # every chair's id, sorted
     assets.find(category="furniture")     # by Poly Haven's category path
     assets.info("WoodenChair_01")         # its label, size in meters, ...
+    assets.info("frc/2026/hub_red")       # FIRST's field models, by year
+
+Ids without a slash are Poly Haven's (polyhaven.json). `frc/<year>/<name>`
+are from FIRST's official field CAD for that season (frc/<year>.json, made
+by `python -m sim.assets.frc`; `sim.frc.FrcField` places them).
 
 The catalog (polyhaven.json, next to this file) lists each model's label,
 category and size, so choosing models needs no network. The models
-themselves are in the bucket, under assets/polyhaven/<id>/:
+themselves are in the bucket, under assets/polyhaven/<id>/ (and
+assets/frc/<year>/<name>/):
 
     model.glb        what cameras see: the mesh and its textures
     collision.npz    what physics sees: convex parts (part0, part1, ...),
@@ -33,6 +39,7 @@ from typing import Optional
 import numpy as np
 
 CATALOG = Path(__file__).with_name("polyhaven.json")
+FRC = Path(__file__).with_name("frc")
 SOURCE = "polyhaven"
 FILES = ("model.glb", "collision.npz")
 METADATA_TOKEN = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
@@ -66,14 +73,15 @@ class Library:
     """A catalog of models, and where their files are."""
 
     def __init__(self, catalog: dict, cache: Path, source: str = SOURCE):
+        self.catalog = catalog
         self.models: dict[str, dict] = catalog["assets"]
         self.cache, self.source = Path(cache), source
         self.checked: set[str] = set()
 
     @classmethod
-    def load(cls, path: Path = CATALOG, cache: Optional[Path] = None) -> "Library":
+    def load(cls, path: Path = CATALOG, cache: Optional[Path] = None, source: str = SOURCE) -> "Library":
         catalog = json.loads(path.read_text()) if path.exists() else {"assets": {}}
-        return cls(catalog, cache or default_cache())
+        return cls(catalog, cache or default_cache(), source)
 
     def find(self, label: Optional[str] = None, category: Optional[str] = None,
              max_size: Optional[float] = None) -> list[str]:
@@ -153,8 +161,34 @@ def download(bucket: str, name: str, path: Path, tok: str) -> None:
     os.replace(partial, path)
 
 
-# The library Scenes and the backends use. Tests swap in their own.
+# The libraries Scenes and the backends use. Tests swap in their own.
 library = Library.load()
+# FIRST's, by source ("frc/2026"), loaded when first used.
+frc_libraries: dict[str, Library] = {}
+
+
+def frc_library(year: int) -> Library:
+    """FIRST's field models for a season. Its `catalog` also has the
+    field's layout, game pieces and size."""
+    source = f"frc/{year}"
+    if source not in frc_libraries:
+        path = FRC / f"{year}.json"
+        if not path.exists():
+            have = sorted(p.stem for p in FRC.glob("*.json"))
+            raise KeyError(f"No FRC models for {year}. There are for: {', '.join(have) or 'no years yet'}. "
+                           "An admin imports a season with `python -m sim.assets.frc <year>`.")
+        frc_libraries[source] = Library.load(path, source=source)
+    return frc_libraries[source]
+
+
+def library_for(key: str) -> tuple[Library, str]:
+    """The library a model id is in, and its id there."""
+    if isinstance(key, str) and key.startswith("frc/"):
+        parts = key.split("/")
+        if len(parts) != 3 or not parts[1].isdigit():
+            raise KeyError(f"{key!r}: FRC models are frc/<year>/<name>, e.g. frc/2026/hub_red")
+        return frc_library(int(parts[1])), parts[2]
+    return library, key
 
 
 def find(label: Optional[str] = None, category: Optional[str] = None, max_size: Optional[float] = None) -> list[str]:
@@ -162,7 +196,18 @@ def find(label: Optional[str] = None, category: Optional[str] = None, max_size: 
 
 
 def info(key: str) -> dict:
-    return library.info(key)
+    lib, name = library_for(key)
+    return lib.info(name)
+
+
+def fetch(key: str) -> Path:
+    lib, name = library_for(key)
+    return lib.fetch(name)
+
+
+def collision(key: str) -> list[np.ndarray]:
+    lib, name = library_for(key)
+    return lib.collision(name)
 
 
 def labels() -> dict[str, int]:

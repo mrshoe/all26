@@ -183,9 +183,9 @@ class TestProps(Fixture):
             def setup(self, rng):
                 self.add(Prop(asset="posts", static=False))
 
-        with self.assertRaisesRegex(ValueError, "no model 'sofa_99'"):
+        with self.assertRaisesRegex(ValueError, "No model 'sofa_99'"):
             build(Unknown, 0)
-        with self.assertRaisesRegex(ValueError, "static for now"):
+        with self.assertRaisesRegex(ValueError, "GamePiece is the kind that moves"):
             build(Moving, 0)
 
     def test_a_ball_lands_on_a_post_and_falls_between_them(self):
