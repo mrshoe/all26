@@ -7,6 +7,10 @@ changes the Scene's objects, adds its own, and moves things in `step`.
 Objects are kept as attributes (`self.floor = self.add(Floor(...))`), and
 the framework names each one after its attribute: `floor`, `walls.0`. Those
 names are what the logs, masks and visualizer call them.
+
+A Group is objects that go together, e.g. an FRC field, written once and
+added to any Scene or Scenario. Its objects are placed relative to it and
+named under it: `field.hub`.
 """
 
 from __future__ import annotations
@@ -18,29 +22,67 @@ from dataclasses import dataclass, field
 from typing import Generic, Optional, TypeVar, Union
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from sim import assets
 from sim.geometry import quat_from_euler
-from sim.objects import Background, Camera, Floor, Item, Light, Prop, Solid
+from sim.objects import Background, Camera, Floor, Item, Light, Prop, Solid, Vec3, Wall
 from sim.randomness import Range, resolve
 
-T = TypeVar("T", bound=Union[Item, list])
+T = TypeVar("T", bound=Union[Item, "Group", list])
 
 
 class _Holder:
     def add(self, item: T) -> T:
-        """Put an object (or a list of them) in the world, and return it."""
+        """Put an object, a Group, or a list of them in the world, and
+        return it."""
         items = item if isinstance(item, list) else [item]
         for one in items:
+            if isinstance(one, Group):
+                self._add_group(one)
+                continue
             if not isinstance(one, Item):
                 raise TypeError(f"add() takes objects like Sphere(...) or Camera(...), not {one!r}")
+            if isinstance(self, Group) and isinstance(one, (Floor, Background)):
+                raise TypeError(f"A {type(one).__name__} can't be in a Group. Add it to the Scene instead.")
             self._items().append(one)
         return item
 
-    def remove(self, item: Item) -> None:
-        """Take an object out of the world, e.g. one of the Scene's."""
-        for holder in (self, getattr(self, "scene", None)):
-            if holder is not None and item in holder._items():
+    def _add_group(self, group: Group) -> None:
+        if group.__dict__.get("_built"):
+            raise ValueError(f"{group!r} was already added")
+        rng, range_rng = self.__dict__.get("_rng"), self.__dict__.get("_range_rng")
+        if rng is None:
+            raise RuntimeError("Groups can only be added in setup(), or in another Group's build()")
+        group.__dict__["_rng"], group.__dict__["_range_rng"] = rng, range_rng
+        # Its settings are drawn now, so build() can use them.
+        for f in dataclasses.fields(group):
+            if f.init:
+                object.__setattr__(group, f.name, resolve(getattr(group, f.name), range_rng))
+        group.build(rng)
+        group.__dict__["_built"] = True
+        for one in group._items():
+            # Innermost Group first: that's the order they're placed in.
+            one.__dict__.setdefault("_groups", []).append(group)
+            self._items().append(one)
+        self._groups().append(group)
+
+    def remove(self, item: Union[Item, Group]) -> None:
+        """Take an object or a Group out of the world, e.g. one of the
+        Scene's."""
+        holders = [h for h in (self, getattr(self, "scene", None)) if h is not None]
+        if isinstance(item, Group):
+            for holder in holders + [g for h in holders for g in all_groups(h)]:
+                kept = [g for g in holder._groups() if g is not item]
+                if len(kept) < len(holder._groups()):
+                    holder._groups()[:] = kept
+                    gone = set(map(id, item._items()))
+                    for h in holders:
+                        h._items()[:] = [one for one in h._items() if id(one) not in gone]
+                    return
+            raise ValueError(f"{item!r} isn't in the world")
+        for holder in holders:
+            if item in holder._items():
                 holder._items().remove(item)
                 return
         raise ValueError(f"{item!r} isn't in the world")
@@ -49,6 +91,86 @@ class _Holder:
         if "_added" not in self.__dict__:
             self.__dict__["_added"] = []
         return self.__dict__["_added"]
+
+    def _groups(self) -> list:
+        if "_added_groups" not in self.__dict__:
+            self.__dict__["_added_groups"] = []
+        return self.__dict__["_added_groups"]
+
+
+@dataclass(eq=False, kw_only=True)
+class Group(_Holder):
+    """Objects that go together, e.g. a field: subclass it, add its objects
+    in `build`, and add it to any Scene or Scenario like an object.
+
+        @dataclass(kw_only=True)
+        class Goal(Group):
+            width: Number = 2.0
+
+            def build(self, rng):
+                self.posts = self.add([Box(size=(0.1, 0.1, 1), position=(x, 0, 0.5))
+                                       for x in (-self.width / 2, self.width / 2)])
+
+        self.goal = self.add(Goal(position=(3, 0, 0), rotation=(0, 0, Range(0, 360))))
+
+    Its objects' positions and rotations are relative to the Group's own.
+    Its settings are drawn when it's added, so `build` sees numbers, not
+    Ranges; its position and rotation can still be changed until the episode
+    starts. Once the episode starts, its objects' positions are in the world's
+    coordinates, like everything else's. Floors and Backgrounds belong to a
+    Scene, so they can't be in a Group.
+    """
+
+    position: Vec3 = (0.0, 0.0, 0.0)
+    # Degrees about x, then y, then z.
+    rotation: Vec3 = (0.0, 0.0, 0.0)
+    name: str = field(default="", init=False, repr=False)
+
+    def build(self, rng: np.random.Generator) -> None:
+        """Add the Group's objects, with `self.add`. `rng` is setup's."""
+
+    def settings(self) -> dict:
+        """The Group's settings, as recorded with the episode."""
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self) if f.init}
+
+
+def all_groups(holder: _Holder) -> list[Group]:
+    """The Groups added to a holder, and the Groups in those, in order."""
+    found = []
+    for group in holder._groups():
+        found += [group, *all_groups(group)]
+    return found
+
+
+def place(item: Item, group: Group) -> None:
+    """Move an object from its Group's coordinates into the Group's parent's,
+    once every Range is drawn."""
+    turn = Rotation.from_euler("xyz", group.rotation, degrees=True)
+    offset = np.asarray(group.position, dtype=float)
+
+    def point(v) -> tuple:
+        return tuple(float(x) for x in offset + turn.apply(np.asarray(v, dtype=float)))
+
+    def set_(key, value):
+        object.__setattr__(item, key, value)
+
+    if isinstance(item, Wall):
+        # Walls stand on the floor, so a Group with them can only turn about z.
+        if not np.allclose(turn.apply([0, 0, 1]), [0, 0, 1], atol=1e-6) or abs(offset[2]) > 1e-9:
+            raise ValueError(f"{item.name}: a Group with walls can only turn about z and must stay "
+                             f"on the floor, but {group.name} is at {group.position}, turned {group.rotation}")
+        set_("start", point((*item.start[:2], 0))[:2])
+        set_("end", point((*item.end[:2], 0))[:2])
+    else:
+        set_("position", point(item.position))
+        local = Rotation.from_euler("xyz", item.rotation, degrees=True)
+        set_("rotation", tuple(float(a) for a in (turn * local).as_euler("xyz", degrees=True)))
+    if isinstance(item, Solid):
+        set_("velocity", tuple(float(x) for x in turn.apply(np.asarray(item.velocity, dtype=float))))
+    if isinstance(item, Light):
+        set_("direction", tuple(float(x) for x in turn.apply(np.asarray(item.direction, dtype=float))))
+    if isinstance(item, Camera) and item.look_at is not None and not isinstance(item.look_at, Item):
+        set_("look_at", point(item.look_at))
 
 
 class Scene(_Holder):
@@ -102,6 +224,8 @@ class World:
     pending: list = field(default_factory=list)
     # describe() before the episode started: everything as drawn.
     drawn: dict = field(default_factory=dict)
+    # Each Group's settings as drawn, by name.
+    groups: dict = field(default_factory=dict)
 
     @property
     def scene(self) -> Scene:
@@ -180,57 +304,94 @@ def build(scenario_class: type[Scenario], seed: int) -> World:
         np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(3)
     )
     scene = scenario_class.scene_class()()
+    scene.__dict__.update(_rng=setup_rng, _range_rng=range_rng)
     scene.setup(setup_rng)
     scenario = scenario_class()
     scenario.scene = scene
+    scenario.__dict__.update(_rng=setup_rng, _range_rng=range_rng)
     scenario.setup(setup_rng)
 
     items = scene._items() + scenario._items()
     if len(set(map(id, items))) != len(items):
         raise ValueError("The same object was added twice")
-    name_items(scene, scenario, items)
+    groups = all_groups(scene) + all_groups(scenario)
+    name_items(scene, scenario, items, groups)
     for number, item in enumerate(items, start=1):
         for f in dataclasses.fields(item):
             if f.init:
                 object.__setattr__(item, f.name, resolve(getattr(item, f.name), range_rng))
         object.__setattr__(item, "id", number)
+    for group in groups:  # e.g. a position the Scenario changed after adding it
+        for f in dataclasses.fields(group):
+            if f.init:
+                object.__setattr__(group, f.name, resolve(getattr(group, f.name), range_rng))
+    present = set(map(id, groups))
+    for item in items:
+        for group in item.__dict__.get("_groups", []):
+            if id(group) in present:
+                place(item, group)
     world = World(scenario=scenario, seed=seed, items=items, step_rng=step_rng)
     check(world)
     world.drawn = world.describe()
+    world.groups = {g.name: {"type": type(g).__name__, **g.settings()} for g in groups}
     for item in items:
         item.__dict__["_world"] = world
     return world
 
 
-def name_items(scene: Scene, scenario: Scenario, items: list[Item]) -> None:
-    """Name each object after the attribute that holds it."""
+def name_items(scene: Scene, scenario: Scenario, items: list[Item], groups: list[Group] = ()) -> None:
+    """Name each object after the attribute that holds it, and each Group's
+    objects under the Group's name: `field.hub`."""
     in_world = set(map(id, items))
+    in_groups = set(map(id, groups))
     names: dict[int, str] = {}
     owner: dict[str, str] = {}
-    for holder, where in ((scene, "Scene"), (scenario, "Scenario")):
+    counts: dict[str, int] = {}
+
+    def visit(holder, prefix: str, where: str) -> None:
         for attr, value in vars(holder).items():
             if attr.startswith("_") or attr == "scene":
                 continue
             found = []
-            if isinstance(value, Item):
+            if isinstance(value, (Item, Group)):
                 found = [(attr, value)]
             elif isinstance(value, (list, tuple)):
-                found = [(f"{attr}.{i}", v) for i, v in enumerate(value) if isinstance(v, Item)]
-            for name, item in found:
-                if id(item) not in in_world or id(item) in names:
+                found = [(f"{attr}.{i}", v) for i, v in enumerate(value) if isinstance(v, (Item, Group))]
+            for name, one in found:
+                full = prefix + name
+                if isinstance(one, Group):
+                    if id(one) in in_groups and not one.name:
+                        object.__setattr__(one, "name", full)
+                        visit(one, full + ".", where)
                     continue
-                if name in owner:
+                if id(one) not in in_world or id(one) in names:
+                    continue
+                if full in owner:
                     raise ValueError(
-                        f"Both the {owner[name]} and the {where} have an object called "
-                        f"{name!r}. Rename one of them."
+                        f"Both the {owner[full]} and the {where} have an object called "
+                        f"{full!r}. Rename one of them."
                     )
-                names[id(item)], owner[name] = name, where
-    counts: dict[str, int] = {}
+                names[id(one)], owner[full] = full, where
+
+    def numbered(prefix: str, kind: str) -> str:
+        counts[prefix + kind] = counts.get(prefix + kind, 0) + 1
+        return f"{prefix}{kind}.{counts[prefix + kind]}"
+
+    for group in groups:
+        object.__setattr__(group, "name", "")
+    visit(scene, "", "Scene")
+    visit(scenario, "", "Scenario")
+    # Groups not kept in an attribute, outermost first, so names nest.
+    for group in groups:
+        if not group.name:
+            parent = next((g for g in groups if any(c is group for c in g._groups())), None)
+            object.__setattr__(group, "name", numbered(parent.name + "." if parent else "", type(group).__name__.lower()))
+            visit(group, group.name + ".", "Scene")
     for item in items:
         if id(item) not in names:
-            kind = type(item).__name__.lower()
-            counts[kind] = counts.get(kind, 0) + 1
-            names[id(item)] = f"{kind}.{counts[kind]}"
+            inner = item.__dict__.get("_groups", [])
+            prefix = inner[0].name + "." if inner else ""
+            names[id(item)] = numbered(prefix, type(item).__name__.lower())
         object.__setattr__(item, "name", names[id(item)])
 
 

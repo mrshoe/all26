@@ -62,11 +62,48 @@ class YellowBall(Scenario[Gym]):
   framework records each labeled object's exact box in every camera.
 - **What's available**: `Sphere`, `Box`, `Floor` (textures in
   `Floor.TEXTURES`), `Wall` (and `Wall.around(floor)`), `Light` (`sun`,
-  `area`, `point`, `spot`), `Camera`, `Background`, and `Prop` (below).
+  `area`, `point`, `spot`), `Camera`, `Background`, `Prop` and `Group` (below).
   See `sim/objects.py`.
 - **Moving things in `step`**: set `position`, `rotation` or `velocity`, or
   call `push(impulse)`. Static things (`static=True`, the default for boxes,
   floors and walls) can't move.
+
+## Groups: objects that go together
+
+A Group is a set of objects written once and added to any Scene or
+Scenario, e.g. an FRC field that goes in the gym for one Scenario and a
+parking lot for another. Subclass `Group`, give it settings, and add its
+objects in `build`, placed relative to the Group:
+
+```python
+from dataclasses import dataclass
+from sim import Box, Group, Range
+
+@dataclass(kw_only=True)
+class Goal(Group):
+    width: float = 2.0
+
+    def build(self, rng):
+        self.posts = self.add([Box(size=(0.1, 0.1, 1), position=(x, 0, 0.5))
+                               for x in (-self.width / 2, self.width / 2)])
+        self.bar = self.add(Box(size=(self.width, 0.1, 0.1), position=(0, 0, 1.05)))
+
+# In any Scene's or Scenario's setup:
+self.goal = self.add(Goal(width=Range(2, 3), position=(4, 0, 0), rotation=(0, 0, Range(0, 360))))
+```
+
+- **Placing**: its objects' positions and rotations (and velocities, light
+  directions, cameras' look-at points and walls) are relative to the
+  Group's `position` and `rotation`. Once the episode starts, they're in the
+  world's coordinates like everything else.
+- **Names**: its objects are named under it: `goal.posts.0`, `goal.bar`.
+  Groups can hold Groups (`pitch.goals.1.bar`).
+- **Settings** are drawn when it's added, so `build` sees numbers, not
+  Ranges. They're recorded in episode.json under `groups`, and `sim check`
+  prints them. Its `position` and `rotation` can still be changed until the
+  episode starts, so a Scenario can move a Scene's Group, or `remove()` it.
+- **Not in a Group**: floors and backgrounds, which belong to a Scene. A
+  Group with walls can only turn about z.
 
 ## Props: furniture and other models
 
