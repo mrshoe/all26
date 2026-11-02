@@ -6,7 +6,7 @@ from scenes.gym import Gym
 
 
 class YellowBall(Scenario[Gym]):
-    duration = 5.0  # seconds per episode
+    duration = 0.5  # seconds per episode
     fps = 24
 
     def setup(self, rng):
@@ -17,7 +17,7 @@ class YellowBall(Scenario[Gym]):
             velocity=(rng.uniform(-1.5, 1.5), rng.uniform(-1, 1), rng.uniform(0, 2)),
         )) for _ in range(50)]
         self.front = self.add(Camera(
-            position=(rng.uniform(-1, 1), rng.uniform(-1.5, -0.5), rng.uniform(0.3, 0.8)),
-            look_at=(rng.uniform(-2, 2), 3, 0.2),
+            position=(0, -5, 5),
+            look_at=(0, 3, 3),
             resolution=(640, 480), fov=Range(60, 75),
         ))
