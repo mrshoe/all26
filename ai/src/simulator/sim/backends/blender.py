@@ -18,10 +18,11 @@ import bpy
 import numpy as np
 from PIL import Image
 
+from sim import assets
 from sim.backends import Picture
 from sim.backends.physics import Physics
 from sim.geometry import quat_from_euler, quat_looking_at
-from sim.objects import Box, Camera, Floor, Light, Solid, Sphere, Wall
+from sim.objects import Box, Camera, Floor, Light, Prop, Solid, Sphere, Wall
 from sim.world import World
 
 # With the denoiser, 16 looks the same as 32 (mean pixel difference under
@@ -67,6 +68,7 @@ class Blender(Physics):
         scene.render.image_settings.color_mode = "RGB"
 
         self._background(world)
+        self.models: dict[str, bpy.types.Object] = {}  # asset id -> its first Prop's object
         self.objects: dict[int, bpy.types.Object] = {}
         for item in world.solids:
             self.objects[item.id] = self._solid(item)
@@ -93,6 +95,8 @@ class Blender(Physics):
         self.scene.world = sky
 
     def _solid(self, item: Solid) -> bpy.types.Object:
+        if isinstance(item, Prop):
+            return self._model(item)
         if isinstance(item, Sphere):
             bpy.ops.mesh.primitive_uv_sphere_add(radius=item.radius, segments=48, ring_count=24)
             bpy.ops.object.shade_smooth()
@@ -124,6 +128,35 @@ class Blender(Physics):
         obj.rotation_quaternion = tuple(quat_from_euler(rotation))
         obj.pass_index = item.id
         obj.data.materials.append(self._material(item))
+        return obj
+
+    def _model(self, item: Prop) -> bpy.types.Object:
+        """The model's mesh and textures. Props of the same model share
+        them, so ten chairs cost about what one does."""
+        first = self.models.get(item.asset)
+        if first is None:
+            path = assets.library.fetch(item.asset) / "model.glb"
+            bpy.ops.object.select_all(action="DESELECT")
+            bpy.ops.import_scene.gltf(filepath=str(path))
+            meshes = [o for o in bpy.context.selected_objects if o.type == "MESH"]
+            if len(meshes) != 1:
+                raise RuntimeError(f"{item.asset}'s model.glb should hold one mesh, not {len(meshes)}")
+            obj = self.models[item.asset] = meshes[0]
+        else:
+            obj = first.copy()  # shares the mesh and materials
+            self.scene.collection.objects.link(obj)
+        obj.name = item.name
+        obj.scale = (float(item.scale),) * 3
+        obj.location = tuple(map(float, item.position))
+        obj.rotation_mode = "QUATERNION"
+        obj.rotation_quaternion = tuple(quat_from_euler(item.rotation))
+        obj.pass_index = item.id
+        if tuple(item.tint[:3]) != (1.0, 1.0, 1.0):
+            for slot in obj.material_slots:
+                if slot.material is not None:
+                    material = slot.material
+                    slot.link = "OBJECT"  # this object's own copy, leaving the others
+                    slot.material = tinted(material, item.tint, f"{item.name}.{material.name}")
         return obj
 
     def _material(self, item: Solid) -> bpy.types.Material:
@@ -212,6 +245,26 @@ def apply_scale() -> None:
     """Bake the new object's scale into its mesh, so texture coordinates
     are in meters."""
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+
+def tinted(material: bpy.types.Material, tint, name: str) -> bpy.types.Material:
+    """A copy of a material whose base color is multiplied by `tint`."""
+    copy = material.copy()
+    copy.name = name
+    nodes, links = copy.node_tree.nodes, copy.node_tree.links
+    for bsdf in [n for n in nodes if n.type == "BSDF_PRINCIPLED"]:
+        base = bsdf.inputs["Base Color"]
+        mix = nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Factor"].default_value = 1.0
+        if base.is_linked:
+            links.new(base.links[0].from_socket, mix.inputs[6])
+        else:
+            mix.inputs[6].default_value = base.default_value
+        mix.inputs[7].default_value = linear(tint)
+        links.new(mix.outputs[2], base)
+    return copy
 
 
 def floor_texture(nodes, links, texture: str, color):

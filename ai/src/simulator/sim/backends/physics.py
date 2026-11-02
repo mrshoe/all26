@@ -8,13 +8,15 @@ physics too.
 from __future__ import annotations
 
 import math
+import sys
 
 import mujoco
 import numpy as np
 
+from sim import assets
 from sim.backends import Pose
 from sim.geometry import quat_from_euler
-from sim.objects import Box, Floor, Solid, Sphere, Wall
+from sim.objects import Box, Floor, Prop, Solid, Sphere, Wall
 from sim.world import World
 
 # How long a bounce's contact lasts, in seconds: about 5 physics steps at
@@ -49,8 +51,12 @@ class Physics:
         spec = mujoco.MjSpec()
         spec.option.timestep = 1 / world.scenario.physics_hz
         self.bodies: dict[int, str] = {}
+        self.stand_ins: list[str] = []
         for item in world.solids:
             self._add(spec, item)
+        if self.stand_ins:
+            print(f"physics: {len(self.stand_ins)} props' files aren't on this computer, so each is "
+                  "its box from the catalog. Cloud jobs use their real shapes.", file=sys.stderr)
         self.model = spec.compile()
         self.data = mujoco.MjData(self.model)
         # Where each moving object's free joint is in qpos and qvel.
@@ -65,6 +71,9 @@ class Physics:
 
     def _add(self, spec, item: Solid) -> None:
         position, quat = list(map(float, item.position)), list(quat_from_euler(item.rotation))
+        if isinstance(item, Prop):
+            self._prop(spec, item, position, quat)
+            return
         if isinstance(item, Floor):
             sx, sy = item.size
             kind, size, position = mujoco.mjtGeom.mjGEOM_PLANE, [sx / 2, sy / 2, 0.1], [0, 0, 0]
@@ -89,6 +98,27 @@ class Physics:
             # Moving things' contact settings win over static things'.
             geom.priority = 1
             self.bodies[item.id] = name
+        self._surface(geom, item)
+
+    def _prop(self, spec, item: Prop, position, quat) -> None:
+        """Static for now: one convex mesh geom per collision part, in the
+        world body. MuJoCo collides with each part's convex hull."""
+        try:
+            parts = [p * item.scale for p in assets.library.collision(item.asset)]
+        except assets.MissingAsset:
+            if assets.cloud_bucket():
+                raise
+            self.stand_ins.append(item.name)
+            size = item.size()
+            corners = np.array([[sx, sy, sz] for sx in (-0.5, 0.5) for sy in (-0.5, 0.5) for sz in (0, 1)])
+            parts = [corners * size]
+        for i, vertices in enumerate(parts):
+            mesh = spec.add_mesh(name=f"item{item.id}.{i}", uservert=np.asarray(vertices, float).ravel().tolist())
+            geom = spec.worldbody.add_geom(type=mujoco.mjtGeom.mjGEOM_MESH, meshname=mesh.name,
+                                           pos=position, quat=quat)
+            self._surface(geom, item)
+
+    def _surface(self, geom, item: Solid) -> None:
         geom.solref = contact_spring(item.bounciness)
         # Sliding, twisting and rolling friction; rolling friction lets a
         # ball roll to a stop.

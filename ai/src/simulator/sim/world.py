@@ -19,8 +19,9 @@ from typing import Generic, Optional, TypeVar, Union
 
 import numpy as np
 
+from sim import assets
 from sim.geometry import quat_from_euler
-from sim.objects import Background, Camera, Floor, Item, Light, Solid
+from sim.objects import Background, Camera, Floor, Item, Light, Prop, Solid
 from sim.randomness import Range, resolve
 
 T = TypeVar("T", bound=Union[Item, list])
@@ -247,6 +248,13 @@ def check(world: World) -> None:
             raise ValueError(f"{cam.name} looks at an object that isn't in the world")
         if not 1 <= cam.fov < 180:
             raise ValueError(f"{cam.name}: fov is in degrees, between 1 and 180")
+    for prop in world.of_type(Prop):
+        if prop.asset not in assets.library.models:
+            raise ValueError(f"{prop.name}: no model {prop.asset!r} in the asset catalog. assets.find() lists them.")
+        if not prop.static:
+            raise ValueError(f"{prop.name}: props are static for now")
+        if not prop.scale > 0:
+            raise ValueError(f"{prop.name}: scale must be above 0")
     if len(world.of_type(Background)) > 1:
         raise ValueError("There can be only one Background")
     s = world.scenario
