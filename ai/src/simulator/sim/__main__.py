@@ -36,6 +36,8 @@ def cmd_check(args) -> int:
         if i == 0:
             for item_name, settings in world.drawn.items():
                 print(f"  {item_name}: {json.dumps(jsonable(settings))}")
+            for group_name, settings in world.groups.items():
+                print(f"  {group_name} (group): {json.dumps(jsonable(settings))}")
         for cam, seen in episode.in_view.items():
             for obj, frames in seen.items():
                 print(f"  {cam} sees {obj} in {frames}/{episode.frames} frames")

@@ -135,4 +135,6 @@ class SimLogger:
             "fps": scenario.fps,
             "duration": scenario.duration,
             "physics_hz": scenario.physics_hz,
+            # Each Group's settings as drawn; its objects are in the objects table.
+            "groups": self.world.groups,
         }))
