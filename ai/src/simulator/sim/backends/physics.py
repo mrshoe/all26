@@ -16,7 +16,7 @@ import numpy as np
 from sim import assets
 from sim.backends import Pose
 from sim.geometry import quat_from_euler
-from sim.objects import Box, Floor, Prop, Solid, Sphere, Wall
+from sim.objects import Box, Floor, GamePiece, Prop, Solid, Sphere, Wall
 from sim.world import World
 
 # How long a bounce's contact lasts, in seconds: about 5 physics steps at
@@ -101,10 +101,11 @@ class Physics:
         self._surface(geom, item)
 
     def _prop(self, spec, item: Prop, position, quat) -> None:
-        """Static for now: one convex mesh geom per collision part, in the
-        world body. MuJoCo collides with each part's convex hull."""
+        """One convex mesh geom per collision part: in the world body if it's
+        static, else in a body of its own (a GamePiece). MuJoCo collides
+        with each part's convex hull."""
         try:
-            parts = [p * item.scale for p in assets.library.collision(item.asset)]
+            parts = [p * item.scale for p in assets.collision(item.asset)]
         except assets.MissingAsset:
             if assets.cloud_bucket():
                 raise
@@ -112,18 +113,31 @@ class Physics:
             size = item.size()
             corners = np.array([[sx, sy, sz] for sx in (-0.5, 0.5) for sy in (-0.5, 0.5) for sz in (0, 1)])
             parts = [corners * size]
+        if item.static:
+            for i, vertices in enumerate(parts):
+                mesh = spec.add_mesh(name=f"item{item.id}.{i}", uservert=np.asarray(vertices, float).ravel().tolist())
+                geom = spec.worldbody.add_geom(type=mujoco.mjtGeom.mjGEOM_MESH, meshname=mesh.name,
+                                               pos=position, quat=quat)
+                self._surface(geom, item)
+            return
+        name = f"item{item.id}"
+        body = spec.worldbody.add_body(name=name, pos=position, quat=quat)
+        body.add_freejoint()
         for i, vertices in enumerate(parts):
             mesh = spec.add_mesh(name=f"item{item.id}.{i}", uservert=np.asarray(vertices, float).ravel().tolist())
-            geom = spec.worldbody.add_geom(type=mujoco.mjtGeom.mjGEOM_MESH, meshname=mesh.name,
-                                           pos=position, quat=quat)
+            geom = body.add_geom(type=mujoco.mjtGeom.mjGEOM_MESH, meshname=mesh.name,
+                                 mass=float(item.mass) / len(parts))
+            geom.priority = 1
             self._surface(geom, item)
+        self.bodies[item.id] = name
 
     def _surface(self, geom, item: Solid) -> None:
         geom.solref = contact_spring(item.bounciness)
         # Sliding, twisting and rolling friction; rolling friction lets a
         # ball roll to a stop.
         geom.friction = [float(item.friction), 0.005, 0.0001]
-        geom.condim = 6 if isinstance(item, Sphere) else 3
+        # 6 adds rolling friction, so balls roll to a stop.
+        geom.condim = 6 if isinstance(item, (Sphere, GamePiece)) else 3
 
     def step(self, dt: float) -> None:
         for _ in range(max(1, round(dt / self.model.opt.timestep))):

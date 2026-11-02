@@ -62,8 +62,8 @@ class YellowBall(Scenario[Gym]):
   framework records each labeled object's exact box in every camera.
 - **What's available**: `Sphere`, `Box`, `Floor` (textures in
   `Floor.TEXTURES`), `Wall` (and `Wall.around(floor)`), `Light` (`sun`,
-  `area`, `point`, `spot`), `Camera`, `Background`, `Prop` and `Group` (below).
-  See `sim/objects.py`.
+  `area`, `point`, `spot`), `Camera`, `Background`, `Prop`, `GamePiece`,
+  `Group` and `FrcField` (below). See `sim/objects.py`.
 - **Moving things in `step`**: set `position`, `rotation` or `velocity`, or
   call `push(impulse)`. Static things (`static=True`, the default for boxes,
   floors and walls) can't move.
@@ -131,14 +131,47 @@ self.chairs = [self.add(Prop(
 - **Labels**: a Prop has no label unless you give it one, like any object.
   The catalog's labels are only for finding models.
 - **tint** multiplies the model's own colors; (1, 1, 1) leaves them.
-- **Static only, for now.** Physics uses each model's convex parts, so a
-  ball can roll under a table.
+- **Static.** Physics uses each model's convex parts, so a ball can roll
+  under a table. `GamePiece` is the kind of Prop that moves (below).
 - **On your laptop**, `check` doesn't have the models, so physics uses each
   Prop's box from the catalog instead (and says so). Cloud jobs download
   the models they use.
 
 `sim/assets/polyhaven.json` is the catalog. Admins make it, and the models in
 the bucket, with `python -m sim.assets.polyhaven` (see its docstring).
+
+## The FRC field
+
+`FrcField` is FIRST's official field for a season, from FIRST's own CAD, as a
+Group, so it goes in any Scene or Scenario:
+
+```python
+from sim import Range
+from sim.frc import FrcField
+
+self.field = self.add(FrcField(year=2026, rotation=(0, 0, Range(-2, 2))))
+self.field.hub              # [hub_blue, hub_red], labeled "hub"
+self.field.fuel             # the game pieces at their starting spots
+self.remove(self.field.outpost[0])
+self.field.to_wpilib(self.cam.position, yaw=90)   # where robot code would say it is
+```
+
+- **Its parts**: each element (HUB, TOWER, BUMP, TRENCH, OUTPOST, DEPOT,
+  the perimeter, the carpet and its tape lines, the scoring table) is a
+  static Prop named after what it is: `field.hub.0`. Elements the season's
+  config labels (e.g. the HUB) get boxes. AprilTags have their real
+  images, so tag detection can be trained and tested.
+- **Game pieces** are `GamePiece`s: Props that physics moves, with mass,
+  bounciness and friction from the catalog. `starting_pieces=False` leaves
+  them out, and you can add your own:
+  `GamePiece(asset="frc/2026/fuel", label="fuel", position=(1, 2, 0.5))`.
+- **Choosing parts**: `elements=("hub", "carpet")` keeps only those.
+- **Placing it**: its `position` is the field's center, with the carpet at
+  z = 0, so a Scene's floor stays under it.
+- **Models** are `frc/<year>/<name>` in the asset catalog
+  (`assets.info("frc/2026/hub_red")`), from `sim/assets/frc/<year>.json`.
+  An admin imports a new season on kickoff day with
+  `python -m sim.assets.frc <year>`; see `sim/assets/frc/importer.py`.
 
 ## Running it
 

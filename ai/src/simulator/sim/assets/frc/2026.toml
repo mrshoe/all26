@@ -1,0 +1,44 @@
+# FIRST's official field for 2026 REBUILT, for `python -m sim.assets.frc 2026`.
+# On kickoff day, copy last year's file and change what's below.
+
+year = 2026
+game = "REBUILT"
+
+# The full field's STEP, from FIRST's playing field page
+# (firstinspires.org/resources/library/frc/playing-field).
+field = "https://firstfrc.blob.core.windows.net/frc2026/FieldAssets/FE-2026-rev-rebuilt-playing-field.step"
+
+# WPILib's field layout for the season: the field's size and each AprilTag's
+# pose, as robot code sees them. From allwpilib's fields/.../frc/ folder.
+layout = "https://raw.githubusercontent.com/wpilibsuite/allwpilib/main/fields/src/main/native/resources/org/wpilib/fields/frc/2026-rebuilt-welded.json"
+
+# Which end of the CAD's field is the red alliance's: "-x" or "+x".
+red = "-x"
+
+# Game pieces, by the start of their part's name in the CAD. Their starting
+# positions come from the CAD too. Mass is from the manual; bounciness and
+# friction are guesses to tune against video.
+[pieces.fuel]
+part = "GE-26900"
+label = "fuel"
+mass = 0.215          # kg; FIRST's scoring element whitepaper measured 216 g on average
+bounciness = 0.5
+friction = 0.8
+
+# Field elements, by the start of their name in the CAD: what we call them,
+# and their label for boxes, if any. Each placed element becomes its own
+# model, named <name>_<red|blue>[_<n>]. `alliance = false` for those that
+# belong to neither; `merge = true` joins every match into one model.
+# Anything not listed is named from its CAD name, with a warning.
+[elements]
+"GE-26300" = { name = "hub", label = "hub" }
+"GE-26500" = { name = "tower", label = "tower" }
+"GE-26200" = { name = "trench" }
+"GE-26100" = { name = "bump" }
+"GE-26000" = { name = "outpost" }
+"GE-26600" = { name = "depot" }
+"FE-2026-02" = { name = "perimeter", alliance = false }
+"FE-2026-01" = { name = "carpet", alliance = false, merge = true }
+"Gaffer Tape" = { name = "carpet", alliance = false, merge = true }
+"Carpet Seaming Tape" = { name = "carpet", alliance = false, merge = true }
+"BLOCK CAD: SCORING TABLE" = { name = "scoring_table", alliance = false }

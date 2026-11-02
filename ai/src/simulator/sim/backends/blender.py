@@ -135,7 +135,7 @@ class Blender(Physics):
         them, so ten chairs cost about what one does."""
         first = self.models.get(item.asset)
         if first is None:
-            path = assets.library.fetch(item.asset) / "model.glb"
+            path = assets.fetch(item.asset) / "model.glb"
             bpy.ops.object.select_all(action="DESELECT")
             bpy.ops.import_scene.gltf(filepath=str(path))
             meshes = [o for o in bpy.context.selected_objects if o.type == "MESH"]

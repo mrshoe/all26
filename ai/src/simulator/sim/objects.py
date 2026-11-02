@@ -149,6 +149,36 @@ class Prop(Solid):
 
 
 @dataclass(eq=False, kw_only=True)
+class GamePiece(Prop):
+    """A Prop that physics moves, e.g. a ball from an FRC game. Its mass,
+    bounciness and friction come from the catalog unless given.
+
+        GamePiece(asset="frc/2026/fuel", label="fuel", position=(1, 2, 0.5))
+    """
+
+    static: bool = False
+    mass: Number = None
+    bounciness: Number = None
+    friction: Number = None
+
+    def __post_init__(self):
+        if isinstance(self.asset, str) and self.asset:
+            from sim import assets
+
+            physics = assets.info(self.asset).get("physics", {})
+            for key in ("mass", "bounciness", "friction"):
+                if getattr(self, key) is None and key in physics:
+                    object.__setattr__(self, key, physics[key])
+        missing = [k for k in ("mass", "bounciness", "friction") if getattr(self, k) is None]
+        if missing:
+            raise ValueError(f"GamePiece {self.asset!r}: the catalog doesn't say its {', '.join(missing)}, "
+                             "so give them")
+
+    def settings(self) -> dict:
+        return {k: v for k, v in Solid.settings(self).items() if k not in ("color", "roughness")}
+
+
+@dataclass(eq=False, kw_only=True)
 class Floor(Solid):
     """A flat floor at z = 0, centered on the origin."""
 
