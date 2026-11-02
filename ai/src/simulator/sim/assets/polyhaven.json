@@ -1,0 +1,7374 @@
+{
+ "source": "polyhaven",
+ "triangles": 20000,
+ "assets": {
+  "ArmChair_01": {
+   "name": "Arm Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "8a04a102d4a1e1a480bc4288384d4a2dfd649608",
+   "triangles": 5626,
+   "source_triangles": 5626,
+   "size": [
+    0.8484,
+    0.7658,
+    1.0651
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "03c8423e16d80b63527fbdf3a7fa112a",
+    "collision.npz": "089fc83e898316771157bbdfcc38b9e4"
+   }
+  },
+  "BarberShopChair_01": {
+   "name": "Barber Shop Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Fernando Quinn"
+   ],
+   "source_hash": "f111fa76f5ccc8748e6f665ad8eca21b8e2a4001",
+   "triangles": 4280,
+   "source_triangles": 4280,
+   "size": [
+    0.7565,
+    1.3279,
+    1.489
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2b7f28e5d32e963a00f6cf3ac0a81de9",
+    "collision.npz": "7d858a36b06661e69a1f177f8d576935"
+   }
+  },
+  "Barrel_01": {
+   "name": "Barrel_01",
+   "label": "barrel",
+   "category": "Containers & Storage/Barrels & Drums/Metal Drums",
+   "authors": [
+    "Jorge Camacho"
+   ],
+   "source_hash": "45ce352c4416845813a00e478950b500796b0a60",
+   "triangles": 2682,
+   "source_triangles": 2682,
+   "size": [
+    0.563,
+    0.563,
+    0.88
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "72173145bc1ba1c61074269e7fc30284",
+    "collision.npz": "4d061eb3b7bed28554cacb052a30703a"
+   }
+  },
+  "Barrel_02": {
+   "name": "Barrel 02",
+   "label": "barrel",
+   "category": "Containers & Storage/Barrels & Drums/Plastic Drums",
+   "authors": [
+    "Jorge Camacho"
+   ],
+   "source_hash": "354f0b9ffcebf4f331533ef183b3eb2fc37ab69e",
+   "triangles": 2688,
+   "source_triangles": 2688,
+   "size": [
+    0.4882,
+    0.4846,
+    0.88
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6e749fb20ebed72312fde2d3066f850b",
+    "collision.npz": "eb7dcda2964a3560008540a6dc07bef0"
+   }
+  },
+  "Camera_01": {
+   "name": "Camera 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Cameras",
+   "authors": [
+    "Rajil Jose Macatangay"
+   ],
+   "source_hash": "6db4d73f8b708eb87597df841c1f6e9beea70778",
+   "triangles": 20000,
+   "source_triangles": 26987,
+   "size": [
+    0.2139,
+    0.2628,
+    0.0778
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fb55478a84898e544a297167d0d500c8",
+    "collision.npz": "320d923d53011f8c1b01be291c3ead41"
+   }
+  },
+  "CashRegister_01": {
+   "name": "Cash Register 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Retail Machines",
+   "authors": [
+    "Joe Seabuhr"
+   ],
+   "source_hash": "a28caf40c20cabd1ee08e639d41982066d7340c6",
+   "triangles": 9927,
+   "source_triangles": 9927,
+   "size": [
+    0.6005,
+    0.6242,
+    0.6214
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e71dafde90a5c64fc347b4a4e21ade05",
+    "collision.npz": "d5c7b6db6f70d15a9d3c6f95cae1ed7d"
+   }
+  },
+  "CheeseBox_01": {
+   "name": "CheeseBox_01",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Wooden Crates",
+   "authors": [
+    "Gabriel Radi\u0107"
+   ],
+   "source_hash": "2bbc42bb8b45c087b98a46d205691999e440daaa",
+   "triangles": 884,
+   "source_triangles": 884,
+   "size": [
+    0.2404,
+    0.1066,
+    0.066
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "609987bb78a2d660964f6a7566f3ee2b",
+    "collision.npz": "f2a30cc0273e856275fabcb0b5ddc4d9"
+   }
+  },
+  "ClassicConsole_01": {
+   "name": "Classic Console 01",
+   "label": "table",
+   "category": "Furniture/Tables/Console Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "acd2b694a1823478102c4fde925d1db6220acdcd",
+   "triangles": 7566,
+   "source_triangles": 7566,
+   "size": [
+    1.543,
+    0.5893,
+    0.9491
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f8189934c7b42350c25fb64a3cf0ded8",
+    "collision.npz": "734404895e7d051ad95239801308c649"
+   }
+  },
+  "ClassicNightstand_01": {
+   "name": "Classic Nightstand 01",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "7128adabb43129d3a868602cc864cb0c1222767e",
+   "triangles": 2002,
+   "source_triangles": 2002,
+   "size": [
+    0.5678,
+    0.4242,
+    0.7
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "aa1db08c6fb33fcf8ec905233d173b4d",
+    "collision.npz": "546b79b0e3aa39d9342d9b0822d188a6"
+   }
+  },
+  "CoffeeCart_01": {
+   "name": "Coffee Cart 01",
+   "label": "cart",
+   "category": "Furniture/Storage Furniture/Carts & Trolleys",
+   "authors": [
+    "Joe Seabuhr"
+   ],
+   "source_hash": "9a4acb5ef57be1f96cd1af66af66d2a798139a24",
+   "triangles": 20000,
+   "source_triangles": 27659,
+   "size": [
+    2.1676,
+    1.0733,
+    1.7177
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "927aa934f1864dbef879243fd1dfe774",
+    "collision.npz": "a66875509ae5bafe45e09437f17a9268"
+   }
+  },
+  "CoffeeTable_01": {
+   "name": "Coffee Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Fernando Quinn"
+   ],
+   "source_hash": "edc6d675027952fdddc0cf03be30f8354abc2338",
+   "triangles": 10404,
+   "source_triangles": 10404,
+   "size": [
+    1.54,
+    0.9728,
+    0.5232
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1aac33c61ec999ca398c4bbf842fb989",
+    "collision.npz": "a6b265744f3c34f70eee3ea366ea495e"
+   }
+  },
+  "Drill_01": {
+   "name": "Drill 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Power Tools/Drills",
+   "authors": [
+    "Fernando Quinn"
+   ],
+   "source_hash": "09a08d9e60a537490591e142ddef14428a140950",
+   "triangles": 2926,
+   "source_triangles": 2926,
+   "size": [
+    0.1829,
+    0.0524,
+    0.1851
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2819158021dd2bd8bca4f971b31d00e9",
+    "collision.npz": "be43beb2b4f0cdcb70260b4bce7ee0f9"
+   }
+  },
+  "GothicBed_01": {
+   "name": "Gothic Bed 01",
+   "label": "bed",
+   "category": "Furniture/Beds",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "1ab8ed2b813d573962623fdafa37c84def8e8447",
+   "triangles": 18745,
+   "source_triangles": 18745,
+   "size": [
+    1.4938,
+    2.04,
+    1.5338
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "cae21d99883fefce879e91e8fa32db87",
+    "collision.npz": "d386af9778ba75720940eede8d5ed11f"
+   }
+  },
+  "GothicCommode_01": {
+   "name": "Gothic Commode 01",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Drawers & Dressers",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "44af11eb2a3a9261b91143b84907aeede142858e",
+   "triangles": 3897,
+   "source_triangles": 3897,
+   "size": [
+    1.2014,
+    0.5807,
+    1.212
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "479fa015a607d9a2d1ca1afd46cb1bf4",
+    "collision.npz": "bb67c263305ac99d9a7fe3a264cb76da"
+   }
+  },
+  "GreenChair_01": {
+   "name": "Green Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "71a65e8de6b5547fb605a460c87f3d37c5b8fe5b",
+   "triangles": 4213,
+   "source_triangles": 4213,
+   "size": [
+    0.6731,
+    0.6644,
+    1.0585
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "06921124016ac544f5719be4b9b0ddb9",
+    "collision.npz": "8ce9ddfd8c0b9d55b363ae36e7c7186f"
+   }
+  },
+  "Lantern_01": {
+   "name": "Lantern 01",
+   "label": "prop",
+   "category": "Lighting/Portable/Lanterns",
+   "authors": [
+    "Rajil Jose Macatangay"
+   ],
+   "source_hash": "e8a56bd66bee21140aa3272268bd207bac37a7e1",
+   "triangles": 20000,
+   "source_triangles": 33902,
+   "size": [
+    0.1221,
+    0.0972,
+    0.2942
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6c0a2b38df32109a6c3bc6f6f0da8ba8",
+    "collision.npz": "7212fa9bad834cf48aa6471b8c1553db"
+   }
+  },
+  "Megaphone_01": {
+   "name": "Megaphone 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Handheld Devices",
+   "authors": [
+    "Ethan Simon-Law"
+   ],
+   "source_hash": "699e4fe3504118c25b1bb26d5542015baff03e43",
+   "triangles": 15814,
+   "source_triangles": 15814,
+   "size": [
+    0.3707,
+    0.2285,
+    0.3001
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f3a8c4790d92b32f2effbf392b0602d6",
+    "collision.npz": "8696932489ce61f208fc3818f4d90039"
+   }
+  },
+  "Ottoman_01": {
+   "name": "Ottoman 01",
+   "label": "ottoman",
+   "category": "Furniture/Seating/Ottomans & Footstools",
+   "authors": [
+    "Caspian Fortune"
+   ],
+   "source_hash": "bc9b99f10b19594d926dbd9ed049cb7c7ccd6e77",
+   "triangles": 4240,
+   "source_triangles": 4240,
+   "size": [
+    0.8846,
+    0.6211,
+    0.6243
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e5d22b6941248c1a26ff0dcafe54a7a8",
+    "collision.npz": "d9b5d3f6e623fefaac6b4773dfde26f1"
+   }
+  },
+  "Rockingchair_01": {
+   "name": "Rockingchair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Jorge Camacho"
+   ],
+   "source_hash": "cad30a6e8f6569971447bd4d7c4d9064ca17aec3",
+   "triangles": 11866,
+   "source_triangles": 11866,
+   "size": [
+    0.7081,
+    0.8335,
+    0.9949
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "db5a355afe49d9674c7fedfc3e6c5f48",
+    "collision.npz": "9216e936e337689f0daaa8114e24141c"
+   }
+  },
+  "SchoolChair_01": {
+   "name": "School Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Ethan Place"
+   ],
+   "source_hash": "f78668ddf3cabcf60afe57e8df1e1982a482617c",
+   "triangles": 5072,
+   "source_triangles": 5072,
+   "size": [
+    0.5659,
+    0.6753,
+    1.006
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d7862a1e71c7d2f6afc73f08eafda253",
+    "collision.npz": "c9082971e8482e4a5844b4c3805c6644"
+   }
+  },
+  "SchoolDesk_01": {
+   "name": "School Desk 01",
+   "label": "desk",
+   "category": "Furniture/Tables/Desks",
+   "authors": [
+    "Ethan Place"
+   ],
+   "source_hash": "6de377a9a619e91fff0b2b89a601e99e408b29a0",
+   "triangles": 4162,
+   "source_triangles": 4162,
+   "size": [
+    0.7118,
+    0.546,
+    0.8826
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "53c26100647b9c7607e9eff7e6afdc5a",
+    "collision.npz": "8ffe883160a1ce6583a77df13d1ba1ae"
+   }
+  },
+  "Shelf_01": {
+   "name": "Shelf 01",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "Gabriel Radi\u0107"
+   ],
+   "source_hash": "c2e1812f70f310072ba7517b0953ddd635c36d03",
+   "triangles": 182,
+   "source_triangles": 182,
+   "size": [
+    1.0034,
+    0.257,
+    2.0803
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5739398672b77223f28db4df9d4e365c",
+    "collision.npz": "0470c2934851c4d0229882c93f764649"
+   }
+  },
+  "Sofa_01": {
+   "name": "Sofa 01",
+   "label": "couch",
+   "category": "Furniture/Seating/Sofas & Couches",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "06d253c13e53259a35bd5291b921bf959c4a025a",
+   "triangles": 4101,
+   "source_triangles": 4101,
+   "size": [
+    1.5715,
+    0.658,
+    0.7965
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3ecb706be9571e5a588c933ace055ab9",
+    "collision.npz": "e106c27d428c07f1b10d861705b4afcb"
+   }
+  },
+  "Television_01": {
+   "name": "Television 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Televisions",
+   "authors": [
+    "Gabriel Radi\u0107"
+   ],
+   "source_hash": "c00ac1c3a4f0cf9e01639ba242ce3748fb690ae7",
+   "triangles": 1918,
+   "source_triangles": 1918,
+   "size": [
+    0.6,
+    0.4708,
+    0.4568
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "01c5cefef9d7b83f431963354d753c1a",
+    "collision.npz": "052b1572903df1a045213f145b155ecd"
+   }
+  },
+  "Ukulele_01": {
+   "name": "Ukulele 01",
+   "label": "prop",
+   "category": "Leisure/Musical Instruments/String Instruments",
+   "authors": [
+    "Joseph Burgan"
+   ],
+   "source_hash": "b4e3018d389e983dde250c867172db7ab1214945",
+   "triangles": 8912,
+   "source_triangles": 8912,
+   "size": [
+    0.1779,
+    0.0508,
+    0.527
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2f431c3924adad193718d4e263e04da3",
+    "collision.npz": "1d3acfed0484cdd313adccbb8da657da"
+   }
+  },
+  "WetFloorSign_01": {
+   "name": "Wet Floor Sign 01",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Traffic & Safety/Signs",
+   "authors": [
+    "Fran Calvente"
+   ],
+   "source_hash": "79eb7de75bfe5924b67412f11e3e63c8abb82593",
+   "triangles": 228,
+   "source_triangles": 228,
+   "size": [
+    0.3001,
+    0.3585,
+    0.6295
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0f9fe403693ca06bdc3675f1c1d45726",
+    "collision.npz": "d1ec6ebb88955e09db18b980860fdd6b"
+   }
+  },
+  "WoodenTable_01": {
+   "name": "Wooden Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Ethan Place"
+   ],
+   "source_hash": "acee43a6468dd85f1da716a4c6d77793e6c7c02f",
+   "triangles": 952,
+   "source_triangles": 952,
+   "size": [
+    1.7996,
+    0.6572,
+    0.5488
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2a10e4027bfa7ba4ca7756859434f6dc",
+    "collision.npz": "551eb8ff21894d2d7bd5ce6bcdeaf95a"
+   }
+  },
+  "WoodenTable_02": {
+   "name": "Wooden Table 02",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "Fran Calvente"
+   ],
+   "source_hash": "53c8cd1ced8a04f15a4cda5ded07812386a38133",
+   "triangles": 1514,
+   "source_triangles": 1514,
+   "size": [
+    0.3007,
+    0.3007,
+    0.4177
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1f185b0f1cf728588997caed8901ef96",
+    "collision.npz": "06d1684407b3f2e4d48baa7040ea3478"
+   }
+  },
+  "WoodenTable_03": {
+   "name": "Wooden Table 03",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Sideboards",
+   "authors": [
+    "Gabriel Radi\u0107"
+   ],
+   "source_hash": "fda4446b0ce06f3bdd7fd51cc50d83257341bbbc",
+   "triangles": 2298,
+   "source_triangles": 2298,
+   "size": [
+    1.3269,
+    0.5753,
+    0.8301
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8da777e71fbd79f164c688b95de04693",
+    "collision.npz": "ddd4a6bf9c9948861c082c1543a46b0d"
+   }
+  },
+  "all_purpose_cleaner": {
+   "name": "All Purpose Cleaner",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Cleaning & Chemical Bottles",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "f72353a9465549c60a007a752a43ff66fd78ee64",
+   "triangles": 4624,
+   "source_triangles": 4624,
+   "size": [
+    0.1568,
+    0.1174,
+    0.3197
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fcff642d731b28b5000d64b5447defea",
+    "collision.npz": "e0edf9cc250a7e50e3736ccffa74d8d9"
+   }
+  },
+  "american_football": {
+   "name": "American Football",
+   "label": "sports_ball",
+   "category": "Leisure/Sports/Balls",
+   "authors": [
+    "Riley Queen"
+   ],
+   "source_hash": "630730f427030fafc03ea9dd612b9ed5afd2f233",
+   "triangles": 4480,
+   "source_triangles": 4480,
+   "size": [
+    0.4533,
+    0.2558,
+    0.2558
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "cb94efe771c2f22dc4f845ce9106a2c7",
+    "collision.npz": "dbc5673e996caa4225be1adda73bc705"
+   }
+  },
+  "ammo_box": {
+   "name": "Ammo Box",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Military Crates",
+   "authors": [
+    "DanKit"
+   ],
+   "source_hash": "c16dc228b4994bc2235d053decc62dd84b0b37eb",
+   "triangles": 4382,
+   "source_triangles": 4382,
+   "size": [
+    0.0866,
+    0.2579,
+    0.1775
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7e675c57b1494f0684e2be5668e4671d",
+    "collision.npz": "27c936517d525c6fa1c6b1fd9f333da2"
+   }
+  },
+  "antique_ceramic_vase_01": {
+   "name": "Antique Ceramic Vase 01",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Ceramic Vases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "14acbdecea40d7a8992d0d78a740a56bbe23ed9f",
+   "triangles": 9408,
+   "source_triangles": 9408,
+   "size": [
+    0.255,
+    0.255,
+    0.4396
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7e8a83393f9d08806c775d6db7c8b49b",
+    "collision.npz": "ea7c8c7431f06af766be2fd3859b77ce"
+   }
+  },
+  "bananas": {
+   "name": "Bananas",
+   "label": "prop",
+   "category": "Food & Kitchen/Produce/Fruit",
+   "authors": [
+    "Alexander Shulha"
+   ],
+   "source_hash": "e0a8d2e4bad29eafcbff7fc2f6c6654fad7b2830",
+   "triangles": 19999,
+   "source_triangles": 46868,
+   "size": [
+    0.6,
+    0.244,
+    0.1788
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "817b528169306370745ea5e7336065bc",
+    "collision.npz": "d43f92bf659cec9b5ae6cd795739bb5c"
+   }
+  },
+  "bar_chair_round_01": {
+   "name": "Bar Chair Round 01",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Dairon Sanchez"
+   ],
+   "source_hash": "3a4411b06fb8509e297c299acac13b2e6d5d71b0",
+   "triangles": 14373,
+   "source_triangles": 14373,
+   "size": [
+    0.4832,
+    0.486,
+    0.7505
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e61845e89a515c5a7008590177f77824",
+    "collision.npz": "3331c4e9d6244a5cef0da124a7384275"
+   }
+  },
+  "bark_debris_01": {
+   "name": "Bark Debris 01",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Deadwood & Debris",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "f63fd327bdc06de60bb9599ec203ebd9b299fb42",
+   "triangles": 19999,
+   "source_triangles": 193406,
+   "size": [
+    1.2093,
+    0.6739,
+    0.1124
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9bbed0854aebcbf881cfb6af4be9df1d",
+    "collision.npz": "87e43bebfa54fb8cd2eacb41cfd782cc"
+   }
+  },
+  "barrel_03": {
+   "name": "Barrel 03",
+   "label": "barrel",
+   "category": "Containers & Storage/Barrels & Drums/Metal Drums",
+   "authors": [
+    "Serhii Khromov"
+   ],
+   "source_hash": "c57f576af2df8ce2cfefe1190365213b5cb4f1ea",
+   "triangles": 1473,
+   "source_triangles": 1473,
+   "size": [
+    0.6339,
+    0.6386,
+    0.9305
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bdd6593826bf772a05ca264388d42b52",
+    "collision.npz": "2b7baf186bfaa0e61a686fab9d49cba8"
+   }
+  },
+  "barrel_stove": {
+   "name": "Barrel Stove",
+   "label": "prop",
+   "category": "Electronics & Appliances/Home Appliances/Stoves & Heaters",
+   "authors": [
+    "MP"
+   ],
+   "source_hash": "317d4401f290899072044a82841d94f4a8440c2f",
+   "triangles": 9216,
+   "source_triangles": 9216,
+   "size": [
+    0.5926,
+    0.5926,
+    0.8556
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8e9603395a15ec9f250cab0013def470",
+    "collision.npz": "98892420de26462fb13b314fde2a21ec"
+   }
+  },
+  "binder_notebook": {
+   "name": "Binder Notebook",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Notebooks & Pads",
+   "authors": [
+    "DaDrood"
+   ],
+   "source_hash": "19b74a17100b8c852b8ce520b3029609fc601fbb",
+   "triangles": 18077,
+   "source_triangles": 18077,
+   "size": [
+    0.584,
+    0.2,
+    0.0253
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "95cf6a117b30a6441d50586eca939404",
+    "collision.npz": "a74411597cb9300875e7abd36b18f002"
+   }
+  },
+  "binoculars": {
+   "name": "Binoculars",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Optical Instruments",
+   "authors": [
+    "Derek Wight"
+   ],
+   "source_hash": "6dcecf864351bfc953953bec37b976d11e84115e",
+   "triangles": 19248,
+   "source_triangles": 19248,
+   "size": [
+    0.1669,
+    0.2879,
+    0.0662
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d9112ad7c12c95fad964ed6a7c79fdf9",
+    "collision.npz": "e5a6618cc3954af5b7c8f305ec5b1490"
+   }
+  },
+  "book_encyclopedia_set_01": {
+   "name": "Book Encyclopedia Set 01",
+   "label": "prop",
+   "category": "Office & Stationery/Books & Documents/Books",
+   "authors": [
+    "John Malcolm"
+   ],
+   "source_hash": "e9912207a0e5af455662c910d23d34ccbabb26ac",
+   "triangles": 20000,
+   "source_triangles": 67306,
+   "size": [
+    0.5513,
+    0.1631,
+    0.2374
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f0bc87bf6856aba53f4b39c357337aff",
+    "collision.npz": "680c3543b561269a643fc7029b424eb6"
+   }
+  },
+  "boombox": {
+   "name": "Boombox",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Radios & Portable Audio",
+   "authors": [
+    "Thomas Paul Mouilleron"
+   ],
+   "source_hash": "480c7f057f485ec818a8f1c7c790248ef993b734",
+   "triangles": 10168,
+   "source_triangles": 10168,
+   "size": [
+    0.7238,
+    0.1865,
+    0.4701
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1ef5d5918949e201c454267a58e9a4d6",
+    "collision.npz": "f57f07d0151ffb9b7436e7b58a648841"
+   }
+  },
+  "boulder_01": {
+   "name": "Boulder 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Boulders",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "83e2b16d6a089f8077d3eebe0462615c2ba0e7f6",
+   "triangles": 26613,
+   "source_triangles": 66122,
+   "size": [
+    1.2752,
+    1.8377,
+    1.0098
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c83016e4d7a1292c2ff6240ae5ad6a94",
+    "collision.npz": "c2fa8d815ade99f52b4f716cc13157de"
+   }
+  },
+  "brass_blowtorch": {
+   "name": "Brass Blowtorch",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Torches & Burners",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "3950ac0497f70453da620e3ffc79d58f152183f2",
+   "triangles": 11750,
+   "source_triangles": 11750,
+   "size": [
+    0.1294,
+    0.2593,
+    0.2106
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4cda9a4611c78fa2ccdc66c17ac71f03",
+    "collision.npz": "04af774e0d7f623556378cc3ac7da80a"
+   }
+  },
+  "brass_candleholders": {
+   "name": "Brass Candleholders",
+   "label": "prop",
+   "category": "Lighting/Portable/Candles & Candlesticks",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "4f01be71cd89efe0a7c1f678354a80b22943ff38",
+   "triangles": 20000,
+   "source_triangles": 41936,
+   "size": [
+    1.0529,
+    0.3647,
+    0.8353
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7c0dddbce1d62fa769c3c7c5527dc16e",
+    "collision.npz": "db1ed7f1c1e99761f505dba69de1a612"
+   }
+  },
+  "brass_goblets": {
+   "name": "Brass Goblets",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Cups & Goblets",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "5b9625f91aafb878f745d78543e395020b35b8ca",
+   "triangles": 9600,
+   "source_triangles": 9600,
+   "size": [
+    0.4534,
+    0.2976,
+    0.2734
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "afe97eec565fa88af70932b1f39b5b49",
+    "collision.npz": "4cb7cda828a7d25a9625186a711eb062"
+   }
+  },
+  "brass_pan_01": {
+   "name": "Brass Pan 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Cookware/Pots & Pans",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "3ec9abfb8af6f1cd8a8188f2869476420e4d54f5",
+   "triangles": 4340,
+   "source_triangles": 4340,
+   "size": [
+    0.1913,
+    0.4497,
+    0.0525
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b1548600b1957b85f42b62905a684bf0",
+    "collision.npz": "3b8d312f08ff10b476c9732a49bb3895"
+   }
+  },
+  "brass_pot_01": {
+   "name": "Brass Pot 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Cookware/Pots & Pans",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "a2b74ef3895196b2e372fa43f1abfe896ee35ffe",
+   "triangles": 3760,
+   "source_triangles": 3760,
+   "size": [
+    0.3019,
+    0.3017,
+    0.2909
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b1b021e29fde5e950b4e7958ffd147e9",
+    "collision.npz": "d6aaa138d9057ebe33e7e4c65e485b64"
+   }
+  },
+  "brass_pot_02": {
+   "name": "Brass Pot 02",
+   "label": "prop",
+   "category": "Food & Kitchen/Cookware/Pots & Pans",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "58dc4f40584611a092d1cfdf8efcba2795412de2",
+   "triangles": 3344,
+   "source_triangles": 3344,
+   "size": [
+    0.3667,
+    0.3023,
+    0.1085
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8f1953af86b8afaa340ed6736056e426",
+    "collision.npz": "b5380ddcbae9d61430084633cdbac8d4"
+   }
+  },
+  "brass_vase_01": {
+   "name": "Brass Vase 01",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Metal Vases",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "c7c0ecd0be363f53878e45bda4f10cbb382bca54",
+   "triangles": 20000,
+   "source_triangles": 21440,
+   "size": [
+    0.2273,
+    0.2273,
+    0.6925
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "188bd0bc2421af19ab72f4ede248f5d3",
+    "collision.npz": "6f436e824118eea03fa635abfe8e5016"
+   }
+  },
+  "brass_vase_02": {
+   "name": "Brass Vase 02",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Metal Vases",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "a75f2e5cfd6794017ac675dc5d10d0c17da3bcd9",
+   "triangles": 6890,
+   "source_triangles": 6890,
+   "size": [
+    0.2102,
+    0.2102,
+    0.5286
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c33f8c86fea552c9c80f1f0ecffb6185",
+    "collision.npz": "3d8641fbea5cc53cede0a7435400e7ba"
+   }
+  },
+  "bronze_ray_statue": {
+   "name": "Bronze Ray Statue",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "b9b7e66c03fea3184df98729b621995efe1b09d9",
+   "triangles": 1844,
+   "source_triangles": 1844,
+   "size": [
+    0.7075,
+    0.5355,
+    0.5896
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "aa4ecdf736e3995f568c1da78dc1128e",
+    "collision.npz": "6debd0c894b802e41f158a671b38f622"
+   }
+  },
+  "bronze_shark_statue": {
+   "name": "Bronze Shark Statue",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "2518ed29a6f461d814ac3ea29cfb3e69823fa98c",
+   "triangles": 7334,
+   "source_triangles": 7334,
+   "size": [
+    0.352,
+    0.7598,
+    0.4316
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bc994d0b68e414fa263e7f8e5b336399",
+    "collision.npz": "8764bc4911ef4951b0b9126354e39d92"
+   }
+  },
+  "bronze_whale_statue": {
+   "name": "Bronze Whale Statue",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "54411c1c54fcab5e80abbe53eb61ab4c262bdab3",
+   "triangles": 3816,
+   "source_triangles": 3816,
+   "size": [
+    0.932,
+    1.3659,
+    1.0729
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f61ab0d5f1fd38f4f12a4783961f9f48",
+    "collision.npz": "c4f2fd9b796bd49d2efba6ad55d626ab"
+   }
+  },
+  "bull_head": {
+   "name": "Bull Head",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "69296e3dab4af13ddb59b1c9323152dd43d237ac",
+   "triangles": 17148,
+   "source_triangles": 17148,
+   "size": [
+    0.3064,
+    0.2807,
+    0.433
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "68bfc13f7d1e872b2e3c4ac2ab35340e",
+    "collision.npz": "d6c14585be75e86d01b57644902670e8"
+   }
+  },
+  "bunsen_burner": {
+   "name": "Bunsen Burner",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Lab Equipment",
+   "authors": [
+    "BKS"
+   ],
+   "source_hash": "8cfa0fa389cd410b0391534b3c9a9515d1bc5421",
+   "triangles": 8434,
+   "source_triangles": 8434,
+   "size": [
+    0.1389,
+    0.1389,
+    0.1731
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f5833e2759925562bd8589d028e9d0bc",
+    "collision.npz": "e600d6c817d92b321189b57cba20b566"
+   }
+  },
+  "calathea_orbifolia_01": {
+   "name": "Calathea Orbifolia 01",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Tropical Plants",
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "source_hash": "5b3ad0b0352b1429f1f11e3de6f5b360ea6ef35a",
+   "triangles": 16688,
+   "source_triangles": 16688,
+   "size": [
+    2.4915,
+    1.1936,
+    0.4243
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a802da3e2812e8924b9ac43222d8dde9",
+    "collision.npz": "1056790dbce30443129e69ee637ac16e"
+   }
+  },
+  "can_rusted": {
+   "name": "Can Rusted",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Tins",
+   "authors": [
+    "Rahul Chaudhary"
+   ],
+   "source_hash": "df29f732f300aa0bbd6da5081ef7a6902397f551",
+   "triangles": 3520,
+   "source_triangles": 3520,
+   "size": [
+    0.1245,
+    0.1247,
+    0.1514
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "20074577a1c5d8e668a30762485b6f17",
+    "collision.npz": "5d26e578ab478b1a8b31c7d624f518c0"
+   }
+  },
+  "cardboard_box_01": {
+   "name": "Cardboard Box 01",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Cardboard Boxes",
+   "authors": [
+    "Rahul Chaudhary"
+   ],
+   "source_hash": "2a37ded0aeebc15100db0e1d285ad36cf40b8f42",
+   "triangles": 16952,
+   "source_triangles": 16952,
+   "size": [
+    0.387,
+    0.5159,
+    0.3418
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "585ea6a87266f554b88c5f54f8b7cc7f",
+    "collision.npz": "12c7ff547555422ab16ce72ca6f85994"
+   }
+  },
+  "carrot_cake": {
+   "name": "Carrot Cake",
+   "label": "prop",
+   "category": "Food & Kitchen/Prepared Food/Cakes & Pastries",
+   "authors": [
+    "Greg Zaal",
+    "James Ray Cock"
+   ],
+   "source_hash": "b1fa5ea224d02682e75f74b2f0e5b1cc52f3e4c5",
+   "triangles": 13790,
+   "source_triangles": 13790,
+   "size": [
+    0.2254,
+    0.2254,
+    0.0976
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1cdbf566a1ae43ea04369942c8b7399b",
+    "collision.npz": "e17f9f88e3549bf3ca9dfa3705fad438"
+   }
+  },
+  "carved_wooden_elephant": {
+   "name": "Carved Wooden Elephant",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Greg Zaal"
+   ],
+   "source_hash": "bb045a04b923530a3e12f3fbac4662567f021633",
+   "triangles": 2752,
+   "source_triangles": 2752,
+   "size": [
+    0.1092,
+    0.0576,
+    0.0962
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9b14908f85028681c68099500a1a79df",
+    "collision.npz": "b7da8f251b2af2c6260d84f33f2d70ab"
+   }
+  },
+  "carved_wooden_plate": {
+   "name": "Carved Wooden Plate",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Plates",
+   "authors": [
+    "Jan Martens"
+   ],
+   "source_hash": "39a0c6ebce60b891533dad0fc0ed42be6b255bf1",
+   "triangles": 2112,
+   "source_triangles": 2112,
+   "size": [
+    0.2718,
+    0.2688,
+    0.0381
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "227637c80fa034cf9772a29aa3cb80f2",
+    "collision.npz": "910cad1fe218cc34cdb162a27a6367c3"
+   }
+  },
+  "cassette_player": {
+   "name": "Cassette Player",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Radios & Portable Audio",
+   "authors": [
+    "Oday Abuzaeed"
+   ],
+   "source_hash": "05aa0f3714214b4fdedf6c01b0ecdaad262a30ab",
+   "triangles": 4830,
+   "source_triangles": 4830,
+   "size": [
+    0.1295,
+    0.0489,
+    0.2368
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "809bb0661d5b73a96341628fc14068eb",
+    "collision.npz": "d5d7cec9ffae90292d13189b888a32a2"
+   }
+  },
+  "cement_bag": {
+   "name": "Cement Bag",
+   "label": "prop",
+   "category": "Containers & Storage/Bags/Sacks",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "5904dc1835a413b66e756f67f8561b82fa5fcdcf",
+   "triangles": 844,
+   "source_triangles": 844,
+   "size": [
+    0.4625,
+    0.6996,
+    0.1799
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0a7924414aea126f01edb7af428c2218",
+    "collision.npz": "cf7341c06f4b6f7eba1ddb928cb195cc"
+   }
+  },
+  "ceramic_pot": {
+   "name": "Ceramic Pot",
+   "label": "prop",
+   "category": "Food & Kitchen/Cookware/Pots & Pans",
+   "authors": [
+    "Aron \u0141yczek"
+   ],
+   "source_hash": "fa63130e7ddf8a865a1d4c3ec745382d0163ab31",
+   "triangles": 3592,
+   "source_triangles": 3592,
+   "size": [
+    0.6563,
+    0.5018,
+    0.3717
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7f77a5190324a10e7f87f812dde79eec",
+    "collision.npz": "c148a45440c127b042d572b2437a6787"
+   }
+  },
+  "ceramic_vase_01": {
+   "name": "Ceramic Vase 01",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Ceramic Vases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "989b1a754be36032e5d643c9c333a08e218c65cf",
+   "triangles": 10296,
+   "source_triangles": 10296,
+   "size": [
+    0.2036,
+    0.2036,
+    0.4003
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5e261174a262a1047d020e70ab330615",
+    "collision.npz": "fe9d455c87acaca8e7b404cf4594f352"
+   }
+  },
+  "ceramic_vase_02": {
+   "name": "Ceramic Vase 02",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Ceramic Vases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "0643acdbc6d663ccbc2df4d00ba30a7126f3daac",
+   "triangles": 11128,
+   "source_triangles": 11128,
+   "size": [
+    0.2184,
+    0.2184,
+    0.3092
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f71203b3809bfa6deba9c47582d2f8a7",
+    "collision.npz": "26a5ca18c5cd32f4d594c720a718a697"
+   }
+  },
+  "ceramic_vase_03": {
+   "name": "Ceramic Vase 03",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Ceramic Vases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "df64b230fb44e0aceff07e3dc0aa97b7ebcb1143",
+   "triangles": 11136,
+   "source_triangles": 11136,
+   "size": [
+    0.1122,
+    0.1122,
+    0.4144
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3313aa3b671a0d4a7d586564ab8a5405",
+    "collision.npz": "453b4f08511c5745d409e2fd831b9818"
+   }
+  },
+  "ceramic_vase_04": {
+   "name": "Ceramic Vase 04",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Ceramic Vases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "2f4fd4e62ce5609ec0b712f7f97a8f1cd7796c7f",
+   "triangles": 9000,
+   "source_triangles": 9000,
+   "size": [
+    0.1811,
+    0.1811,
+    0.3419
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a232f900aa33ca4318514fa26181cf9d",
+    "collision.npz": "8259138d8d8b3a6e51ab34444d5a0109"
+   }
+  },
+  "cheiridopsis_succulent": {
+   "name": "Cheiridopsis Succulent",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Succulents & Cacti",
+   "authors": [
+    "James Ray Cock",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "982ded4019c28843e7468de66ac90f0406286184",
+   "triangles": 20000,
+   "source_triangles": 82438,
+   "size": [
+    2.164,
+    0.9595,
+    0.2708
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bcdb8e323a479ac7604469535b9a8a57",
+    "collision.npz": "b2bee7b07e868ac86a08ac2d2c91d038"
+   }
+  },
+  "chemistry_set": {
+   "name": "Chemistry Set",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Lab Equipment",
+   "authors": [
+    "Ji\u0159\u00ed Pt\u00e1\u010dek"
+   ],
+   "source_hash": "fc23251aead732812c32d58dda83b6264aee231a",
+   "triangles": 19999,
+   "source_triangles": 41958,
+   "size": [
+    1.0786,
+    0.3539,
+    0.429
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "31a631e9e64393ba7f2b536eb1bb0f7d",
+    "collision.npz": "394b3ccc80aa0d31aca002869fcd66b3"
+   }
+  },
+  "chess_set": {
+   "name": "Chess Set",
+   "label": "prop",
+   "category": "Leisure/Games & Toys/Board Games",
+   "authors": [
+    "Riley Queen"
+   ],
+   "source_hash": "fe02fd16e17017a92c414b79d7f81047708e89ee",
+   "triangles": 19999,
+   "source_triangles": 76920,
+   "size": [
+    0.5532,
+    0.5532,
+    0.1123
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b4f88dd6784a11fe16b97a3842d07199",
+    "collision.npz": "031317d42e101b177faa48df8343edc3"
+   }
+  },
+  "chinese_armchair": {
+   "name": "Chinese Armchair",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "1e3819b180ab7c6918200d3e39eada53031579c6",
+   "triangles": 2675,
+   "source_triangles": 2675,
+   "size": [
+    0.8483,
+    0.7887,
+    1.5875
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a525e84946aa2d5fa4aef4bbc752b03e",
+    "collision.npz": "9d11f3630544a7f6643c1adf470b1615"
+   }
+  },
+  "chinese_console_table": {
+   "name": "Chinese Console Table",
+   "label": "table",
+   "category": "Furniture/Tables/Console Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "d2f88e4753957bff4fcf282db5d86af5073eff45",
+   "triangles": 13648,
+   "source_triangles": 13648,
+   "size": [
+    1.7196,
+    0.3388,
+    0.6607
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "76cb67f27449ad0900368dfbc13c767f",
+    "collision.npz": "af720238912fe4b83fefbb994ae2eb93"
+   }
+  },
+  "chinese_screen_panels": {
+   "name": "Chinese Screen Panels",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Room Dividers & Screens",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "b500116411a2532f0c1d870f964c7375f8df40df",
+   "triangles": 784,
+   "source_triangles": 784,
+   "size": [
+    1.294,
+    0.3769,
+    1.6031
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5c1c48ed249fd2aaaa1abc61f0b0766d",
+    "collision.npz": "d84d41d2e7fb7101d89003227b3ebdd1"
+   }
+  },
+  "chinese_sofa": {
+   "name": "Chinese Sofa",
+   "label": "couch",
+   "category": "Furniture/Seating/Sofas & Couches",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "e526d4fda894dd044639fe0517c0074290b31f41",
+   "triangles": 704,
+   "source_triangles": 704,
+   "size": [
+    2.2854,
+    0.9689,
+    0.86
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "534ef6e7ae216fd2c2f7c09dd7c66917",
+    "collision.npz": "f24d586dad4459785af311f736bd1ad5"
+   }
+  },
+  "chinese_stool": {
+   "name": "Chinese Stool",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "996baf2756a969c5bd141d2867c92acaf2039b43",
+   "triangles": 1090,
+   "source_triangles": 1090,
+   "size": [
+    0.599,
+    0.5064,
+    0.6306
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "adea83a535d50b77f6f347b9579c703c",
+    "collision.npz": "4c7c920b0e8596eec2e5d7921b568667"
+   }
+  },
+  "chinese_tea_table": {
+   "name": "Chinese Tea Table",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "232962e125d74cee5faec1913585cd78d5f5d616",
+   "triangles": 2508,
+   "source_triangles": 2508,
+   "size": [
+    0.8413,
+    0.8356,
+    0.4986
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4137ac328538e0a89d002e10c1a4ce43",
+    "collision.npz": "8ae12803ad14b3ddfb54ac55ae379f16"
+   }
+  },
+  "cigarette_case": {
+   "name": "Cigarette Case",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Accessories/Smoking Accessories",
+   "authors": [
+    "Micha\u0142 Wi\u015bniewski"
+   ],
+   "source_hash": "9615ca36a0f9301a9812b2d66ad2c6e13a573ae8",
+   "triangles": 16912,
+   "source_triangles": 16912,
+   "size": [
+    0.3233,
+    0.1007,
+    0.0245
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d73aa55d3224d69cac8de304a85aecc8",
+    "collision.npz": "1ec933d44d88215deaae259830f087f9"
+   }
+  },
+  "circuit_board": {
+   "name": "Circuit Board",
+   "label": "prop",
+   "category": "Electronics & Appliances/Computing/Components",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_hash": "804d8b735c30e6a9df2ae66b6307a7368ef8291b",
+   "triangles": 14430,
+   "source_triangles": 14430,
+   "size": [
+    0.4035,
+    0.3974,
+    0.0783
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "965f3ccd8359e7973c4280c8e85045b3",
+    "collision.npz": "6036eab649aa739ea51a6ae5c9aeaa91"
+   }
+  },
+  "classic_laptop": {
+   "name": "Classic Laptop",
+   "label": "prop",
+   "category": "Electronics & Appliances/Computing/Computers",
+   "authors": [
+    "Arrangemonk"
+   ],
+   "source_hash": "44e244f74d7fc5329b69795c5c95f105803aadc2",
+   "triangles": 14450,
+   "source_triangles": 14450,
+   "size": [
+    0.6519,
+    0.4859,
+    0.5428
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9e1b2c4de04405a9ea38f8f5c6e93933",
+    "collision.npz": "545869a65363911d39934cfe5553b37f"
+   }
+  },
+  "clipboard": {
+   "name": "Clipboard",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Clipboards & Boards",
+   "authors": [
+    "ProgrammerOnCoffee"
+   ],
+   "source_hash": "d67455f77731d7d7927333d699907dd6451e581c",
+   "triangles": 6176,
+   "source_triangles": 6176,
+   "size": [
+    0.2286,
+    0.3366,
+    0.042
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "aeaf52ff7d909e47049752a94c76b1fa",
+    "collision.npz": "574337ceb860f17c952cad12052bb39d"
+   }
+  },
+  "coffee_table_round_01": {
+   "name": "Coffee Table Round 01",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "111d2440084dcd01332ef4f7a4008fc5a41e413b",
+   "triangles": 4044,
+   "source_triangles": 4044,
+   "size": [
+    1.3013,
+    1.3013,
+    0.491
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2f2b5314f6c40ccddb66cdb323a9bc3b",
+    "collision.npz": "28654edf25615b060ef0888528972474"
+   }
+  },
+  "combination_wrench": {
+   "name": "Combination Wrench",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Wrenches & Spanners",
+   "authors": [
+    "BKS"
+   ],
+   "source_hash": "66f73753979a340ab6fa34460f7e4085ca7c861a",
+   "triangles": 1986,
+   "source_triangles": 1986,
+   "size": [
+    0.0566,
+    0.337,
+    0.0215
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bfe359c248ae21d2a7d79ebac8cf0cf5",
+    "collision.npz": "f5141f0dd02ba3c425dac480c81bd7d8"
+   }
+  },
+  "compost_bag_02": {
+   "name": "Compost Bag 02",
+   "label": "prop",
+   "category": "Containers & Storage/Bags/Garden & Compost Bags",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "aa96f29975d682235b75de6414439ac812135c24",
+   "triangles": 12096,
+   "source_triangles": 12096,
+   "size": [
+    0.5393,
+    0.4705,
+    0.4337
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f029e6c0bbbb53c533194354ff73a978",
+    "collision.npz": "051213f75a941404fc913628fbb96a08"
+   }
+  },
+  "compost_bags": {
+   "name": "Compost Bags",
+   "label": "prop",
+   "category": "Containers & Storage/Bags/Garden & Compost Bags",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "0ba33faf6d6518ed888ab2dfce615a3505b8a22d",
+   "triangles": 18708,
+   "source_triangles": 18708,
+   "size": [
+    1.8281,
+    0.9259,
+    0.7073
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6da60283887af8c0379efef1b9236c68",
+    "collision.npz": "449ca9a23e1e2adc881452a91cda0a21"
+   }
+  },
+  "concrete_cat_statue": {
+   "name": "Concrete Cat Statue",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Rico Cilliers",
+    "Riley Queen"
+   ],
+   "source_hash": "5f3785e43dd475d06772cd5c57d202e22f978c22",
+   "triangles": 11950,
+   "source_triangles": 11950,
+   "size": [
+    0.153,
+    0.25,
+    0.283
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f4c10f176e7e341e0a6d4bc18762cff5",
+    "collision.npz": "e269ee98b75d5a4ed4a1ffa6cebe6c17"
+   }
+  },
+  "concrete_road_barrier": {
+   "name": "Concrete Road Barrier",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Traffic & Safety/Road Barriers",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "bc3dfafc1abfc83dfa19710745d6f0beba9d2368",
+   "triangles": 19999,
+   "source_triangles": 60928,
+   "size": [
+    1.545,
+    0.6387,
+    0.8309
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c013772f5577ce0249b28fc50100a889",
+    "collision.npz": "3ff54324caa14f8d1c168df5f0494973"
+   }
+  },
+  "concrete_road_barrier_02": {
+   "name": "Concrete Road Barrier 02",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Traffic & Safety/Road Barriers",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "fbcefc03483cf10e19d91653f3f1b10112be436d",
+   "triangles": 20000,
+   "source_triangles": 23822,
+   "size": [
+    1.5655,
+    0.4421,
+    1.112
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2e47f5d0e99399a269260c959a4ab63c",
+    "collision.npz": "119faeff2bb053ff2972c7405407d1c3"
+   }
+  },
+  "croissant": {
+   "name": "Croissant",
+   "label": "prop",
+   "category": "Food & Kitchen/Prepared Food/Cakes & Pastries",
+   "authors": [
+    "Dario Barresi",
+    "Greg Zaal"
+   ],
+   "source_hash": "16023b7dcc7d8c5660c4d128e079e878fc08ab23",
+   "triangles": 1990,
+   "source_triangles": 1990,
+   "size": [
+    0.2,
+    0.0755,
+    0.062
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "434d0b73d7b8b89351d20b40eeea5b98",
+    "collision.npz": "4b2e96a09ad1b315d43b28249d174307"
+   }
+  },
+  "crowbar_01": {
+   "name": "Crowbar 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Pry Bars",
+   "authors": [
+    "Alexander Otterbeck"
+   ],
+   "source_hash": "6298bc964de4bce459d682181cb7ef9e827cf380",
+   "triangles": 2300,
+   "source_triangles": 2300,
+   "size": [
+    0.0404,
+    0.1276,
+    0.5554
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "91a9302550e45756ca3a97c16cc8b694",
+    "collision.npz": "ef48c577d4a30410be8c776f80d69f3e"
+   }
+  },
+  "crystalline_iceplant": {
+   "name": "Crystalline Iceplant",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Succulents & Cacti",
+   "authors": [
+    "James Ray Cock",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "0344e1f831a707e73f4bde5e29c2fa8a7cb14563",
+   "triangles": 13094,
+   "source_triangles": 13094,
+   "size": [
+    1.6935,
+    0.7379,
+    0.0822
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f4b3e29e01bd548bd19083734aea482a",
+    "collision.npz": "80b2b5ef95b9646028d41dabddf584ba"
+   }
+  },
+  "dartboard": {
+   "name": "Dartboard",
+   "label": "prop",
+   "category": "Leisure/Games & Toys/Board Games",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "5e28b6807f86ea1c78ac3198ac93d24bb8130e1f",
+   "triangles": 6800,
+   "source_triangles": 6800,
+   "size": [
+    0.4507,
+    0.0398,
+    0.4507
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b0772b91f8a90a452cd49b7fc6345ce1",
+    "collision.npz": "bc7011cd997263b6062a70bc248ad17d"
+   }
+  },
+  "dead_quiver_branch_01": {
+   "name": "Dead Quiver Branch 01",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Branches & Twigs",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "30e0f1dc491198a52d5ed34408d9a7f15c2c5546",
+   "triangles": 14834,
+   "source_triangles": 14834,
+   "size": [
+    0.2549,
+    0.227,
+    0.4387
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "04593295cb771210ad04ea1f84d9ca87",
+    "collision.npz": "5a69927f793f23f1c56e476cac217aba"
+   }
+  },
+  "dead_quiver_branch_02": {
+   "name": "Dead Quiver Branch 02",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Branches & Twigs",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "f421a59fa732de651bb3995542030fb0907822af",
+   "triangles": 14386,
+   "source_triangles": 14386,
+   "size": [
+    0.2873,
+    0.201,
+    0.5264
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "08fd1d7451168d6dec16c85c7a04df91",
+    "collision.npz": "5127d8864321f993c404d5a9a4f14c4d"
+   }
+  },
+  "dead_quiver_trunk": {
+   "name": "Dead Quiver Trunk",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Fallen Logs & Stumps",
+   "authors": [
+    "Dario Barresi",
+    "James Ray Cock",
+    "Rico Cilliers"
+   ],
+   "source_hash": "5e1897094f635d4f7a0903be28a8ebe54dd1bdcf",
+   "triangles": 17978,
+   "source_triangles": 17978,
+   "size": [
+    0.3065,
+    0.2681,
+    1.9941
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a18f686dc09d2efecf6bb92ee29375e6",
+    "collision.npz": "d64bd717f779be5ceb6fff0d5651c669"
+   }
+  },
+  "digital_wrist_watch": {
+   "name": "Digital Wrist Watch",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Accessories/Watches & Timepieces",
+   "authors": [
+    "Adrian C"
+   ],
+   "source_hash": "6f9042911f618186b294485af7ef8f081a3a4494",
+   "triangles": 10390,
+   "source_triangles": 10390,
+   "size": [
+    0.0365,
+    0.2172,
+    0.0083
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f3493bf6ba45525c2ec268bec2448a29",
+    "collision.npz": "b0603de8a845be52e2bbeab091dba876"
+   }
+  },
+  "dining_chair_02": {
+   "name": "Dining Chair 02",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "b99b2f907424bbc55b77541f9616fa9da770dcde",
+   "triangles": 20000,
+   "source_triangles": 22013,
+   "size": [
+    0.4336,
+    0.5764,
+    0.9734
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3fcb4dd7f0d979bcfdb2afc1fca59b37",
+    "collision.npz": "f339c5503220d468562321bdf129c4f7"
+   }
+  },
+  "dining_table": {
+   "name": "Dining Table",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Aron \u0141yczek"
+   ],
+   "source_hash": "5d15c817890f7babe434f57fc9d78c9a9a6ed9e1",
+   "triangles": 1048,
+   "source_triangles": 1048,
+   "size": [
+    2.2559,
+    1.3902,
+    0.877
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "44930547f22dad552baed3a87f832dda",
+    "collision.npz": "222a7ae3daf15c249da85412960520bf"
+   }
+  },
+  "dirty_football": {
+   "name": "Dirty Football",
+   "label": "sports_ball",
+   "category": "Leisure/Sports/Balls",
+   "authors": [
+    "Rohit Seervi"
+   ],
+   "source_hash": "b27ae02f28eda2ef7e2b5ee925fdad06b3346617",
+   "triangles": 19998,
+   "source_triangles": 19998,
+   "size": [
+    0.2214,
+    0.22,
+    0.22
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "85c10c27ea6362cb0b6d281a0d5ba95a",
+    "collision.npz": "8415bb32910cae426f1971c1328f5305"
+   }
+  },
+  "drain_cleaner": {
+   "name": "Drain Cleaner",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Cleaning & Chemical Bottles",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "513d69e8018672ca7bd7048ef67fdd711f94bc61",
+   "triangles": 4338,
+   "source_triangles": 4338,
+   "size": [
+    0.1654,
+    0.0563,
+    0.1786
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c79d4eb1a3c127a829a4c011ef458b87",
+    "collision.npz": "b757db6d5f8c0fcad680e7d1904acc13"
+   }
+  },
+  "drawer_cabinet": {
+   "name": "Drawer Cabinet",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Drawers & Dressers",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "dda532faa842f6046d05e7ffcfddaea897152f78",
+   "triangles": 20000,
+   "source_triangles": 26406,
+   "size": [
+    1.1411,
+    0.4881,
+    1.8813
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "cb3114fac6ae6838bd73fc83a7b6dc73",
+    "collision.npz": "1460996061731084b96fda6903b34cf2"
+   }
+  },
+  "drill_press_01": {
+   "name": "Drill Press 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Power Tools/Workshop Machines",
+   "authors": [
+    "Viktor"
+   ],
+   "source_hash": "f3eb9da047d02b6a02c34286c4cd12008418fccc",
+   "triangles": 20000,
+   "source_triangles": 58526,
+   "size": [
+    0.3546,
+    0.5989,
+    0.902
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "23af4eda27d01f5765d248d96134cc64",
+    "collision.npz": "05d42cada57d6f0fe418af8342767d5b"
+   }
+  },
+  "dry_branches_medium_01": {
+   "name": "Dry Branches Medium 01",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Branches & Twigs",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "9707cc29f837b6946d6787c231b522dc2ed69573",
+   "triangles": 16803,
+   "source_triangles": 16803,
+   "size": [
+    1.0595,
+    1.2992,
+    0.341
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "74783617670f1d5906f1fe66023dccfb",
+    "collision.npz": "6350e118ff116cffb5b09af68cfc1251"
+   }
+  },
+  "dry_quiver_leaf": {
+   "name": "Dry Quiver Leaf",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Deadwood & Debris",
+   "authors": [
+    "Greg Zaal",
+    "Rico Cilliers"
+   ],
+   "source_hash": "ad69fbdafc6c8ba947ad3110d76faed9ce875420",
+   "triangles": 19999,
+   "source_triangles": 78720,
+   "size": [
+    0.3968,
+    0.1921,
+    0.4249
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b24033954764920e8db111e5e12e1097",
+    "collision.npz": "572a3b95dc0b12168677e2482738a075"
+   }
+  },
+  "dustpan": {
+   "name": "Dustpan",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Brooms & Cleaning",
+   "authors": [
+    "Balen"
+   ],
+   "source_hash": "bcd10677bf23256c6fbf6999f032a6d4ed465081",
+   "triangles": 4332,
+   "source_triangles": 4332,
+   "size": [
+    0.3321,
+    0.368,
+    0.1003
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2cf1f14bdbc9cccbad2789c9bfca19ad",
+    "collision.npz": "e0c74bcd3435c5fa36e369be74003b6a"
+   }
+  },
+  "exterior_aircon_unit": {
+   "name": "Exterior Aircon Unit",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Utility Equipment/Aircon Units",
+   "authors": [
+    "Monsta3D"
+   ],
+   "source_hash": "afd5b9eb4b3cfc2544044a00f4acb2a92d2f310e",
+   "triangles": 18986,
+   "source_triangles": 18986,
+   "size": [
+    1.8,
+    0.3742,
+    0.9279
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "79e28ca6271379d843ff62f3e9c17407",
+    "collision.npz": "a72e4529ea386e6b04808a293437a858"
+   }
+  },
+  "fern_02": {
+   "name": "Fern 02",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Ferns",
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "source_hash": "36e2a53d7f23f422640ad368c1f27745de2fef82",
+   "triangles": 6232,
+   "source_triangles": 6232,
+   "size": [
+    1.9725,
+    1.724,
+    0.4277
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8cd740d86f1dd992be967468c43f0d68",
+    "collision.npz": "5d5494ef553c289d394ef258e1b58b1d"
+   }
+  },
+  "filmstrip_projector_8mm": {
+   "name": "Filmstrip Projector 8mm",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Projectors",
+   "authors": [
+    "PeterM"
+   ],
+   "source_hash": "cb2fd73b23c90c63a44da80712938f5239d1990b",
+   "triangles": 20000,
+   "source_triangles": 32697,
+   "size": [
+    0.2537,
+    0.6026,
+    0.3454
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a08f2a9c94947e4178612c9f4f0d8c0d",
+    "collision.npz": "d04b3684c53ba44e270a7245708ba9a0"
+   }
+  },
+  "fire_hydrant": {
+   "name": "Fire Hydrant",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Traffic & Safety/Hydrants & Fire Safety",
+   "authors": [
+    "Gon\u00e7alo Fel\u00edcio"
+   ],
+   "source_hash": "392eed954362d55b55022af83c0b7150bf977853",
+   "triangles": 19999,
+   "source_triangles": 86316,
+   "size": [
+    0.8745,
+    0.3176,
+    0.7999
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "490fe4bf023d7817ad6277791944debc",
+    "collision.npz": "947a0aa999026784def132b22d890d52"
+   }
+  },
+  "fishermans_hat": {
+   "name": "Fishermans Hat",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Headwear",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "a1b99c79405e31ff8a3e74b7b0d51783007e4b45",
+   "triangles": 10304,
+   "source_triangles": 10304,
+   "size": [
+    0.3236,
+    0.35,
+    0.1239
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "92bf11f70098c10986275c6ad22a5e86",
+    "collision.npz": "39d264432dafffc8d013113e69f738fd"
+   }
+  },
+  "flower_empodium": {
+   "name": "Flower Empodium",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Wildflowers",
+   "authors": [
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "9b07e5501c6a00074d6bd55df2571f61687b2185",
+   "triangles": 3053,
+   "source_triangles": 3053,
+   "size": [
+    1.3228,
+    0.2841,
+    0.2684
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "961a992cc69be595dea0a729f0c957c5",
+    "collision.npz": "8ebb4a123a01277a39580233bba499a8"
+   }
+  },
+  "flower_gazania": {
+   "name": "Flower Gazania",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Wildflowers",
+   "authors": [
+    "James Ray Cock",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "6861ef52064618add31b204dcabc198a5bfbb52e",
+   "triangles": 14340,
+   "source_triangles": 14340,
+   "size": [
+    1.4813,
+    0.7028,
+    0.1655
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0c18f7928fbbaeba83891ead4d52ec6b",
+    "collision.npz": "b6dc856060f9bfb4469a386bbdf86bdd"
+   }
+  },
+  "flower_stinkkruid": {
+   "name": "Flower Stinkkruid",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Wildflowers",
+   "authors": [
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "03082af6c21b6b6f146a8bec83808a8efafb3e7b",
+   "triangles": 20000,
+   "source_triangles": 80716,
+   "size": [
+    1.7058,
+    0.3005,
+    0.1782
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a11ca8e753829f982ba4154d9a175a99",
+    "collision.npz": "500752c093886a226f6fe6759b6425e8"
+   }
+  },
+  "flower_ursinia": {
+   "name": "Flower Ursinia",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Wildflowers",
+   "authors": [
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "c7207cfa8d45fac3cca61091eab76931340b6722",
+   "triangles": 19999,
+   "source_triangles": 24917,
+   "size": [
+    2.1938,
+    0.3433,
+    0.1718
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9154dd3ea56f6fffabe68353be013427",
+    "collision.npz": "d72e1668e2d2faebe5b16f28175742cd"
+   }
+  },
+  "folding_wooden_stool": {
+   "name": "Folding Wooden Stool",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "3892e7a739a932db568f2493f78dabfd162416c3",
+   "triangles": 6324,
+   "source_triangles": 6324,
+   "size": [
+    0.5278,
+    0.5471,
+    0.442
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2d086041cf6874b072c066443dac27c5",
+    "collision.npz": "428973359ef6445d078ffdc206255e3d"
+   }
+  },
+  "food_ginger_01": {
+   "name": "Food Ginger 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Produce/Vegetables",
+   "authors": [
+    "Oliver Harries"
+   ],
+   "source_hash": "e1d57e6942f5bb05eecd5902a89a1e365863825c",
+   "triangles": 7205,
+   "source_triangles": 7205,
+   "size": [
+    0.2399,
+    0.1474,
+    0.5746
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "345508e5dcea2290d2769d26f7c3e350",
+    "collision.npz": "c0ef50b89e447579278848bf173aa740"
+   }
+  },
+  "food_pears_asian_01": {
+   "name": "Pears Asian 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Produce/Fruit",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "7b8953bf76ea6fdac29f364d3f3f553240856491",
+   "triangles": 12572,
+   "source_triangles": 12572,
+   "size": [
+    0.1261,
+    0.1669,
+    0.0712
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c73ea5fb466c17e0e6eaa1667cabcd9b",
+    "collision.npz": "fd3a67286db9997f629598dfc1545d8f"
+   }
+  },
+  "food_pomegranate_01": {
+   "name": "Food Pomegranate 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Produce/Fruit",
+   "authors": [
+    "Oliver Harries"
+   ],
+   "source_hash": "3998876df4918643a59766ce2ca12bc609f8b057",
+   "triangles": 8142,
+   "source_triangles": 8142,
+   "size": [
+    0.1143,
+    0.1154,
+    0.115
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "57234662897b620450005a693bba5d0e",
+    "collision.npz": "dfa0814cc067c3a5b90fa99433b51e19"
+   }
+  },
+  "football": {
+   "name": "Football",
+   "label": "sports_ball",
+   "category": "Leisure/Sports/Balls",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "ccfb473fa6dd628cc3aa9b934c706723730454b8",
+   "triangles": 4296,
+   "source_triangles": 4296,
+   "size": [
+    0.5089,
+    0.2222,
+    0.2219
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c9aba0d128b0e6e4921983d3c01c6c68",
+    "collision.npz": "cde338e4d068adcb6775064876b261b8"
+   }
+  },
+  "gallinera_chair": {
+   "name": "Gallinera Chair",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "973b0b19757f75a4677c956ac740d4b739efaf72",
+   "triangles": 11560,
+   "source_triangles": 11560,
+   "size": [
+    0.5808,
+    0.6039,
+    1.0337
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "554ccce8887f764ccd40fc4d1c6c6887",
+    "collision.npz": "1da723b1a813eea56f73d5ee6651cc9c"
+   }
+  },
+  "gallinera_table": {
+   "name": "Gallinera Table",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "c4800dff250e8756f32bd8c8b0feaa9ce39fe0e7",
+   "triangles": 5528,
+   "source_triangles": 5528,
+   "size": [
+    0.8301,
+    0.5183,
+    0.4878
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b75f1d446782893313bd06170511034d",
+    "collision.npz": "b6df0197a01aa1b458207c2a7ab25119"
+   }
+  },
+  "gamepad": {
+   "name": "Gamepad",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Handheld Devices",
+   "authors": [
+    "Josh Dean"
+   ],
+   "source_hash": "5c8dcfd40d6e66cac6ad8555a40317333f1827ba",
+   "triangles": 9546,
+   "source_triangles": 9546,
+   "size": [
+    0.4041,
+    0.435,
+    0.0189
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a6fae84b015ddf64449fff4dc2feb297",
+    "collision.npz": "60aac3db869f839c265097b5020c501b"
+   }
+  },
+  "gaming_console": {
+   "name": "Gaming Console",
+   "label": "prop",
+   "category": "Electronics & Appliances/Home Appliances/Entertainment Systems",
+   "authors": [
+    "Sean Buckley"
+   ],
+   "source_hash": "9700b9cb52e54ec5957d976c04c6d31ebf421c6e",
+   "triangles": 20000,
+   "source_triangles": 31710,
+   "size": [
+    0.3286,
+    0.3185,
+    0.1001
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e339b170925c5601cc0e1c198d0b9184",
+    "collision.npz": "eaae615fd2c7b4e4cb07bf476b6443cf"
+   }
+  },
+  "garden_gloves_01": {
+   "name": "Garden Gloves 01",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Clothing & Footwear/Gloves & Workwear",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "e335f5f05c89b0ade5f59cac51b860b3c9b055f6",
+   "triangles": 6822,
+   "source_triangles": 6822,
+   "size": [
+    0.2266,
+    0.299,
+    0.076
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "385ddc3b60543617d71911ff3f375f82",
+    "collision.npz": "46a86ad40f786f683b9735c2a31853a6"
+   }
+  },
+  "garden_gnome": {
+   "name": "Garden Gnome",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Ornamental Sculptures",
+   "authors": [
+    "Bhargav Kubal"
+   ],
+   "source_hash": "d9916cd986eeec9226772870af437dea0fdf8366",
+   "triangles": 20000,
+   "source_triangles": 28858,
+   "size": [
+    0.258,
+    0.2097,
+    0.5991
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "41b6064bf02f713d606a5e625d3995ab",
+    "collision.npz": "e58dbbdda7fe9a9db96087516e00154b"
+   }
+  },
+  "garden_sprinkler_01": {
+   "name": "Garden Sprinkler 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Watering & Irrigation",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "3dfbbc58ed8f575c82e68d35b24379633fd5c955",
+   "triangles": 8192,
+   "source_triangles": 8192,
+   "size": [
+    0.3508,
+    0.2491,
+    0.203
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "86fd3fc1e8e76bc39d3ee7696df7fbea",
+    "collision.npz": "1d471179fd81ee06ef06ce2ad3073312"
+   }
+  },
+  "gothic_coffee_table": {
+   "name": "Gothic Coffee Table",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "05912f196d3d1f8cf861b8ffe1ad8dacd42d927e",
+   "triangles": 20000,
+   "source_triangles": 23836,
+   "size": [
+    1.4431,
+    1.4431,
+    0.5588
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "43397d0a16be552993280942a6ef97e3",
+    "collision.npz": "6ab3be6220b73e75d3ae6115aeb7f7a2"
+   }
+  },
+  "gothic_statue": {
+   "name": "Gothic Statue",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Busts & Human Figures",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_hash": "180fe034aec7158f2550b133e0ba2be9e9c1c241",
+   "triangles": 20000,
+   "source_triangles": 27739,
+   "size": [
+    1.4775,
+    1.5638,
+    1.7399
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "59d2996bc80c4dd8f0710af7d82245ee",
+    "collision.npz": "99c454235219a99f63676763af687393"
+   }
+  },
+  "hamburger_buns": {
+   "name": "Hamburger Buns",
+   "label": "prop",
+   "category": "Food & Kitchen/Prepared Food/Bread & Baked Goods",
+   "authors": [
+    "Alexander Shulha"
+   ],
+   "source_hash": "73e5febb05ae9cc2246560b97feac601a56a1c3e",
+   "triangles": 11588,
+   "source_triangles": 11588,
+   "size": [
+    0.3972,
+    0.1138,
+    0.0634
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fd9d31ba3dcbc58f43e30f1c3db589ee",
+    "collision.npz": "e0f37a17f434c8545e1d59a4850f0347"
+   }
+  },
+  "hand_plane_no4": {
+   "name": "Hand Plane No4",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "73089c692d816133d2c9be2553498a9deac54bf2",
+   "triangles": 8220,
+   "source_triangles": 8220,
+   "size": [
+    0.3308,
+    0.0843,
+    0.1978
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d43618e294e147f7530893a8be40cf2f",
+    "collision.npz": "79e3a005d30a8560c519e095d8721b2a"
+   }
+  },
+  "hand_truck": {
+   "name": "Hand Truck",
+   "label": "cart",
+   "category": "Furniture/Storage Furniture/Carts & Trolleys",
+   "authors": [
+    "Mutanzom3D"
+   ],
+   "source_hash": "b169bd38206dbdde638e2bda547dab1ec7823c39",
+   "triangles": 13220,
+   "source_triangles": 13220,
+   "size": [
+    0.5933,
+    0.6925,
+    1.4025
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2f031a0368d03157d1ddf395a06619df",
+    "collision.npz": "081aaec4ec04dc0d325335d61275ac4b"
+   }
+  },
+  "handsaw_wood": {
+   "name": "Handsaw Wood",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Saws & Cutting",
+   "authors": [
+    "Konrad Sza\u0142ankiewicz"
+   ],
+   "source_hash": "657045bf8621c94eab8bf63f46781d5e0c92441c",
+   "triangles": 2548,
+   "source_triangles": 2548,
+   "size": [
+    0.0408,
+    0.633,
+    0.1665
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8087c089eab0dea8b3216160e1a5adef",
+    "collision.npz": "4b33c43ae417258cb6d727945c03e84e"
+   }
+  },
+  "hatchet": {
+   "name": "Hatchet",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Axes & Hatchets",
+   "authors": [
+    "James Ray Cock",
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "ec44e3d885af1f2f12aea3535a8700930f52f265",
+   "triangles": 5250,
+   "source_triangles": 5250,
+   "size": [
+    0.026,
+    0.1043,
+    0.2887
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "87c419ab0a6c966436a98c7da257ee8b",
+    "collision.npz": "dd5ed0379f7ce5b5adcb30e74a5357a2"
+   }
+  },
+  "horse_head": {
+   "name": "Horse Head",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "e57f384475e832c0bcbd230230ad778073b959bf",
+   "triangles": 12068,
+   "source_triangles": 12068,
+   "size": [
+    0.2149,
+    0.3341,
+    0.4187
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a92adff8b9bcb89bd5ad39b172fff62c",
+    "collision.npz": "99a727fb4d8d9b57bd9937df4bf56eff"
+   }
+  },
+  "horse_statue_01": {
+   "name": "Horse Statue 01",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "1d826b7fbcaca3f5aaa48ea4b27a74b44e593971",
+   "triangles": 19999,
+   "source_triangles": 22388,
+   "size": [
+    0.163,
+    0.1078,
+    0.22
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b2c21b4226444ec9b790c55945592903",
+    "collision.npz": "a55c684b38e3a7035b1a0c855db51f1d"
+   }
+  },
+  "industrial_coffee_table": {
+   "name": "Industrial Coffee Table",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "25e02bba0258cd7e7da15885c573e686e7513ed1",
+   "triangles": 20000,
+   "source_triangles": 41300,
+   "size": [
+    0.7772,
+    0.7571,
+    0.6382
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "807610cc16303d24f19deebc63f98267",
+    "collision.npz": "a9dd9ea83c945d2953aa720ffbe57d12"
+   }
+  },
+  "industrial_microscope": {
+   "name": "Industrial Microscope",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Optical Instruments",
+   "authors": [
+    "Lukas Walzer"
+   ],
+   "source_hash": "8a478e01a8143546913bb0c48712bdd06dcac2ee",
+   "triangles": 16598,
+   "source_triangles": 16598,
+   "size": [
+    0.2145,
+    0.4981,
+    0.4617
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e548f0b4b3ab0f38fdfca29385796622",
+    "collision.npz": "ee90072a68a5c97975b0a0fb9b40611e"
+   }
+  },
+  "industrial_pastic_container": {
+   "name": "Industrial Plastic Container",
+   "label": "trash_can",
+   "category": "Containers & Storage/Boxes & Crates/Bins",
+   "authors": [
+    "Galo Benivegna"
+   ],
+   "source_hash": "77cda45559262d55ab7c128db322f028d56de412",
+   "triangles": 7118,
+   "source_triangles": 7118,
+   "size": [
+    0.4572,
+    0.6315,
+    0.4188
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "63e104dfc4a3cc271e86cbdad017f2a0",
+    "collision.npz": "c0ad2bef49342b7b086cfa88ba8d225a"
+   }
+  },
+  "industrial_pipe_lamp": {
+   "name": "Industrial Pipe Lamp",
+   "label": "prop",
+   "category": "Lighting/Floor & Desk/Desk Lamps",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "b4c7f4672f07891c0c1d0e7e082a1eea414c7ecb",
+   "triangles": 8626,
+   "source_triangles": 8626,
+   "size": [
+    0.183,
+    0.2621,
+    0.3641
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bbdab59de796a2798c18af4768a2ef6c",
+    "collision.npz": "d6a5b2de6506f1396d48b0f95ccfdbd9"
+   }
+  },
+  "industrial_storage_cart": {
+   "name": "Industrial Storage Cart",
+   "label": "cart",
+   "category": "Furniture/Storage Furniture/Carts & Trolleys",
+   "authors": [
+    "Jule Bielitz"
+   ],
+   "source_hash": "1885782cd204ad6fed4d96111bd713aee14fd4bf",
+   "triangles": 18902,
+   "source_triangles": 18902,
+   "size": [
+    1.6033,
+    1.1027,
+    1.3774
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "eed99a5a9e6954158e610e3de5377a0d",
+    "collision.npz": "cd549b410de8d2dd7626fd4dbf7d1349"
+   }
+  },
+  "jug_01": {
+   "name": "Jug 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Jugs & Pitchers",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "c9c08b43eee157b95f9f8d0102a7a88259bbccfe",
+   "triangles": 5770,
+   "source_triangles": 5770,
+   "size": [
+    0.2753,
+    0.1675,
+    0.2113
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1337abc8a149d73f57d8ab93cc5e7b17",
+    "collision.npz": "68e3afee71e63e4f0fcaed45ab001790"
+   }
+  },
+  "katana_stand_01": {
+   "name": "Katana Stand 01",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Display Pieces",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "001350ae4d6dbccca937aa2358f2210959d92121",
+   "triangles": 3780,
+   "source_triangles": 3780,
+   "size": [
+    0.2958,
+    0.0535,
+    0.1819
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3f1e1999e06716c9b5c57ccb97c14043",
+    "collision.npz": "f3feb4ae8956ecfa99bff9ca8e18e9a0"
+   }
+  },
+  "korean_fire_extinguisher_01": {
+   "name": "Korean Fire Extinguisher 01",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Traffic & Safety/Hydrants & Fire Safety",
+   "authors": [
+    "UM JOORIN"
+   ],
+   "source_hash": "bf286ac62105374e5c583367e80ce77dcbe6881c",
+   "triangles": 9913,
+   "source_triangles": 9913,
+   "size": [
+    0.28,
+    0.3674,
+    0.6593
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "77ed5b4e81d7ca31e3dd9f5ce1aa454b",
+    "collision.npz": "f5393c8a4a25b8f08d9d6b2987c551d9"
+   }
+  },
+  "korean_public_payphone_01": {
+   "name": "Korean Public Payphone 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Public Terminals",
+   "authors": [
+    "UM JOORIN"
+   ],
+   "source_hash": "25bf80a7dfbeac1175f793d594299ee6667ea1ce",
+   "triangles": 20000,
+   "source_triangles": 48132,
+   "size": [
+    0.4006,
+    0.3011,
+    0.7397
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "07fba98615c3dbfd19ee7c6f0c9354cc",
+    "collision.npz": "8f64bef6e537e727b10c3a447b83b0f6"
+   }
+  },
+  "ladder_sectioned_01": {
+   "name": "Ladder Sectioned 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Ladders",
+   "authors": [
+    "MP"
+   ],
+   "source_hash": "13918cbf2df2d0f0321d29546ed2da162b44887a",
+   "triangles": 20000,
+   "source_triangles": 29140,
+   "size": [
+    0.6615,
+    0.1776,
+    2.1346
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d2e3694acfc6bb07b9bbc9d636fbd72a",
+    "collision.npz": "9f4d067bae645baef8b0a25d3ff3f707"
+   }
+  },
+  "lambis_shell": {
+   "name": "Lambis Shell",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Decorative Objects",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "541aa6fe3432c07646559a84f5384e248ab4dffe",
+   "triangles": 12498,
+   "source_triangles": 12498,
+   "size": [
+    0.1395,
+    0.0745,
+    0.0465
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e2db2f08d3e127f1b52aea65d7a52135",
+    "collision.npz": "f9f768549862bc16f079b0e80a037ea1"
+   }
+  },
+  "leipoldtia_schultzei": {
+   "name": "Leipoldtia Schultzei",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Succulents & Cacti",
+   "authors": [
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "413899fdf8bac139d2cff0805a732a442daacdcf",
+   "triangles": 31007,
+   "source_triangles": 385504,
+   "size": [
+    2.3085,
+    0.8093,
+    0.312
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "14a5295aea8521f69ae000c1ed7d8583",
+    "collision.npz": "fa9efdfce56df71b79fe6ec902a624cb"
+   }
+  },
+  "life_jacket": {
+   "name": "Life Jacket",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Clothing & Footwear/Safety Gear",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "94cef5a5cde9afe795c7cf940b7916f2cd3ea2d1",
+   "triangles": 8968,
+   "source_triangles": 8968,
+   "size": [
+    0.6956,
+    0.1842,
+    0.9923
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "134143a4fec3400eb20241be05227536",
+    "collision.npz": "a070250a09f458720a79752dd50f9ef3"
+   }
+  },
+  "lion_head": {
+   "name": "Lion Head",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Animal Figures",
+   "authors": [
+    "Tina"
+   ],
+   "source_hash": "e7e73761f23f501655f1b5b8aa1eb3b2ad8919b1",
+   "triangles": 19999,
+   "source_triangles": 47214,
+   "size": [
+    0.3208,
+    0.2068,
+    0.4361
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1e4f9e9dafcbf217a3a7ace3585a4ee6",
+    "collision.npz": "c08a3a98e9d9d34ff39de4a276ca0793"
+   }
+  },
+  "long_life_food": {
+   "name": "Long Life Food",
+   "label": "prop",
+   "category": "Food & Kitchen/Packaged & Pantry",
+   "authors": [
+    "Mia Pecina Zorko"
+   ],
+   "source_hash": "9b0c4e65bdd4d8c0f09f15dde7728afa7a8cb2c4",
+   "triangles": 4712,
+   "source_triangles": 4712,
+   "size": [
+    0.5238,
+    0.1136,
+    0.2376
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "db208ff1905ce313a0715615b60d964a",
+    "collision.npz": "6a3aaad9f7e356f6b660dd277f6e4a54"
+   }
+  },
+  "magnifying_glass_01": {
+   "name": "Magnifying Glass 01",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Optical Instruments",
+   "authors": [
+    "Nazar Borodavka"
+   ],
+   "source_hash": "6da491748884093be54c0e1ec1ca97a839889ea0",
+   "triangles": 7240,
+   "source_triangles": 7240,
+   "size": [
+    0.1321,
+    0.0267,
+    0.2716
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "585471751a72f89ff57d394bb2f9eb80",
+    "collision.npz": "97090fb33b2f97aad1cb980ea5ba8653"
+   }
+  },
+  "marble_bust_01": {
+   "name": "Marble Bust 01",
+   "label": "prop",
+   "category": "Decor & Art/Sculptures & Figurines/Busts & Human Figures",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "7a118fddaa2d7823e16cf3647b9075d373a81164",
+   "triangles": 17456,
+   "source_triangles": 17456,
+   "size": [
+    0.2717,
+    0.2997,
+    0.5149
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6899a30ca84be576506da7280dc769bf",
+    "collision.npz": "f1f690eaaea8997844b0ceda7589d0f6"
+   }
+  },
+  "measuring_tape_01": {
+   "name": "Measuring Tape 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Measuring Tools",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "750ca1a82e79da1feaa5fb4809ebc31c52a1a949",
+   "triangles": 2868,
+   "source_triangles": 2868,
+   "size": [
+    0.0406,
+    0.1694,
+    0.0734
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b5003eb5fba8346763a15df46a52253f",
+    "collision.npz": "e92dedde8221f60c50b5f4a5ca2de29f"
+   }
+  },
+  "medical_box": {
+   "name": "Medical Box",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Mobility & Medical/Medical Kits",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "e88c35fdfce2d2c4e77c406f49bcf39563c2dadc",
+   "triangles": 3718,
+   "source_triangles": 3718,
+   "size": [
+    0.5255,
+    0.3502,
+    0.0975
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e04855bfb1228b777ea6e043ae097b12",
+    "collision.npz": "38b1bb11355cba57e1d6443ec044b4b9"
+   }
+  },
+  "metal_detector": {
+   "name": "Metal Detector",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Measuring Tools",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "554df4e1073ad058fcb816d9ef745b6754d45a64",
+   "triangles": 15518,
+   "source_triangles": 15518,
+   "size": [
+    0.2379,
+    0.8611,
+    0.9617
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e287a7a8f7bc8bd91fce4aac6cc2a8ae",
+    "collision.npz": "856808bb866daf5271b715dac7f2da23"
+   }
+  },
+  "metal_jerrycan": {
+   "name": "Metal Jerrycan",
+   "label": "prop",
+   "category": "Containers & Storage/Tanks & Jerrycans/Jerrycans",
+   "authors": [
+    "Sean Buckley"
+   ],
+   "source_hash": "dec5eb28e40431074a34abb2cc63354559218f46",
+   "triangles": 20000,
+   "source_triangles": 20022,
+   "size": [
+    0.3503,
+    0.1717,
+    0.4552
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "06d9123d48c979620cf2a8bce2cc0996",
+    "collision.npz": "ae95a1b3022ceb83428f61e1ee0c9064"
+   }
+  },
+  "metal_jerrycan_green": {
+   "name": "Metal Jerrycan Green",
+   "label": "prop",
+   "category": "Containers & Storage/Tanks & Jerrycans/Jerrycans",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "77866d0231053e819e02a2456d50bf12b5b22e5d",
+   "triangles": 9636,
+   "source_triangles": 9636,
+   "size": [
+    0.3604,
+    0.1709,
+    0.4999
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a535605fea2caa9646e547196b3e024b",
+    "collision.npz": "a64a25116cd476e1cf6e377b7423f685"
+   }
+  },
+  "metal_jug": {
+   "name": "Metal Jug",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Jugs & Pitchers",
+   "authors": [
+    "Anzor Lezhava"
+   ],
+   "source_hash": "19b56fb1a714da6cb21144ef125ed71a5721318d",
+   "triangles": 6040,
+   "source_triangles": 6040,
+   "size": [
+    0.1968,
+    0.1955,
+    0.2875
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a26d985d3e9707e505155948732685fd",
+    "collision.npz": "7dd69c88e34ac5883c32b2115da95497"
+   }
+  },
+  "metal_office_desk": {
+   "name": "Metal Office Desk",
+   "label": "desk",
+   "category": "Furniture/Tables/Desks",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "687c6d374d4674adb8d065aa3480b04f4f56f2b0",
+   "triangles": 6898,
+   "source_triangles": 6898,
+   "size": [
+    2.0,
+    0.9472,
+    0.7875
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "22d574c9dfd732cff1403578904ae10b",
+    "collision.npz": "e3538fb057b88c10fc983092e40e1c34"
+   }
+  },
+  "metal_stool_01": {
+   "name": "Metal Stool 01",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "71e47af25e18dbc9a6081c23a25c72ee5a2459f6",
+   "triangles": 8334,
+   "source_triangles": 8334,
+   "size": [
+    0.352,
+    0.3546,
+    0.8828
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fbb90f8c0d6f38a70872ebac54b4ae13",
+    "collision.npz": "a0f01963351437e6a0e3b669607d70ee"
+   }
+  },
+  "metal_stool_02": {
+   "name": "Metal Stool 02",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "1a42bd884305ce704ceccec448fefdbe34a28619",
+   "triangles": 6532,
+   "source_triangles": 6532,
+   "size": [
+    0.4481,
+    0.4731,
+    0.4581
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "428fd25983b1ccc863bd3a0766166f59",
+    "collision.npz": "7699313253ae2efa0dd9661d1dffbd0c"
+   }
+  },
+  "metal_stool_03": {
+   "name": "Metal Stool 03",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Flo Tasser"
+   ],
+   "source_hash": "d9c705e5cb3458ede0b62a0df7754e75c8926bcb",
+   "triangles": 6576,
+   "source_triangles": 6576,
+   "size": [
+    0.4606,
+    0.4706,
+    1.0231
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b13e869ac4a9c09fbc7c4ce82bfba975",
+    "collision.npz": "1e5f448bcf27d8bbfbb96a373ee49227"
+   }
+  },
+  "metal_toolbox": {
+   "name": "Metal Toolbox",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Tool Chests",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "df0982cb97ade9651921bf5d76047a33a388118a",
+   "triangles": 14228,
+   "source_triangles": 14228,
+   "size": [
+    0.4,
+    0.2705,
+    0.3047
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "cac69a23cd34879cc72c2dbfa86262ca",
+    "collision.npz": "6341c743087c6f8b48fc234e40b10e30"
+   }
+  },
+  "metal_trash_can": {
+   "name": "Metal Trash Can",
+   "label": "trash_can",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Trash Cans",
+   "authors": [
+    "GurJas Studios"
+   ],
+   "source_hash": "3ecbee3adbcc53b4af3c8f010e76e10c5b7558a2",
+   "triangles": 13960,
+   "source_triangles": 13960,
+   "size": [
+    1.778,
+    0.5563,
+    0.9062
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "80821bf683f6ca006bc40455f7b416ce",
+    "collision.npz": "86870ad03102631478cf4d18760999f7"
+   }
+  },
+  "mid_century_lounge_chair": {
+   "name": "Mid Century Lounge Chair",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "0f50a344eb54625e4b4a22bf049ecc1c6fe8347c",
+   "triangles": 6148,
+   "source_triangles": 6148,
+   "size": [
+    1.0086,
+    1.1903,
+    1.1691
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e636bd93c7574ef6590ad05e8d55863a",
+    "collision.npz": "b87e1ea87a38a3192681164104fd301b"
+   }
+  },
+  "modern_arm_chair_01": {
+   "name": "Modern Arm Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Vibrant Nordic"
+   ],
+   "source_hash": "6893f36e58dddba95bd0ae1f1ef38537c1852a0b",
+   "triangles": 8916,
+   "source_triangles": 8916,
+   "size": [
+    0.8203,
+    0.9866,
+    1.0229
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fbf378e4e8337d670df0e6b38719973a",
+    "collision.npz": "bb1c0b80c9b5fc3d228da0c42c25c183"
+   }
+  },
+  "modern_coffee_table_01": {
+   "name": "Modern Coffee Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Amin"
+   ],
+   "source_hash": "31772c0aab6f930a18de82606146c0a97f08b7d0",
+   "triangles": 4504,
+   "source_triangles": 4504,
+   "size": [
+    0.6,
+    1.2018,
+    0.39
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7837f09edb2a67a8433b743f88596bff",
+    "collision.npz": "fdb94d386b5e5934322421181e47964a"
+   }
+  },
+  "modern_coffee_table_02": {
+   "name": "Modern Coffee Table 02",
+   "label": "table",
+   "category": "Furniture/Tables/Coffee Tables",
+   "authors": [
+    "Amin"
+   ],
+   "source_hash": "d4792d6f4ea4eb10335816eaac4b6e1a9bcd1b36",
+   "triangles": 13645,
+   "source_triangles": 13645,
+   "size": [
+    1.1991,
+    1.1997,
+    0.3692
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "38b30b63994331d30c10b695d5f69b1b",
+    "collision.npz": "aa1de79998514dfa1cdc9b8c8be93716"
+   }
+  },
+  "modern_wooden_cabinet": {
+   "name": "Modern Wooden Cabinet",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Cabinets & Cupboards",
+   "authors": [
+    "Patrik Pangerl"
+   ],
+   "source_hash": "ef2d266b0823d230f465b29bb32b110b4c71b3b2",
+   "triangles": 19999,
+   "source_triangles": 24976,
+   "size": [
+    2.44,
+    0.52,
+    0.6801
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d7af5d7ad776ba75d558fe15d2b840ab",
+    "collision.npz": "2f7c87360554b865dd1005593d4e02c6"
+   }
+  },
+  "modified_thermos": {
+   "name": "Modified Thermos",
+   "label": "prop",
+   "category": "Food & Kitchen/Drinks/Flasks & Thermoses",
+   "authors": [
+    "Alex Weber"
+   ],
+   "source_hash": "b54fc17f8886546ef664c28796bfcc96a6bc69a5",
+   "triangles": 11576,
+   "source_triangles": 11576,
+   "size": [
+    0.1427,
+    0.1011,
+    0.3062
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0d3e73b396867010b729536a76743d79",
+    "collision.npz": "39437161a6bb3cca5aa14f0a35a51f12"
+   }
+  },
+  "modular_electric_cables": {
+   "name": "Modular Electric Cables",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Electrical/Cables & Wiring",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "824f792bf907b567d72a52da324c7a79e67b40cd",
+   "triangles": 20000,
+   "source_triangles": 42078,
+   "size": [
+    2.0771,
+    0.2148,
+    0.7577
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4d7a122f09396b501cd807643fcc58d5",
+    "collision.npz": "adde8b452241cc83531e76b752003b65"
+   }
+  },
+  "modular_industrial_pipes_01": {
+   "name": "Modular Industrial Pipes 01",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Pipes & Ducts/Modular Pipes",
+   "authors": [
+    "Jorge Camacho"
+   ],
+   "source_hash": "43a80d0f0f527ea832f00a5d6512ec0ef70a5910",
+   "triangles": 12340,
+   "source_triangles": 12340,
+   "size": [
+    1.4028,
+    0.3076,
+    1.9546
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e4c6a2df6763d241a3f2fbdaa9b19fd2",
+    "collision.npz": "c5247b95825962741f72b1d824c1032a"
+   }
+  },
+  "modular_metal_gutter": {
+   "name": "Modular Metal Gutter",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Pipes & Ducts/Gutters & Downspouts",
+   "authors": [
+    "Maxim Domnin"
+   ],
+   "source_hash": "01a58d11c6108814bd6526ac6951ee9ce2abc1f6",
+   "triangles": 16490,
+   "source_triangles": 16490,
+   "size": [
+    2.2685,
+    1.5147,
+    1.8426
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c28777bbc619e456bf13772ff9438d3c",
+    "collision.npz": "61175ee0769791165a120ca94615b6a4"
+   }
+  },
+  "modular_pipes_plastic_01": {
+   "name": "Modular Pipes Plastic 01",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Pipes & Ducts/Modular Pipes",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "4f42b50b74be515ab781b45d4ab1e788828f3381",
+   "triangles": 20000,
+   "source_triangles": 47788,
+   "size": [
+    0.8157,
+    0.3618,
+    0.0755
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f44f869c573999a548032ce87cd34aa9",
+    "collision.npz": "47204d190982fa22e56e6c1efac62cfc"
+   }
+  },
+  "moon_rock_01": {
+   "name": "Moon Rock 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Extraterrestrial Rocks",
+   "authors": [
+    "Dario Barresi",
+    "Greg Zaal",
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "8aac337ef1b7cd03ee522258ce658dbc1bffe554",
+   "triangles": 18668,
+   "source_triangles": 18668,
+   "size": [
+    0.2123,
+    0.1117,
+    0.0753
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "369845e923ae5ca7a2b51a2e0203641f",
+    "collision.npz": "8980f79ae233f88cc94dff62d5c1b156"
+   }
+  },
+  "moon_rock_02": {
+   "name": "Moon Rock 02",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Extraterrestrial Rocks",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "91ebdf0b508b44a6cf08a5de1e23e2172d343179",
+   "triangles": 3304,
+   "source_triangles": 3304,
+   "size": [
+    0.2465,
+    0.2513,
+    0.2019
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6d25dad7ddfcb8f9ca636b5b4c0d74ca",
+    "collision.npz": "84edf40b421f89dbc74881f4b03a2041"
+   }
+  },
+  "moon_rock_03": {
+   "name": "Moon Rock 03",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Extraterrestrial Rocks",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "91e6ba46a8ce2620ab298cb0cabe82d60027ccb1",
+   "triangles": 5598,
+   "source_triangles": 5598,
+   "size": [
+    0.112,
+    0.0861,
+    0.0582
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b656dab0df95ecb692d85a62aa8d32bf",
+    "collision.npz": "0a3bf177a4b9841c740912a881ad2f3c"
+   }
+  },
+  "moon_rock_04": {
+   "name": "Moon Rock 04",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Extraterrestrial Rocks",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "source_hash": "80374d9ae3cf6a80f1983768987db33576a6e277",
+   "triangles": 7636,
+   "source_triangles": 7636,
+   "size": [
+    0.1198,
+    0.1738,
+    0.0538
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "304866e139b4b1c1f99370297b4ca668",
+    "collision.npz": "a0304739cf69be52c47e51236adeffd6"
+   }
+  },
+  "mousetrap": {
+   "name": "Mousetrap",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools",
+   "authors": [
+    "GreenPixel"
+   ],
+   "source_hash": "52446c00c1e638500cd5d919d0b443dee4c98382",
+   "triangles": 5136,
+   "source_triangles": 5136,
+   "size": [
+    0.055,
+    0.1004,
+    0.0179
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "00db4af06bd5d7168b47069a9cf0a7f7",
+    "collision.npz": "202d0b5c87e70ca16fe7a1f2a7e1db99"
+   }
+  },
+  "multi_cleaner_5_litre": {
+   "name": "Multi Cleaner 5 Litre",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Cleaning & Chemical Bottles",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "a8bf2495f39d1b4f99c30f46f361bc9ccafc8fb1",
+   "triangles": 4332,
+   "source_triangles": 4332,
+   "size": [
+    0.2193,
+    0.1058,
+    0.3003
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "26e21c7e4825022fb7cab6abab2b743b",
+    "collision.npz": "976386c721ef4f1a8696930730aa7767"
+   }
+  },
+  "namaqualand_boulder_05": {
+   "name": "Namaqualand Boulder 05",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Desert Boulders",
+   "authors": [
+    "Dario Barresi",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "db0437675da1e8fcd3fdd7b0d933cac1c9462456",
+   "triangles": 19999,
+   "source_triangles": 89618,
+   "size": [
+    1.3647,
+    0.7483,
+    0.5358
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b7b9759c6318148f3a5d992228034c21",
+    "collision.npz": "c668f3e3cdfa0302597f12273c972594"
+   }
+  },
+  "namaqualand_boulder_06": {
+   "name": "Namaqualand Boulder 06",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Desert Boulders",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "f388f7ae4d491b48aa800289d7e71c43cecea93b",
+   "triangles": 19999,
+   "source_triangles": 109114,
+   "size": [
+    0.674,
+    1.212,
+    0.652
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "da1af7307a3929e1608288eef70845c5",
+    "collision.npz": "34e5c883dc666ee3be4a574647dd97c0"
+   }
+  },
+  "namaqualand_boulders_01": {
+   "name": "Namaqualand Boulders 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Desert Boulders",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "05cd2d5d4beb501f2bd4b7b2a441fc5792b25c18",
+   "triangles": 20000,
+   "source_triangles": 40850,
+   "size": [
+    1.0581,
+    0.5864,
+    0.2519
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "43602d247a9ca3f4fd7e208e44322f10",
+    "collision.npz": "bfff3260712c5164b52e811327c8a0e9"
+   }
+  },
+  "namaqualand_rocks_01": {
+   "name": "Namaqualand Rocks 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Stone Sets",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "b3db262e3bbee2c87c984ee85daad2baaaeeebee",
+   "triangles": 19999,
+   "source_triangles": 85716,
+   "size": [
+    1.4481,
+    0.2156,
+    0.1522
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e5ee85e523da6dbae16690e5ca632a38",
+    "collision.npz": "aa3427d679c850307bbcc7a2a7266e90"
+   }
+  },
+  "namaqualand_stones_01": {
+   "name": "Namaqualand Stones 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Stone Sets",
+   "authors": [
+    "Greg Zaal",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "56a5d069e1b0eb31d342e677d39a23649a5265dd",
+   "triangles": 20000,
+   "source_triangles": 70124,
+   "size": [
+    1.022,
+    0.112,
+    0.084
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "75df26b0ed1519dabb9acc1b128ac2e2",
+    "collision.npz": "5be55747713f0cd91efb434211f55d6b"
+   }
+  },
+  "nettle_plant": {
+   "name": "Nettle Plant",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Shrubs & Bushes",
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "source_hash": "8f65dcb085e502c39e2abfa0161f4de2b43c6096",
+   "triangles": 19999,
+   "source_triangles": 31304,
+   "size": [
+    1.0828,
+    0.0947,
+    0.2184
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "38ced7ac7627cec11d92a39fb0a1900d",
+    "collision.npz": "7b7e8aa3d0e206cdd1de4667ef39bf51"
+   }
+  },
+  "office_notepads": {
+   "name": "Office Notepads",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Notebooks & Pads",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "41a4f25b547807cd4c1dea9ec782319f8c996a8a",
+   "triangles": 666,
+   "source_triangles": 666,
+   "size": [
+    1.1028,
+    0.6598,
+    0.022
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0e701a126b804a83a39f21ae812f68ba",
+    "collision.npz": "2828da5ef9f5a0102db5b48b4c6f9a6d"
+   }
+  },
+  "oil_tin": {
+   "name": "Oil Tin",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Oil & Fuel Cans",
+   "authors": [
+    "Niklas"
+   ],
+   "source_hash": "78613d51822c0601e44556acee237154b02ac0d5",
+   "triangles": 2834,
+   "source_triangles": 2834,
+   "size": [
+    0.1147,
+    0.1535,
+    0.2054
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "050dfce4f70cb832e2f92f1c9bdf90a4",
+    "collision.npz": "d89b0b0bc7f9ec3bbf5320d0bfc509fb"
+   }
+  },
+  "old_bed_frame": {
+   "name": "Old Bed Frame",
+   "label": "bed",
+   "category": "Furniture/Beds",
+   "authors": [
+    "Luca B"
+   ],
+   "source_hash": "520f81981bc7162368cfbb9b889264d8e3c53b57",
+   "triangles": 19999,
+   "source_triangles": 49990,
+   "size": [
+    0.9047,
+    2.0017,
+    1.2024
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f23d950b0e334a7aeec7dba2a85a7364",
+    "collision.npz": "4bfcbf28dd7737e27a7575853d164214"
+   }
+  },
+  "old_drill_press": {
+   "name": "Old Drill Press",
+   "label": "prop",
+   "category": "Tools & Equipment/Power Tools/Workshop Machines",
+   "authors": [
+    "Harsh Vardhan Singh"
+   ],
+   "source_hash": "a96e5cf7bda67039ae79e04d97d814f147c78936",
+   "triangles": 20000,
+   "source_triangles": 21842,
+   "size": [
+    0.5272,
+    0.6095,
+    1.05
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "dacdd9722b845091208a7c2d78d3b0f6",
+    "collision.npz": "330ec7a7ec1d945dde74659b1cdf2cdc"
+   }
+  },
+  "old_gas_mask": {
+   "name": "Old Gas Mask",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Clothing & Footwear/Safety Gear",
+   "authors": [
+    "Micha\u0142 Wi\u015bniewski"
+   ],
+   "source_hash": "2eb8444cb0f9cfd027d96b09364c1fd4fe9fdaf8",
+   "triangles": 18900,
+   "source_triangles": 18900,
+   "size": [
+    0.2105,
+    0.3087,
+    1.1257
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0b759cd2e9bd6c14dba08431d63bd8d1",
+    "collision.npz": "b6298f2b06dbdb9cc7eddd85c60726f7"
+   }
+  },
+  "old_military_compressor": {
+   "name": "Old Military Compressor",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Pumps",
+   "authors": [
+    "Brian Speight"
+   ],
+   "source_hash": "68ce27286d358c0109bfefb8198d3be96cdf18b7",
+   "triangles": 20000,
+   "source_triangles": 79042,
+   "size": [
+    0.5978,
+    1.6739,
+    1.1795
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1f286e43de6c9544929c4d86c376f969",
+    "collision.npz": "e6ff16f54a47dea715eef83c19d7f0a8"
+   }
+  },
+  "old_military_crate": {
+   "name": "Old Military Crate",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Military Crates",
+   "authors": [
+    "Jack Mava"
+   ],
+   "source_hash": "03f2c68403869a77c2b3b4a7b2e2e2266ba616fa",
+   "triangles": 20000,
+   "source_triangles": 20952,
+   "size": [
+    1.8154,
+    0.9757,
+    0.3009
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f3ed9ed6ccda4f95ec6f59838e812c05",
+    "collision.npz": "9c450398c8f15bc268b2d0b0b19ac085"
+   }
+  },
+  "outdoor_table_chair_set_01": {
+   "name": "Outdoor Table Chair Set 01",
+   "label": "bench",
+   "category": "Furniture/Seating/Outdoor Seating",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "6e1e83970732c6c4e9f2056f37cec189cc80adc5",
+   "triangles": 9828,
+   "source_triangles": 9828,
+   "size": [
+    0.7417,
+    1.7173,
+    0.8586
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6cf84b98fd0a87def8be011a5f79a24a",
+    "collision.npz": "fef0cce66dbf574d99813849d3e01dd9"
+   }
+  },
+  "painted_wooden_bench": {
+   "name": "Painted Wooden Bench",
+   "label": "bench",
+   "category": "Furniture/Seating/Benches",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "6784218e3b57df8750c5aa76ece84edfdd53b797",
+   "triangles": 630,
+   "source_triangles": 630,
+   "size": [
+    1.1649,
+    0.4965,
+    0.8893
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "14a550aa4162081c258d8da8059f57f3",
+    "collision.npz": "e8e59acef5627e2cc5786622612766d2"
+   }
+  },
+  "painted_wooden_cabinet": {
+   "name": "Painted Wooden Cabinet",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Cabinets & Cupboards",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "f8cce862d9eaac61abef0246a662aa937ec04332",
+   "triangles": 2227,
+   "source_triangles": 2227,
+   "size": [
+    1.1947,
+    0.6166,
+    1.1819
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d6f2874c02406788857c7ce38cc5ba4f",
+    "collision.npz": "851063c7f98718eff23c59f3b80918c4"
+   }
+  },
+  "painted_wooden_chair_01": {
+   "name": "Painted Wooden Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "51ead6fbc1a60ea9098c37e18b1d5413223789e0",
+   "triangles": 724,
+   "source_triangles": 724,
+   "size": [
+    0.4318,
+    0.5398,
+    0.9565
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b5978d2c491e000ecba7fced36c7a54f",
+    "collision.npz": "6e1a51c86517f3f72c42190dc2c9fc8f"
+   }
+  },
+  "painted_wooden_chair_02": {
+   "name": "Painted Wooden Chair 02",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "fc80666ad28251b4ecc506fe5ddce50f3204bdf0",
+   "triangles": 1246,
+   "source_triangles": 1246,
+   "size": [
+    0.6394,
+    0.6621,
+    1.2638
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2cf7982356627e24819ab5e89f45b79a",
+    "collision.npz": "9c7da9a3517ffd54fdc15559bb58bd7e"
+   }
+  },
+  "painted_wooden_nightstand": {
+   "name": "Painted Wooden Nightstand",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "b6f876f6bbeed892613bc8a43ef08d2008f72ec9",
+   "triangles": 470,
+   "source_triangles": 470,
+   "size": [
+    0.5046,
+    0.5087,
+    0.6155
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d106e99abca1fc79f79201823b26a1e3",
+    "collision.npz": "191ccb9c9014a91c8bc5a19470c712c8"
+   }
+  },
+  "painted_wooden_shelves": {
+   "name": "Painted Wooden Shelves",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "76a6c2e7243607651f07a050c5a4d730ac275905",
+   "triangles": 524,
+   "source_triangles": 524,
+   "size": [
+    0.5111,
+    0.3671,
+    1.1251
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a162d1542ea5aafc82ceaf7294ce93c2",
+    "collision.npz": "4928b1fc29ca96ffb27846052e8716bb"
+   }
+  },
+  "painted_wooden_sofa": {
+   "name": "Painted Wooden Sofa",
+   "label": "couch",
+   "category": "Furniture/Seating/Sofas & Couches",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "cd7862213f3ab23e520551a206ddb49a4f5777d9",
+   "triangles": 5826,
+   "source_triangles": 5826,
+   "size": [
+    2.4517,
+    0.7873,
+    1.281
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "be572083dfd500790acd1010f008513a",
+    "collision.npz": "f234a13a57a325c01829045f5536fe1e"
+   }
+  },
+  "painted_wooden_stool": {
+   "name": "Painted Wooden Stool",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "05124979aecd8b4eb15587a43eccae4bb0a5b7e4",
+   "triangles": 676,
+   "source_triangles": 676,
+   "size": [
+    0.3848,
+    0.4061,
+    0.5789
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "011500bc48710501f8defc46cfb668c3",
+    "collision.npz": "faa4215285e5e672ab25edbe1bc9193e"
+   }
+  },
+  "painted_wooden_table": {
+   "name": "Painted Wooden Table",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "ecd402d73fb1f798e08b575a49282bd89856db86",
+   "triangles": 600,
+   "source_triangles": 600,
+   "size": [
+    2.4056,
+    1.137,
+    0.9586
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "002ab3ca98061d2f01785e73ed8c65f2",
+    "collision.npz": "49e8891494710dcaea9cfec3ac8fb8d0"
+   }
+  },
+  "pastic_torch_6v": {
+   "name": "Plastic Torch 6V",
+   "label": "prop",
+   "category": "Lighting/Portable/Flashlights & Torches",
+   "authors": [
+    "James Cocks"
+   ],
+   "source_hash": "ddae2fd39a2382d790639d2621fd1b9deda8dd9b",
+   "triangles": 4352,
+   "source_triangles": 4352,
+   "size": [
+    0.1369,
+    0.2242,
+    0.1417
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "512a8c86c37c86e93bc4396d35fcfb7f",
+    "collision.npz": "11dae64a5a44b3a2c861b52019132f51"
+   }
+  },
+  "periwinkle_plant": {
+   "name": "Periwinkle Plant",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Wildflowers",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "914403d31fda1dc15ff457e71e96ab7476134019",
+   "triangles": 20000,
+   "source_triangles": 34350,
+   "size": [
+    1.2354,
+    0.3207,
+    0.4107
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4edca8387909ba6ff88d8a4a848cd965",
+    "collision.npz": "00fcb466f37b68e3b88e1c39064ec3d8"
+   }
+  },
+  "picke_dirty_01": {
+   "name": "Picke Dirty 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Digging Tools",
+   "authors": [
+    "Dennis Halbeck"
+   ],
+   "source_hash": "5d1a09319ec11e7188f212e2f89b0c3e770082f5",
+   "triangles": 6196,
+   "source_triangles": 6196,
+   "size": [
+    0.5498,
+    0.0691,
+    1.1156
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6cb1235d9e610b236eb562ab52852b37",
+    "collision.npz": "8997af4018594fde1b3ee2fdfb8d68ac"
+   }
+  },
+  "pine_roots": {
+   "name": "Pine Roots",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Root Clusters",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "source_hash": "8a16347883d31284122bea6c1638f4feca7966ef",
+   "triangles": 20000,
+   "source_triangles": 162693,
+   "size": [
+    1.7725,
+    1.8939,
+    0.1542
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2eba3a0feabca482d2df667bbafce604",
+    "collision.npz": "b9d773060c7ff4cb017cddd30ab7e570"
+   }
+  },
+  "planter_box_01": {
+   "name": "Planter Box 01",
+   "label": "prop",
+   "category": "Containers & Storage/Boxes & Crates/Planter Boxes",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "e3e14427dcd99e4141916fa2a581509036657015",
+   "triangles": 8094,
+   "source_triangles": 8094,
+   "size": [
+    0.9126,
+    0.4137,
+    0.425
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d831dfdeccc3d59a46595a3bb95bebf8",
+    "collision.npz": "d36ec19f982c9609dc33a116b81ea70b"
+   }
+  },
+  "planter_box_02": {
+   "name": "Planter Box 02",
+   "label": "prop",
+   "category": "Containers & Storage/Boxes & Crates/Planter Boxes",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "11d15f92f767aa1e72507d3ceacd24f50f09253e",
+   "triangles": 10944,
+   "source_triangles": 10944,
+   "size": [
+    1.2516,
+    0.4672,
+    0.4534
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "66a7191758152c3e6f8f4c0efa11b275",
+    "collision.npz": "2bb1315469cced96f030f1f208b203a2"
+   }
+  },
+  "planter_box_03": {
+   "name": "Planter Box 03",
+   "label": "prop",
+   "category": "Containers & Storage/Boxes & Crates/Planter Boxes",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "f7992283532ca3db8edfa08e6a27b989696f05cd",
+   "triangles": 13112,
+   "source_triangles": 13112,
+   "size": [
+    0.9143,
+    0.6555,
+    0.8551
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0eb1d23fa40b391a9e82e2909df3c50c",
+    "collision.npz": "cd40b1540ea8299ed4d90ea88f448300"
+   }
+  },
+  "planter_pot_clay": {
+   "name": "Planter Pot Clay",
+   "label": "prop",
+   "category": "Decor & Art/Vases & Vessels/Terracotta Pots",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "source_hash": "9add1027ddc7f4f0bcc83024d2bdf7715dea8b5d",
+   "triangles": 3080,
+   "source_triangles": 3080,
+   "size": [
+    0.266,
+    0.2635,
+    0.2219
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "85dfd417db34146c56b634578bce9896",
+    "collision.npz": "a12bbd56647ae1bf1b5fd1596dbd77c1"
+   }
+  },
+  "plastic_bottle_gallon": {
+   "name": "Plastic Bottle Gallon",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Jugs & Bottles",
+   "authors": [
+    "Rahul Chaudhary"
+   ],
+   "source_hash": "8e579852c844aa8beea73397b4e05717a2303d93",
+   "triangles": 13728,
+   "source_triangles": 13728,
+   "size": [
+    0.1663,
+    0.1264,
+    0.2745
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b620d31014f186fd624908b4d644c652",
+    "collision.npz": "6445b6d2f104f7f739b9e46ad558f912"
+   }
+  },
+  "plastic_broom": {
+   "name": "Plastic Broom",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Brooms & Cleaning",
+   "authors": [
+    "L"
+   ],
+   "source_hash": "96b9f69289e9738a0bcfc8302e17575e0fd0a237",
+   "triangles": 18736,
+   "source_triangles": 18736,
+   "size": [
+    0.4164,
+    0.5666,
+    1.1975
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "51a81929b03a5ebfc45f5a6f3089dbc6",
+    "collision.npz": "5c870784091ac31a3a66fb014384bc6c"
+   }
+  },
+  "plastic_container": {
+   "name": "Plastic Container",
+   "label": "trash_can",
+   "category": "Containers & Storage/Boxes & Crates/Bins",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "15344534f183e6b8c9fe2605822057d37d276f7c",
+   "triangles": 4070,
+   "source_triangles": 4070,
+   "size": [
+    0.8951,
+    0.6264,
+    0.4297
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0d4262bf60c91631776e2b78309c3acc",
+    "collision.npz": "0eda5f46ee7751d425db5ad7cf49d584"
+   }
+  },
+  "plastic_crate_01": {
+   "name": "Plastic Crate 01",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Plastic Crates",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "74d27ffa75c1d477708f4dd344d500b65d376a84",
+   "triangles": 18320,
+   "source_triangles": 18320,
+   "size": [
+    0.298,
+    0.408,
+    0.2642
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2f788abe2123842748f1b190b50fe73a",
+    "collision.npz": "14f5c69914a976911b44025380a0fcb8"
+   }
+  },
+  "plastic_crate_02": {
+   "name": "Plastic Crate 02",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Plastic Crates",
+   "authors": [
+    "Fabi_G"
+   ],
+   "source_hash": "499ee17caf1790ee16f2e9e7e2a54cefcca3e73c",
+   "triangles": 5840,
+   "source_triangles": 5840,
+   "size": [
+    0.5055,
+    0.4055,
+    0.2541
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3bb13b3f3b70338fb0a665111915218b",
+    "collision.npz": "02c52f43c32c4807b01654ee0e47277e"
+   }
+  },
+  "plastic_crate_03": {
+   "name": "Plastic Crate 03",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Plastic Crates",
+   "authors": [
+    "Pacific Penguin"
+   ],
+   "source_hash": "de0df102c2dfdda10d8a569c40579824212f0fec",
+   "triangles": 19999,
+   "source_triangles": 21740,
+   "size": [
+    0.4811,
+    0.265,
+    0.2659
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "15658b6cf1e0bda61b84ba7b5a4b272d",
+    "collision.npz": "45a01054de9dc77f7537920f6d5b40b9"
+   }
+  },
+  "plastic_jerrycan": {
+   "name": "Plastic Jerrycan",
+   "label": "prop",
+   "category": "Containers & Storage/Tanks & Jerrycans/Jerrycans",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "386cd3051e4046233e6651c9e096bafce59a9913",
+   "triangles": 7348,
+   "source_triangles": 7348,
+   "size": [
+    0.268,
+    0.3409,
+    0.3184
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "deea3d066dc483a11c2a67ba52b27d53",
+    "collision.npz": "0550f03d828d498236bd73e5e12022a4"
+   }
+  },
+  "plastic_monobloc_chair_01": {
+   "name": "Plastic Monobloc Chair 01",
+   "label": "chair",
+   "category": "Furniture/Seating/Chairs",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "fc7be38d51f2483fd3194fdbc6321cf5873742ae",
+   "triangles": 3356,
+   "source_triangles": 3356,
+   "size": [
+    0.6419,
+    0.6276,
+    0.8798
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6e40133cf3925dd053dc246b8e7f087b",
+    "collision.npz": "112af6c4ae0414a0901abd0182422000"
+   }
+  },
+  "plastic_thermos": {
+   "name": "Plastic Thermos",
+   "label": "prop",
+   "category": "Food & Kitchen/Drinks/Flasks & Thermoses",
+   "authors": [
+    "PierreB3D"
+   ],
+   "source_hash": "1c9bd60b49a2f2e7ce581d52f00d497343352abd",
+   "triangles": 5514,
+   "source_triangles": 5514,
+   "size": [
+    0.1406,
+    0.1093,
+    0.3204
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "dc2eb21a4bcc4966486e10b67efca6a3",
+    "collision.npz": "a4bb7e71fddd4268427bb5b193cee00a"
+   }
+  },
+  "plunger": {
+   "name": "Plunger",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Brooms & Cleaning",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "a5d976370506cc3d25a50700da8421ef13ef76b0",
+   "triangles": 3278,
+   "source_triangles": 3278,
+   "size": [
+    0.1721,
+    0.1721,
+    0.4211
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "573b3c0e09ce2b7aa0de6a0401352da7",
+    "collision.npz": "f0d9d835d89a2ef511d8e99f67f2a76b"
+   }
+  },
+  "portable_cassette_player": {
+   "name": "Portable Cassette Player",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Radios & Portable Audio",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "ffb24285e6fb0c78d14778860cbeab851f2f2547",
+   "triangles": 13307,
+   "source_triangles": 13307,
+   "size": [
+    0.1723,
+    0.0397,
+    0.1303
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "31d0d45624dfb4e80e8d00e804408784",
+    "collision.npz": "5adde515e0afe1de363e9ffae5740728"
+   }
+  },
+  "portable_generator": {
+   "name": "Portable Generator",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Utility Equipment",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "1eb1caabd255ee5d737842cb7d92dc325c77d0f4",
+   "triangles": 20000,
+   "source_triangles": 26419,
+   "size": [
+    0.8183,
+    0.5641,
+    0.5769
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "ac45759125284b7e08f47e4a121513dd",
+    "collision.npz": "8e4c4d89799e4ca024995c8438e1412d"
+   }
+  },
+  "portable_searchlight": {
+   "name": "Portable Searchlight",
+   "label": "prop",
+   "category": "Lighting/Portable/Flashlights & Torches",
+   "authors": [
+    "Elijah Cragg"
+   ],
+   "source_hash": "9b5f1215694e0361ac1dd8bed7512f2f296ec634",
+   "triangles": 18802,
+   "source_triangles": 18802,
+   "size": [
+    0.1653,
+    0.2534,
+    0.1853
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "ff188aa455bdad846d7129e727a8d8c3",
+    "collision.npz": "4984194bf89fffe7d5747a8761d594e9"
+   }
+  },
+  "portable_welding_cart": {
+   "name": "Portable Welding Cart",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Welding Equipment",
+   "authors": [
+    "Georgii Gorbunov"
+   ],
+   "source_hash": "54d2c0b8e1d0da2bf8e86e668062ca0fa071f0e3",
+   "triangles": 20000,
+   "source_triangles": 29418,
+   "size": [
+    0.8383,
+    0.6549,
+    1.5632
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a006e2d3bf6801d72a6c531125cf3e25",
+    "collision.npz": "8c1f09a743a56d08f337d022692e8d09"
+   }
+  },
+  "postcard_set_01": {
+   "name": "Postcard Set 01",
+   "label": "prop",
+   "category": "Office & Stationery/Books & Documents/Cards & Postcards",
+   "authors": [
+    "James Ray Cock",
+    "Jurita Burger"
+   ],
+   "source_hash": "fe10db91a4160ae11259ba78041a5520ab63e3f8",
+   "triangles": 2720,
+   "source_triangles": 2720,
+   "size": [
+    0.6767,
+    0.0001,
+    0.545
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "749f918a027489736895590fdc68c359",
+    "collision.npz": "a90d84125de1c392a9000d3436967fd2"
+   }
+  },
+  "pot_enamel_01": {
+   "name": "Pot Enamel 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Cookware/Pots & Pans",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "2332da616c0701d4556f6e272426f8459611c7f3",
+   "triangles": 11416,
+   "source_triangles": 11416,
+   "size": [
+    0.2629,
+    0.1805,
+    0.1783
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4ac579bc94592f3d1ffe311338468928",
+    "collision.npz": "21db9780ba909a6d84097c33034ddb17"
+   }
+  },
+  "potted_plant_01": {
+   "name": "Potted Plant 01",
+   "label": "plant",
+   "category": "Nature/Plants/Potted Plants",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "9fa70d49cb125b1b74e3aeddef22253ba2db060b",
+   "triangles": 19999,
+   "source_triangles": 176226,
+   "size": [
+    0.5854,
+    0.6335,
+    1.3499
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "dc5534254943864eaf3d2b1e714e88b0",
+    "collision.npz": "254c473f5726dd7ee9bb2f72663c31cc"
+   }
+  },
+  "potted_plant_02": {
+   "name": "Potted Plant 02",
+   "label": "plant",
+   "category": "Nature/Plants/Potted Plants",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "155661c96a28b9eb143e866daeb41f5a076d6677",
+   "triangles": 19999,
+   "source_triangles": 69806,
+   "size": [
+    0.7008,
+    0.6564,
+    0.8416
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b9baa629522038b257646ca60808af53",
+    "collision.npz": "5e2d13ab9d08f413e2c8591e03afc668"
+   }
+  },
+  "potted_plant_04": {
+   "name": "Potted Plant 04",
+   "label": "plant",
+   "category": "Nature/Plants/Potted Plants",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "c71ad499bc2ad1a95b689fc8895447eff788408b",
+   "triangles": 8929,
+   "source_triangles": 8929,
+   "size": [
+    0.1679,
+    0.1848,
+    0.2675
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "ed7772683205efbc859f118c4856a3a1",
+    "collision.npz": "5a083e76b8feac8ca3de4bda6970be4a"
+   }
+  },
+  "projector_screen": {
+   "name": "Projector Screen",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Projectors",
+   "authors": [
+    "PeterM"
+   ],
+   "source_hash": "9d6cfae28ea00c99d348c3bbf2f8e1d58731f5cd",
+   "triangles": 8727,
+   "source_triangles": 8727,
+   "size": [
+    1.0936,
+    0.9158,
+    1.7995
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "30ae1b83aabc717961c2b8886068ccd2",
+    "collision.npz": "da215d2448d3415f80ff10c164244428"
+   }
+  },
+  "propane_tank": {
+   "name": "Propane Tank",
+   "label": "prop",
+   "category": "Containers & Storage/Tanks & Jerrycans/Gas Cylinders",
+   "authors": [
+    "Slinc"
+   ],
+   "source_hash": "a6ff4387c33f943167863372e9d7f844fbe5e25f",
+   "triangles": 5238,
+   "source_triangles": 5238,
+   "size": [
+    0.3374,
+    0.3374,
+    0.5538
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4b6a5b5166cd835c2b31477e113671be",
+    "collision.npz": "5e8b1fe1ccd4f21010e6de4630f131ba"
+   }
+  },
+  "quiver_tree_02": {
+   "name": "Quiver Tree 02",
+   "label": "prop",
+   "category": "Nature/Trees/Desert Trees",
+   "authors": [
+    "Dario Barresi",
+    "Rico Cilliers"
+   ],
+   "source_hash": "0587f20a8675f71008bafe89b42256c1ffda2cf7",
+   "triangles": 20000,
+   "source_triangles": 82074,
+   "size": [
+    0.8693,
+    0.88,
+    1.4688
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5e860f61e6385280c9eb37558e7fcc9a",
+    "collision.npz": "bba8cd2122eaf67ec3505d41fcd60cbc"
+   }
+  },
+  "retro_multimeter": {
+   "name": "Retro Multimeter",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Lab Equipment",
+   "authors": [
+    "elli moeller"
+   ],
+   "source_hash": "53bc11f4783d6aa428add6ff0096328bb169d4f1",
+   "triangles": 8948,
+   "source_triangles": 8948,
+   "size": [
+    0.216,
+    0.2026,
+    0.2786
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "7627d88732c201544eea581b0f6bbc56",
+    "collision.npz": "7241f1b86e2be12d804457dbb35e0921"
+   }
+  },
+  "rock_07": {
+   "name": "Rock 07",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Boulders",
+   "authors": [
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "dd2ca74801cd50ae5f510331cbb86e4b76b05801",
+   "triangles": 14844,
+   "source_triangles": 14844,
+   "size": [
+    0.1689,
+    0.3203,
+    0.1437
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1d6a7a3dfd052789ffbfb1fda1b0e5e5",
+    "collision.npz": "d88903e724c578ec3e8fa76cabd04ee7"
+   }
+  },
+  "rock_09": {
+   "name": "Rock 09",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Boulders",
+   "authors": [
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "1560e10c5800cc570d6e0a692fb5300443f72156",
+   "triangles": 12416,
+   "source_triangles": 12416,
+   "size": [
+    0.074,
+    0.1446,
+    0.0329
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c8973173eb2df66d3f2fca4f4c7e9b4d",
+    "collision.npz": "3555ac4d4c1d00c967585c3c032d9ce5"
+   }
+  },
+  "round_spectacles": {
+   "name": "Round Spectacles",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Accessories/Eyewear",
+   "authors": [
+    "Sean Buckley"
+   ],
+   "source_hash": "35737e3f6dce1f4fdfca27bfba9c4e8abd0ce482",
+   "triangles": 11810,
+   "source_triangles": 11810,
+   "size": [
+    0.1578,
+    0.149,
+    0.0463
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3c1e0ccdb878dfdc6d352850eec0a4ac",
+    "collision.npz": "1820a974f06c5e971e0e7c7c91d24ff5"
+   }
+  },
+  "round_wooden_table_01": {
+   "name": "Round Wooden Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "68d8afc5c698ecb2b91c3773864c78f58fa75c5a",
+   "triangles": 8640,
+   "source_triangles": 8640,
+   "size": [
+    1.3993,
+    1.3993,
+    1.005
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "89950816a3a635d32eb1b2c353e95f11",
+    "collision.npz": "2ef6c17bd75f5d39493cc074a660e597"
+   }
+  },
+  "round_wooden_table_02": {
+   "name": "Round Wooden Table 02",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "f21803c204b5835f887cdc37016c77a16fa1d8fb",
+   "triangles": 4254,
+   "source_triangles": 4254,
+   "size": [
+    0.7962,
+    0.7962,
+    0.746
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b4d3e94bd40a5727975411cc589846cb",
+    "collision.npz": "4a96e0a0bae2718b6d82fa408cf954eb"
+   }
+  },
+  "rubber_boots": {
+   "name": "Rubber Boots",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Clothing & Footwear/Footwear",
+   "authors": [
+    "L"
+   ],
+   "source_hash": "42cc529377cae934a22cdfb5f3cbf4db14a2a6bc",
+   "triangles": 20000,
+   "source_triangles": 56128,
+   "size": [
+    0.8906,
+    0.2663,
+    0.3728
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3e3cfe44dc87dfc22ac8c068a460c347",
+    "collision.npz": "49e46f981bc532d5b57eacbb8e27dead"
+   }
+  },
+  "rubber_duck_toy": {
+   "name": "Rubber Duck Toy",
+   "label": "prop",
+   "category": "Leisure/Games & Toys/Toys",
+   "authors": [
+    "Plat251"
+   ],
+   "source_hash": "00cce7478ed6c66264d09711f2ce55c1fc7b096c",
+   "triangles": 4288,
+   "source_triangles": 4288,
+   "size": [
+    0.2135,
+    0.3,
+    0.2855
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a85491b6228181ed4ee4ceb6f3ae5c96",
+    "collision.npz": "2e2d637d39026711d36a9143ac1f2e5c"
+   }
+  },
+  "russian_food_cans_01": {
+   "name": "Russian Food Cans 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Packaged & Pantry",
+   "authors": [
+    "Kosan Aziz"
+   ],
+   "source_hash": "4d4d5761308fe3c436c571802068d033dcaabc60",
+   "triangles": 1348,
+   "source_triangles": 1348,
+   "size": [
+    0.1424,
+    0.0462,
+    0.0849
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "ca12a36f5345ac079ccfb8a97af5485c",
+    "collision.npz": "bcf031b72bfcad878c334a7fe335d9c4"
+   }
+  },
+  "rusted_hacksaw": {
+   "name": "Rusted Hacksaw",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Saws & Cutting",
+   "authors": [
+    "Dabou Master"
+   ],
+   "source_hash": "6dc86476881d23f68914fab5546ce28e1194b796",
+   "triangles": 6546,
+   "source_triangles": 6546,
+   "size": [
+    0.4964,
+    0.0328,
+    0.1094
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "fa6aa50fdc2a25a06b75e8e39073b0d2",
+    "collision.npz": "12f70f8cd3f573c0dce231a74c896a5b"
+   }
+  },
+  "rusted_spade_01": {
+   "name": "Rusted Spade 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Digging Tools",
+   "authors": [
+    "Blemonade"
+   ],
+   "source_hash": "eef32d05175c6b1e0e8604beaef20deb8f3555ba",
+   "triangles": 11436,
+   "source_triangles": 11436,
+   "size": [
+    0.1681,
+    0.0456,
+    1.1009
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5a355f34cf8056bb072a39f465de3eb5",
+    "collision.npz": "2b0ad96404fc941cbfb1f86ebfb10668"
+   }
+  },
+  "screwdrivers_02": {
+   "name": "Screwdrivers 02",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Screwdrivers",
+   "authors": [
+    "BKS"
+   ],
+   "source_hash": "76d1024374cb0fdc6cd46d2ea0d07848c4d0d6a2",
+   "triangles": 3548,
+   "source_triangles": 3548,
+   "size": [
+    0.1005,
+    0.2699,
+    0.0271
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a639515aba378fd3e4aa8c46db3d5199",
+    "collision.npz": "db1a35eeecbac546fd11d0d6cc26e80d"
+   }
+  },
+  "seadogs_compass": {
+   "name": "Seadogs Compass",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Accessories/Nautical Instruments",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_hash": "47241f01ef012f81e068401649409183db7e503c",
+   "triangles": 11645,
+   "source_triangles": 11645,
+   "size": [
+    0.0813,
+    0.1441,
+    0.0866
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6bddfa8746c218b56175cb6cd96d95d8",
+    "collision.npz": "4fe4cda160ac9ee229cf06f8d92979d9"
+   }
+  },
+  "security_light": {
+   "name": "Security Light",
+   "label": "prop",
+   "category": "Lighting/Street & Outdoor/Security & Flood Lights",
+   "authors": [
+    "Maximilian Schuster"
+   ],
+   "source_hash": "a69a104e2e8084c8a68646165e0b8ae65021f37d",
+   "triangles": 4668,
+   "source_triangles": 4668,
+   "size": [
+    0.3231,
+    0.4172,
+    0.531
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "78aaa95ae342e5e3fd70b81a0a1293e1",
+    "collision.npz": "4113d3a80bc3ba40bcc9c0b4b80eca64"
+   }
+  },
+  "seeding_tray_01": {
+   "name": "Seedling Tray 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Planters & Pots",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "abdc7651094d5ec29fc76183d7ff2fbe6ec977eb",
+   "triangles": 8334,
+   "source_triangles": 8334,
+   "size": [
+    0.2202,
+    0.2202,
+    0.0608
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d54157961a3359dbd41b194b37423b86",
+    "collision.npz": "92b7026b47dd30a8f17bbc08a170d1af"
+   }
+  },
+  "shrub_03": {
+   "name": "Shrub 03",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Shrubs & Bushes",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "54def63266ae691c3656edadb07e137996c6dde7",
+   "triangles": 8287,
+   "source_triangles": 8287,
+   "size": [
+    1.3669,
+    0.1512,
+    0.4028
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "38f71f2f44d0c5c921cd14800c91fac6",
+    "collision.npz": "2cf274e4719a9a38fc6a233bc5c71185"
+   }
+  },
+  "shrub_04": {
+   "name": "Shrub 04",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Shrubs & Bushes",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "e2ec49df49d4a6ee25e245f493249e07a42a9b7d",
+   "triangles": 19999,
+   "source_triangles": 27327,
+   "size": [
+    0.5837,
+    0.146,
+    0.2192
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "d802b1bc8555f344c478f11100050589",
+    "collision.npz": "b34dc0b8d0e7111014d94a6acac75379"
+   }
+  },
+  "shrub_sorrel_01": {
+   "name": "Shrub Sorrel 01",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Shrubs & Bushes",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "65530d7157644eab84ae2b32da08acd26efa07f6",
+   "triangles": 3319,
+   "source_triangles": 3319,
+   "size": [
+    0.3521,
+    0.1464,
+    0.058
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "35950e571eb3dd59bc53eb35dac8bc38",
+    "collision.npz": "bc2ac2eadc3f71e5905743c774e058cc"
+   }
+  },
+  "side_table_01": {
+   "name": "Side Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "c48d34c9a62887ad0c1175877ac69ffdd97e52b6",
+   "triangles": 2756,
+   "source_triangles": 2756,
+   "size": [
+    0.55,
+    0.45,
+    0.5507
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "04312a1c12e1bd74eb54324d9aec3b79",
+    "collision.npz": "07f87e7586c4da55318be0e51309c722"
+   }
+  },
+  "side_table_tall_01": {
+   "name": "Side Table Tall 01",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "f196a7fccc418df0e29faf5db2cb4a91b9dcdc71",
+   "triangles": 6408,
+   "source_triangles": 6408,
+   "size": [
+    0.384,
+    0.384,
+    0.7612
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "959c6863f59a07792b9c56090d7fb243",
+    "collision.npz": "0efacfa9b0c2a81cb7534a5d78e8a4d1"
+   }
+  },
+  "single_root": {
+   "name": "Single Root",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Root Clusters",
+   "authors": [
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "580506751940bc602fc02652ec0f56db13133356",
+   "triangles": 19999,
+   "source_triangles": 61027,
+   "size": [
+    0.5551,
+    1.836,
+    0.1778
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0496cae96e2b8824cf243cb5e27d97c6",
+    "collision.npz": "376a70c53f71d4495235f9f80cb73d77"
+   }
+  },
+  "sledgehammer_01": {
+   "name": "Sledgehammer 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Hammers & Mallets",
+   "authors": [
+    "Dylan Guzman"
+   ],
+   "source_hash": "652af041c97bb744d9d24b24c6ec940d64e3c4fd",
+   "triangles": 2596,
+   "source_triangles": 2596,
+   "size": [
+    0.2085,
+    0.0905,
+    1.0056
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1256dc53a60908111eb9e1513b04c3bd",
+    "collision.npz": "76b4fba33ff1d90c97e1e8ad5447fe06"
+   }
+  },
+  "small_lpg_tank": {
+   "name": "Small Lpg Tank",
+   "label": "prop",
+   "category": "Containers & Storage/Tanks & Jerrycans/Gas Cylinders",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "f15a80eccdef60165c29e86f7955a8e679943902",
+   "triangles": 15042,
+   "source_triangles": 15042,
+   "size": [
+    0.41,
+    0.4092,
+    0.642
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "698eff685d78573233d2442778d2d528",
+    "collision.npz": "572f4f99d87cc0cbb1614f9b0f14a464"
+   }
+  },
+  "small_oil_can_01": {
+   "name": "Small Oil Can 01",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Oil & Fuel Cans",
+   "authors": [
+    "Raven van de Werken"
+   ],
+   "source_hash": "8aee52e7d617093a125677e1903f4bdae10bf8fe",
+   "triangles": 16746,
+   "source_triangles": 16746,
+   "size": [
+    0.2661,
+    0.1038,
+    0.2368
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "70ae51011ba59db627bec3bdeb86c37a",
+    "collision.npz": "232b7ad8fca3c3b072d32608e909c126"
+   }
+  },
+  "small_plastic_torch": {
+   "name": "Small Plastic Torch",
+   "label": "prop",
+   "category": "Lighting/Portable/Flashlights & Torches",
+   "authors": [
+    "Abiyyu Panggalih (Abiyyu_xyz)"
+   ],
+   "source_hash": "38d8326f0116b436ae0098909a7ac0fa32cab57b",
+   "triangles": 13252,
+   "source_triangles": 13252,
+   "size": [
+    0.0998,
+    0.2275,
+    0.0551
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b63989ac038f74318e47fec611cd0fe9",
+    "collision.npz": "d76e1fde6e68c572f6f32b1f9c4b6e4b"
+   }
+  },
+  "small_wooden_table_01": {
+   "name": "Small Wooden Table 01",
+   "label": "table",
+   "category": "Furniture/Tables/Side & End Tables",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "5fbce37ee9fc4cf557bc03d18b61acfe3d852ec0",
+   "triangles": 3410,
+   "source_triangles": 3410,
+   "size": [
+    0.9162,
+    0.44,
+    0.5331
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "786cf29d23dae145e6689c917ed5db31",
+    "collision.npz": "e51749aa7f2d9079ff6fc060f508b015"
+   }
+  },
+  "sofa_02": {
+   "name": "Sofa 02",
+   "label": "couch",
+   "category": "Furniture/Seating/Sofas & Couches",
+   "authors": [
+    "Kirill Sannikov"
+   ],
+   "source_hash": "d7e2bb41e7bca3c320b837961bd7f71a064b6fe9",
+   "triangles": 2728,
+   "source_triangles": 2728,
+   "size": [
+    1.8072,
+    0.8178,
+    0.7095
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "14d9797de9e716121f7c1087ccc84007",
+    "collision.npz": "a6e88334437ab4cc8d5407d9bedca7a2"
+   }
+  },
+  "spinning_wheel_01": {
+   "name": "Spinning Wheel 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Vices & Clamps",
+   "authors": [
+    "Sofia Pahaoja"
+   ],
+   "source_hash": "752a2a4337f51a3bfe69b4d35cca17cd80839bde",
+   "triangles": 19999,
+   "source_triangles": 52023,
+   "size": [
+    0.4894,
+    1.025,
+    0.9659
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "65d1eba1c83fb9ecef35366370a202b6",
+    "collision.npz": "6f87cc0473bf434cc9575a220644e31b"
+   }
+  },
+  "spray_paint_bottles": {
+   "name": "Spray Paint Bottles",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Aerosol & Spray Cans",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "cd5a69aed9685418177fb5c8908e8f8290782ef4",
+   "triangles": 5040,
+   "source_triangles": 5040,
+   "size": [
+    0.1582,
+    0.0656,
+    0.2286
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "77352bccb5bf1471ea7a338d5a7c1350",
+    "collision.npz": "9f89f507d59acbc500b65efa217d6dd5"
+   }
+  },
+  "spray_paint_bottles_02": {
+   "name": "Spray Paint Bottles 02",
+   "label": "prop",
+   "category": "Containers & Storage/Cans, Tins & Bottles/Aerosol & Spray Cans",
+   "authors": [
+    "Riley Queen"
+   ],
+   "source_hash": "209a02ed29bee79cc1b554090646a4302939ca32",
+   "triangles": 6576,
+   "source_triangles": 6576,
+   "size": [
+    0.1955,
+    0.0773,
+    0.2189
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4a2c331f0ddcb4262f1bca19334d2995",
+    "collision.npz": "6cd08505c23763eea58f8fcf336d309d"
+   }
+  },
+  "standing_chalkboard_01": {
+   "name": "Standing Chalkboard 01",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Clipboards & Boards",
+   "authors": [
+    "ParzivalCG"
+   ],
+   "source_hash": "a28256e934770192e1892051638032435cc27a0b",
+   "triangles": 2372,
+   "source_triangles": 2372,
+   "size": [
+    0.9195,
+    0.7587,
+    1.509
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0ffc4a41204693be15a3e985c82e9883",
+    "collision.npz": "a28864f65c02ae93a1c131e15c786a1b"
+   }
+  },
+  "standing_picture_frame_01": {
+   "name": "Standing Picture Frame 01",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Display Pieces",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "6e61e61373ad6c36d76463bb3d4f69d5c8d15438",
+   "triangles": 1634,
+   "source_triangles": 1634,
+   "size": [
+    0.1003,
+    0.2008,
+    0.2497
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9747f28498a40124287bc0b7bda20a17",
+    "collision.npz": "70a250d020d7de6e74c3e41ad4bf1cbb"
+   }
+  },
+  "standing_picture_frame_02": {
+   "name": "Standing Picture Frame 02",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Display Pieces",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "99bde08b0a79a5d1cab68ff69ad9dbc022c3b901",
+   "triangles": 2986,
+   "source_triangles": 2986,
+   "size": [
+    0.1023,
+    0.2169,
+    0.2664
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "325f6a5133233dbbe644f80f254594fa",
+    "collision.npz": "8807ef450718c4e34cb70bfd8337cf7e"
+   }
+  },
+  "stationery_supplies": {
+   "name": "Stationery Supplies",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Writing Instruments",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "4dbacd04f75f1ccd853db5f56a6a891359c5fa31",
+   "triangles": 4412,
+   "source_triangles": 4412,
+   "size": [
+    0.3019,
+    0.0837,
+    0.1643
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "023a21a2421edb632df386fdc16a7aa5",
+    "collision.npz": "cd6fd81e07b9eb77ffc926ee7c8e37ce"
+   }
+  },
+  "steel_frame_shelves_01": {
+   "name": "Steel Frame Shelves 01",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "07b34991c01f75c3bfe85923ba649bc40de1dd17",
+   "triangles": 4348,
+   "source_triangles": 4348,
+   "size": [
+    1.0974,
+    0.5021,
+    2.1405
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9fce7c1901a8ec007b9687bd17ceafa7",
+    "collision.npz": "189a785a4eb14c1eadac1559f01767d8"
+   }
+  },
+  "steel_frame_shelves_02": {
+   "name": "Steel Frame Shelves 02",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "0546034c9b139c2b1545f6e3d129ca35b2324e03",
+   "triangles": 4348,
+   "source_triangles": 4348,
+   "size": [
+    0.5933,
+    0.5024,
+    2.1416
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "390aba1e72d00f81df432b07b481a58b",
+    "collision.npz": "c3b440fdf9483c2023be2fa4fbd675c8"
+   }
+  },
+  "stone_01": {
+   "name": "Stone 01",
+   "label": "rock",
+   "category": "Nature/Rocks & Stone/Boulders",
+   "authors": [
+    "Dario Barresi",
+    "Rico Cilliers"
+   ],
+   "source_hash": "3b541260ddde766b6bcfae56be426b81ce1a1e81",
+   "triangles": 20000,
+   "source_triangles": 53520,
+   "size": [
+    0.1468,
+    0.089,
+    0.0717
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "495a87ff562f5b876d617a84b98c3215",
+    "collision.npz": "de36db90aca0481d2007ac6526717492"
+   }
+  },
+  "strawberry_chocolate_cake": {
+   "name": "Strawberry Chocolate Cake",
+   "label": "prop",
+   "category": "Food & Kitchen/Prepared Food/Cakes & Pastries",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "a441726fcf88501501868c20037cfbf7a88f82bd",
+   "triangles": 20000,
+   "source_triangles": 27054,
+   "size": [
+    0.2443,
+    0.2403,
+    0.0792
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4e148cf4317a07c40195bdef44daee6e",
+    "collision.npz": "d36566b44165eff47f51590d3ddbf9fa"
+   }
+  },
+  "street_rat": {
+   "name": "Street Rat",
+   "label": "prop",
+   "category": "Nature/Wildlife/Mammals",
+   "authors": [
+    "Sean Buckley"
+   ],
+   "source_hash": "7d499946dd91cfc66cb4e0ec8825012643ee832c",
+   "triangles": 20000,
+   "source_triangles": 57216,
+   "size": [
+    0.032,
+    0.1483,
+    0.0339
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "db95376c85c7828456196a886c8baed4",
+    "collision.npz": "247fe30665943a221e6fd4eb58d887e8"
+   }
+  },
+  "sungka_board": {
+   "name": "Sungka Board",
+   "label": "prop",
+   "category": "Leisure/Games & Toys/Board Games",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "592332c0812a265afac115c04f4ee1e1f1ea7949",
+   "triangles": 7304,
+   "source_triangles": 7304,
+   "size": [
+    0.14,
+    0.6006,
+    0.0352
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bdea17d9730619b222153727a5c7bdde",
+    "collision.npz": "997e66092d1f630044d426544dc7d6e0"
+   }
+  },
+  "sungka_board_02": {
+   "name": "Sungka Board 02",
+   "label": "prop",
+   "category": "Leisure/Games & Toys/Board Games",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "343a77c8c6da8429ecf0838f1abcb2105e572ebd",
+   "triangles": 20000,
+   "source_triangles": 42558,
+   "size": [
+    0.9317,
+    0.1757,
+    0.0258
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8c9c12588a349c5ac03a02d1ffd8d345",
+    "collision.npz": "094cac3329736376f10801ebdc027256"
+   }
+  },
+  "tea_set_01": {
+   "name": "Tea Set 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Tea & Coffee Sets",
+   "authors": [
+    "James Ray Cock",
+    "Jurita Burger",
+    "Rico Cilliers"
+   ],
+   "source_hash": "56e8ed17e683a9335871e8e8ad9a444ba44e6c1c",
+   "triangles": 19999,
+   "source_triangles": 40296,
+   "size": [
+    0.9185,
+    0.4838,
+    0.165
+   ],
+   "parts": 13,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bc3a2f09c3c329b7bce0701be6b69c58",
+    "collision.npz": "665e314732434901fe89ad051d553da1"
+   }
+  },
+  "television_02": {
+   "name": "Television 02",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Televisions",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_hash": "f4262124540572dc20120714aaa2de8a8b0e4655",
+   "triangles": 2310,
+   "source_triangles": 2310,
+   "size": [
+    0.3997,
+    0.3502,
+    0.4114
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "36417b34a71148f243af31380e97d218",
+    "collision.npz": "cc86eaa182a0abd3bc43a25e4d4fdfc0"
+   }
+  },
+  "throw_pillows_01": {
+   "name": "Throw Pillows 01",
+   "label": "prop",
+   "category": "Decor & Art/Ornaments/Cushions & Pillows",
+   "authors": [
+    "Serhii Khromov"
+   ],
+   "source_hash": "8a475b95a0956bd700394e0f5ed32822071e2f54",
+   "triangles": 6362,
+   "source_triangles": 6362,
+   "size": [
+    0.9401,
+    0.4519,
+    0.4502
+   ],
+   "parts": 11,
+   "collision": "parts",
+   "files": {
+    "model.glb": "db4715ff055d767c50e48ee09c9ff13d",
+    "collision.npz": "f6e0bf62d8ac737179ca3f47badf2777"
+   }
+  },
+  "tire_pump": {
+   "name": "Tire Pump",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Pumps",
+   "authors": [
+    "Garrison Gager"
+   ],
+   "source_hash": "a9eab957cd4549a29f6ce0f0db13efdd99b28a5c",
+   "triangles": 6572,
+   "source_triangles": 6572,
+   "size": [
+    0.2549,
+    0.101,
+    0.5795
+   ],
+   "parts": 7,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b7169ca6daef623a40ba455fdc633cb7",
+    "collision.npz": "56c9f7f740355787b85fd68b26e8cc1f"
+   }
+  },
+  "tongue_groove_pliers": {
+   "name": "Tongue & Groove Pliers",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Pliers & Grippers",
+   "authors": [
+    "BKS"
+   ],
+   "source_hash": "925a1957e74ba4e22570e59844232e5682c80dd3",
+   "triangles": 2694,
+   "source_triangles": 2694,
+   "size": [
+    0.0625,
+    0.2444,
+    0.0139
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "8a5f8eb33aa74bbca798784b7a0f25de",
+    "collision.npz": "14d4452909646c675c5899a3a18fc06e"
+   }
+  },
+  "tool_cart": {
+   "name": "Tool Cart",
+   "label": "cart",
+   "category": "Furniture/Storage Furniture/Carts & Trolleys",
+   "authors": [
+    "Savva Zakharov"
+   ],
+   "source_hash": "05721491e72ee7cf51d9e1acca348145e5a0565c",
+   "triangles": 20000,
+   "source_triangles": 29394,
+   "size": [
+    1.2733,
+    0.7538,
+    0.9646
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0f73c599f7b2463dfd491d816ccdae3d",
+    "collision.npz": "ce773943fc338c65f971ce2ebb62c997"
+   }
+  },
+  "trashbag": {
+   "name": "Trashbag",
+   "label": "prop",
+   "category": "Containers & Storage/Bags/Waste Bags",
+   "authors": [
+    "Benny Weimer"
+   ],
+   "source_hash": "d291da0b535dffda7f7262b5e9210c93892576f7",
+   "triangles": 4482,
+   "source_triangles": 4482,
+   "size": [
+    0.5281,
+    0.4629,
+    0.575
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "646da8eb93fb2b62e1b23e8aa7825a8e",
+    "collision.npz": "f4d0c368348b0acd97c4884e37927dba"
+   }
+  },
+  "treasure_chest": {
+   "name": "Treasure Chest",
+   "label": "prop",
+   "category": "Containers & Storage/Boxes & Crates/Chests & Trunks",
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "source_hash": "0ae2580ba667a1c67340426abc76f7665306406e",
+   "triangles": 20000,
+   "source_triangles": 103330,
+   "size": [
+    0.959,
+    0.5226,
+    0.6188
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "04b23b60fe56eb04d6b3c5f93358d4e6",
+    "collision.npz": "07c91fd28c524f48e7dd51452aa2cc82"
+   }
+  },
+  "tree_stump_01": {
+   "name": "Tree Stump 01",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Fallen Logs & Stumps",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "source_hash": "a61e4018508b545a75a5a705d54d5de8e9c8df9f",
+   "triangles": 19999,
+   "source_triangles": 41046,
+   "size": [
+    1.4257,
+    1.5902,
+    0.5724
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bd595f96252a8841131e0631fffe1da4",
+    "collision.npz": "c543be8b37972186dc687aa5db4b6783"
+   }
+  },
+  "tree_stump_02": {
+   "name": "Tree Stump 02",
+   "label": "prop",
+   "category": "Nature/Logs, Branches & Roots/Fallen Logs & Stumps",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "source_hash": "014e407e84af210a9ec49adba0505c7581706544",
+   "triangles": 20000,
+   "source_triangles": 62345,
+   "size": [
+    1.5219,
+    1.3924,
+    0.5229
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "9511a9301949886d1c5f20a5357b0caf",
+    "collision.npz": "ebef4e74801b899add35f26a5fd94b21"
+   }
+  },
+  "trowel_01": {
+   "name": "Trowel 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Digging Tools",
+   "authors": [
+    "Satyaki Mandal"
+   ],
+   "source_hash": "8c3e29ebc3419c3f2fe91964490be535a63a764b",
+   "triangles": 5242,
+   "source_triangles": 5242,
+   "size": [
+    0.0991,
+    0.3469,
+    0.1026
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1bfbdb556d7e86ecf943f31cf853929f",
+    "collision.npz": "803d33f21d01b20a1e05cdb8ece8e7e1"
+   }
+  },
+  "utility_box_01": {
+   "name": "Utility Box 01",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Electrical/Utility & Power Boxes",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "af6d53ad17db23473c84e6ccf3f09270e76d3583",
+   "triangles": 4404,
+   "source_triangles": 4404,
+   "size": [
+    0.52,
+    0.432,
+    1.1203
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5ec86a17c93ac8e5c9abbb2776915882",
+    "collision.npz": "b669ed48f7f0cb9987b9d141279d3e82"
+   }
+  },
+  "utility_box_02": {
+   "name": "Utility Box 02",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Electrical/Utility & Power Boxes",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "8420d634a09db8508124f2086be28b992d0a26c0",
+   "triangles": 6268,
+   "source_triangles": 6268,
+   "size": [
+    0.92,
+    0.432,
+    1.1203
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "03a07106156e421545103f93afe4c489",
+    "collision.npz": "86be14bd6f9c2e1cbc7399b6a18a31fc"
+   }
+  },
+  "vintage_binocular": {
+   "name": "Vintage Binoculars",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Optical Instruments",
+   "authors": [
+    "Luke"
+   ],
+   "source_hash": "a0e6413e0a5f69c98aa8681f673dc2b0b6809e22",
+   "triangles": 19362,
+   "source_triangles": 19362,
+   "size": [
+    0.194,
+    0.1992,
+    0.0684
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "795c13645202e773be52c507afb31e35",
+    "collision.npz": "3259fdb21ff94c7b99e8871e039e0fab"
+   }
+  },
+  "vintage_crutches_01": {
+   "name": "Vintage Crutches 01",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Mobility & Medical/Crutches",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "d749b421cc9f59d98c9cb2685fe192c55c064b6f",
+   "triangles": 10628,
+   "source_triangles": 10628,
+   "size": [
+    0.3838,
+    0.2036,
+    1.605
+   ],
+   "parts": 8,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b94b70f5cdd9161ac2d3a0e1988ece24",
+    "collision.npz": "96cc5ffc81750e57a25f650372428cac"
+   }
+  },
+  "vintage_day_bed": {
+   "name": "Vintage Day Bed",
+   "label": "bed",
+   "category": "Furniture/Beds",
+   "authors": [
+    "Aron \u0141yczek"
+   ],
+   "source_hash": "18d7bb12a9c6a6290dae8a32f015167d5d41c29e",
+   "triangles": 2715,
+   "source_triangles": 2715,
+   "size": [
+    1.9726,
+    0.8548,
+    1.1273
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0b5028fa5a60f5aadd2ded024f17045f",
+    "collision.npz": "ff7a48d8de003a3233e93c0307b84ae5"
+   }
+  },
+  "vintage_electric_kettle": {
+   "name": "Vintage Electric Kettle",
+   "label": "prop",
+   "category": "Electronics & Appliances/Home Appliances/Kettles",
+   "authors": [
+    "SV Garip"
+   ],
+   "source_hash": "6de2f0161fe1e0f8eb1138daf0985ee865511290",
+   "triangles": 14838,
+   "source_triangles": 14838,
+   "size": [
+    0.3209,
+    0.2486,
+    0.3047
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2ca1aea5ce7541918745466ea1550c5c",
+    "collision.npz": "0e5b9b9b12cd5ef295715edb7dcc595e"
+   }
+  },
+  "vintage_flashlight": {
+   "name": "Vintage Flashlight",
+   "label": "prop",
+   "category": "Lighting/Portable/Flashlights & Torches",
+   "authors": [
+    "Omar M. El-Safy"
+   ],
+   "source_hash": "90669e64aa1bf85684f2fdef801e8ae2cbe7a8e6",
+   "triangles": 10562,
+   "source_triangles": 10562,
+   "size": [
+    0.0959,
+    0.3055,
+    0.1443
+   ],
+   "parts": 10,
+   "collision": "parts",
+   "files": {
+    "model.glb": "e121fd8019e106707efb7ecc6cf9d5ad",
+    "collision.npz": "250ab2fc29d8f04d158f7e6bfeb98533"
+   }
+  },
+  "vintage_microscope": {
+   "name": "Vintage Microscope",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments/Lab Equipment",
+   "authors": [
+    "Luis Jos\u00e9 Fern\u00e1ndez Rodr\u00edguez"
+   ],
+   "source_hash": "1ec0dfddbf0c79a3b8c34a3e794848aa145ebed9",
+   "triangles": 20000,
+   "source_triangles": 20631,
+   "size": [
+    0.1068,
+    0.1819,
+    0.3996
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bc93d584bd1cf91e0465476622543ce3",
+    "collision.npz": "6cb24e7ad71c87f2a27cba60c08b70b6"
+   }
+  },
+  "vintage_microwave": {
+   "name": "Vintage Microwave",
+   "label": "prop",
+   "category": "Electronics & Appliances/Home Appliances",
+   "authors": [
+    "Adam Nekola"
+   ],
+   "source_hash": "f87772eb5c4a10e48b84c176c94f2a25f042accc",
+   "triangles": 8120,
+   "source_triangles": 8120,
+   "size": [
+    1.0737,
+    0.7456,
+    0.5258
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "edd86b622e91329d841f43723225c219",
+    "collision.npz": "516b0a5b09e0deb82c7e5fbcaff942e8"
+   }
+  },
+  "vintage_oil_lamp": {
+   "name": "Vintage Oil Lamp",
+   "label": "prop",
+   "category": "Lighting/Portable/Oil Lamps",
+   "authors": [
+    "Monsta3D"
+   ],
+   "source_hash": "b086de19794124868b2979b794d8a659e6451f1c",
+   "triangles": 7208,
+   "source_triangles": 7208,
+   "size": [
+    0.22,
+    0.22,
+    0.8016
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1149ccc45bb41614d589dd67065c1577",
+    "collision.npz": "21c6d31a75904873ed0296751b489851"
+   }
+  },
+  "vintage_radio_transceiver": {
+   "name": "Vintage Radio Transceiver",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Radios & Portable Audio",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "f343f538ee1b638da93aeaf450e50e428a57a2f4",
+   "triangles": 20000,
+   "source_triangles": 42350,
+   "size": [
+    0.5741,
+    0.4132,
+    0.4347
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2b5059e19229a42dd40f501027a8114f",
+    "collision.npz": "af10bcf92061856b0774625c9101a5d3"
+   }
+  },
+  "vintage_spacecraft_instrument": {
+   "name": "Vintage Spacecraft Instrument",
+   "label": "prop",
+   "category": "Electronics & Appliances/Devices & Instruments",
+   "authors": [
+    "Micha\u0142 Wi\u015bniewski"
+   ],
+   "source_hash": "3aec81c994124de931920043b0fa287c0f23a96c",
+   "triangles": 13279,
+   "source_triangles": 13279,
+   "size": [
+    0.4103,
+    0.2044,
+    0.2693
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "44b1ce3646d445afff8a135d3cdc7042",
+    "collision.npz": "67b4d8308d3add20e1e8392e569aca35"
+   }
+  },
+  "vintage_stapler": {
+   "name": "Vintage Stapler",
+   "label": "prop",
+   "category": "Office & Stationery/Stationery & Supplies/Office Tools",
+   "authors": [
+    "Mateusz Sadek"
+   ],
+   "source_hash": "4702671d2522027c1c1c098099d04dbae6a68774",
+   "triangles": 4370,
+   "source_triangles": 4370,
+   "size": [
+    0.2085,
+    0.0474,
+    0.0953
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6a9c571418cd32936709afded72ccc21",
+    "collision.npz": "5ad7b3dafbcf90b288c0bdbbf536307a"
+   }
+  },
+  "vintage_suitcase": {
+   "name": "Vintage Suitcase",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Bags & Luggage",
+   "authors": [
+    "Maximilian Schuster"
+   ],
+   "source_hash": "990b81368d2e3271bc560aa3b47dbf44e80e8d32",
+   "triangles": 16474,
+   "source_triangles": 16474,
+   "size": [
+    1.6082,
+    0.2392,
+    0.5679
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "2ea9f70e86a290b88ebecfd4a16ceb5f",
+    "collision.npz": "27284eb1d6ea58a484c0a119cf609eaa"
+   }
+  },
+  "vintage_video_camera": {
+   "name": "Vintage Video Camera",
+   "label": "prop",
+   "category": "Electronics & Appliances/Audio & Video/Cameras",
+   "authors": [
+    "James Ray Cock",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "c07a3cd8f538e99f6f8a5863ceae5bd3d9be40ce",
+   "triangles": 18682,
+   "source_triangles": 18682,
+   "size": [
+    0.0712,
+    0.1326,
+    0.145
+   ],
+   "parts": 14,
+   "collision": "parts",
+   "files": {
+    "model.glb": "94e78f41fb154d49a18d32a019bb7451",
+    "collision.npz": "d3843af5e8c92e309c6e1487956f609d"
+   }
+  },
+  "vintage_wooden_drawer_01": {
+   "name": "Vintage Wooden Drawer 01",
+   "label": "cabinet",
+   "category": "Furniture/Storage Furniture/Drawers & Dressers",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "e123322194b22d562cb904ca42419c59c6a9f4d2",
+   "triangles": 5184,
+   "source_triangles": 5184,
+   "size": [
+    1.7151,
+    1.0069,
+    1.0908
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "b836322fe19c5b57379984c05c4e654d",
+    "collision.npz": "a50ab197bac938b3891d94e1e6591493"
+   }
+  },
+  "water_manhole_cover": {
+   "name": "Water Manhole Cover",
+   "label": "prop",
+   "category": "Industrial & Infrastructure/Plumbing & Drainage/Manhole Covers",
+   "authors": [
+    "Raunox"
+   ],
+   "source_hash": "88b0825bb7daa072702c8238ed1f245321008fc5",
+   "triangles": 6301,
+   "source_triangles": 6301,
+   "size": [
+    0.6908,
+    0.6908,
+    0.0676
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6f6f9ec1663abf99f49d12a99e0e844c",
+    "collision.npz": "1fa80b138288066b970ed9c507aa470c"
+   }
+  },
+  "watering_can_metal_01": {
+   "name": "Watering Can Metal 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Watering & Irrigation",
+   "authors": [
+    "Charles Nderitu"
+   ],
+   "source_hash": "2418aec52e5fa408b1cbc23701f8ce1eac860bc6",
+   "triangles": 11837,
+   "source_triangles": 11837,
+   "size": [
+    0.191,
+    0.4523,
+    0.1968
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "84650e338bf8ff71c59ac9e1fc339afa",
+    "collision.npz": "980011a0c26b55704c6847ed8f0807c5"
+   }
+  },
+  "wheelchair_01": {
+   "name": "Wheelchair 01",
+   "label": "prop",
+   "category": "Apparel & Personal Items/Mobility & Medical/Wheelchairs",
+   "authors": [
+    "Garreth Dean"
+   ],
+   "source_hash": "3c76c141a25ce6a406ee3a14ea8db4d76f6d7948",
+   "triangles": 20000,
+   "source_triangles": 40252,
+   "size": [
+    0.8241,
+    1.0908,
+    1.1035
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "c6130acd74e33296f57db1fd8e589ec2",
+    "collision.npz": "af2917ae5f5df9b3f1eb16964d4d4c86"
+   }
+  },
+  "wicker_basket_01": {
+   "name": "Wicker Basket 01",
+   "label": "prop",
+   "category": "Containers & Storage/Baskets & Buckets/Baskets",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "49f624a285b5e5dc8fe4b75ad18cf5d18d8cdca1",
+   "triangles": 19999,
+   "source_triangles": 22276,
+   "size": [
+    0.3832,
+    0.295,
+    0.1174
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "6a15aaaea2654142cce6b3590e44c222",
+    "collision.npz": "74282c305236ba5c091f970644d5e28b"
+   }
+  },
+  "wicker_basket_02": {
+   "name": "Wicker Basket 02",
+   "label": "prop",
+   "category": "Containers & Storage/Baskets & Buckets/Baskets",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "7c68c52ddfcdec879003c2120929487b0c589837",
+   "triangles": 17850,
+   "source_triangles": 17850,
+   "size": [
+    0.3469,
+    0.2545,
+    0.2005
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "94aa0143d1c223d3b1ed81812f0fb749",
+    "collision.npz": "4f373b36bf58dcf09dd40deba51929bd"
+   }
+  },
+  "wild_rooibos_bush": {
+   "name": "Wild Rooibos Bush",
+   "label": "ground_plants",
+   "category": "Nature/Plants/Desert & Arid Plants",
+   "authors": [
+    "James Ray Cock",
+    "Jenelle van Heerden"
+   ],
+   "source_hash": "e36b891edee5f1133d3d05b0707a690f8a078f6c",
+   "triangles": 20000,
+   "source_triangles": 27519,
+   "size": [
+    2.2789,
+    0.8434,
+    0.5413
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4739fd057c21f6efe067efb6b826bbcf",
+    "collision.npz": "8dc5a9169e396043683b5293f3903142"
+   }
+  },
+  "wine_barrel_01": {
+   "name": "Wine Barrel 01",
+   "label": "barrel",
+   "category": "Containers & Storage/Barrels & Drums/Wooden Barrels",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "943d486d1d003b1f56157522fd5382e24ab4bf07",
+   "triangles": 10820,
+   "source_triangles": 10820,
+   "size": [
+    0.7419,
+    0.756,
+    0.8713
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "4605d79f2458cdcfeefb0a9e386bd691",
+    "collision.npz": "baf67c058936b9d06fdc38f6c0edba24"
+   }
+  },
+  "wine_bottles_01": {
+   "name": "Wine Bottles 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Drinks/Bottles & Wine",
+   "authors": [
+    "Jurita Burger",
+    "Rico Cilliers"
+   ],
+   "source_hash": "9426086370c86485039d330f47b99c93d333ff38",
+   "triangles": 19999,
+   "source_triangles": 28848,
+   "size": [
+    0.6763,
+    0.0805,
+    0.3314
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "5d7152074d25b374339979b8bae82ba5",
+    "collision.npz": "fa102e7dae207444169b5443c181babf"
+   }
+  },
+  "wooden_axe": {
+   "name": "Wooden Axe",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Axes & Hatchets",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "c709a9e4f56f12e3f4cf9b10228760dfbf6ac490",
+   "triangles": 3348,
+   "source_triangles": 3348,
+   "size": [
+    0.0472,
+    0.2143,
+    0.6303
+   ],
+   "parts": 3,
+   "collision": "parts",
+   "files": {
+    "model.glb": "abfa132fe0ceae0e873b186523c3b57f",
+    "collision.npz": "83d83969b2700a3fc46ccf02b6403db3"
+   }
+  },
+  "wooden_axe_02": {
+   "name": "Wooden Axe 02",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Axes & Hatchets",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "0df910d54a3067120c13c5cb3af0aeb973e052cc",
+   "triangles": 2218,
+   "source_triangles": 2218,
+   "size": [
+    0.0509,
+    0.2257,
+    0.7042
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "81f1f5e16bb1fef83de4bffdc97ac0e5",
+    "collision.npz": "b7fdccdfd9b1edbb40038c4c5230eedc"
+   }
+  },
+  "wooden_axe_03": {
+   "name": "Wooden Axe 03",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Axes & Hatchets",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "52cd656cc63e22e23288b047d961ff6a8edbb82a",
+   "triangles": 3886,
+   "source_triangles": 3886,
+   "size": [
+    0.0505,
+    0.1583,
+    0.6318
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bc93b1841d4f9d1657100fc929ec8c55",
+    "collision.npz": "18d00304e3f6c0bd08b1a2d752500095"
+   }
+  },
+  "wooden_bookshelf_worn": {
+   "name": "Wooden Bookshelf Worn",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "Ulan Cabanilla"
+   ],
+   "source_hash": "7db4a47cb5d2cf4dccb714c4ada6008321217fcb",
+   "triangles": 10106,
+   "source_triangles": 10106,
+   "size": [
+    1.374,
+    0.5813,
+    2.0634
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "840f1aa7af7c16fb45f1075d5bbe97a6",
+    "collision.npz": "0efc12bb16a818c78cb4ed20a43f03eb"
+   }
+  },
+  "wooden_bowl_01": {
+   "name": "Wooden Bowl 01",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Bowls",
+   "authors": [
+    "Oliver Harries"
+   ],
+   "source_hash": "ff38f8071c92479217e80fabee05cb78ca6ef1a0",
+   "triangles": 14122,
+   "source_triangles": 14122,
+   "size": [
+    0.3131,
+    0.3091,
+    0.0937
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "37361fe02b949b25ffb7e0796412650f",
+    "collision.npz": "3dcf6702ef58dcf3f7d1650e9f5ecec0"
+   }
+  },
+  "wooden_bowl_02": {
+   "name": "Wooden Bowl 02",
+   "label": "prop",
+   "category": "Food & Kitchen/Tableware/Bowls",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "203f860d0142d73da28bfd91a7a982532caf87ee",
+   "triangles": 4666,
+   "source_triangles": 4666,
+   "size": [
+    0.1307,
+    0.1245,
+    0.0731
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a228f721ff33389cc362fd0d03853fda",
+    "collision.npz": "0e4ba3ca7dae1e6ffec5e093a9267f81"
+   }
+  },
+  "wooden_broom": {
+   "name": "Wooden Broom",
+   "label": "prop",
+   "category": "Tools & Equipment/Garden Tools/Brooms & Cleaning",
+   "authors": [
+    "Balen"
+   ],
+   "source_hash": "24370350833793d8ac46995502178ef1324ff05c",
+   "triangles": 14258,
+   "source_triangles": 14258,
+   "size": [
+    0.4902,
+    0.1125,
+    1.4536
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "cf5c854cdd658cfdb3566aa6587357e9",
+    "collision.npz": "7ab223a7f2a912b2a565a010e2135a09"
+   }
+  },
+  "wooden_bucket_01": {
+   "name": "Wooden Bucket 01",
+   "label": "prop",
+   "category": "Containers & Storage/Baskets & Buckets/Buckets",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "8d260ae5188bca1ef50676560a2c7a4160c82100",
+   "triangles": 5116,
+   "source_triangles": 5116,
+   "size": [
+    0.367,
+    0.3422,
+    0.5499
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "741aa31ad85be452ee50cc3762776b52",
+    "collision.npz": "c3e360e2d83d0401532f733ff826adb8"
+   }
+  },
+  "wooden_bucket_02": {
+   "name": "Wooden Bucket 02",
+   "label": "prop",
+   "category": "Containers & Storage/Baskets & Buckets/Buckets",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "a40353bab070ec4e81471ce7c16feabad6b2a163",
+   "triangles": 7252,
+   "source_triangles": 7252,
+   "size": [
+    0.6153,
+    0.6163,
+    0.3504
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "58c9624a9d7e38e65d25614036d38ac9",
+    "collision.npz": "f30c437e4a680deb6610aeee89fca928"
+   }
+  },
+  "wooden_crate_01": {
+   "name": "Wooden Crate 01",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Wooden Crates",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "1ac5d053ce4c72e3fbb4c3065e7979522bf1908e",
+   "triangles": 6576,
+   "source_triangles": 6576,
+   "size": [
+    0.8253,
+    0.409,
+    0.3496
+   ],
+   "parts": 9,
+   "collision": "parts",
+   "files": {
+    "model.glb": "ef47c12378367ec1d77aac701d84447c",
+    "collision.npz": "c2430ff21b4e6ac1fa2684b889a92857"
+   }
+  },
+  "wooden_crate_02": {
+   "name": "Wooden Crate 02",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Wooden Crates",
+   "authors": [
+    "James Ray Cock",
+    "Jurita Burger"
+   ],
+   "source_hash": "2733eca1a1c1aaa3b4be262939692a4c02a9315a",
+   "triangles": 5176,
+   "source_triangles": 5176,
+   "size": [
+    0.5291,
+    1.1663,
+    0.464
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "495a5cb631dd219698cfacf8f1275179",
+    "collision.npz": "953608a13ef9d5ae71fe7f45afe1fa91"
+   }
+  },
+  "wooden_cutting_board": {
+   "name": "Wooden Cutting Board",
+   "label": "prop",
+   "category": "Food & Kitchen/Utensils/Cutting Boards",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "bf62fd6c3b52e068d9f8f47a30ede3363c206b75",
+   "triangles": 3520,
+   "source_triangles": 3520,
+   "size": [
+    0.4499,
+    0.2467,
+    0.0413
+   ],
+   "parts": 1,
+   "collision": "parts",
+   "files": {
+    "model.glb": "13fbb02936f5aaaae9367dc4f446a476",
+    "collision.npz": "b107b3cf13ef4506c4b14971c06600c3"
+   }
+  },
+  "wooden_display_shelves_01": {
+   "name": "Wooden Display Shelves 01",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "34b10f61944642400bd3d5686ea27350da9cbb66",
+   "triangles": 3174,
+   "source_triangles": 3174,
+   "size": [
+    0.3715,
+    1.0778,
+    1.5562
+   ],
+   "parts": 15,
+   "collision": "parts",
+   "files": {
+    "model.glb": "3ace516a95903a5a68b55825b90bf240",
+    "collision.npz": "586b3465b192f657b61da9b430fbadde"
+   }
+  },
+  "wooden_hammer_01": {
+   "name": "Wooden Hammer 01",
+   "label": "prop",
+   "category": "Tools & Equipment/Hand Tools/Hammers & Mallets",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "c22831042768eda727123fc44399e4a897b99604",
+   "triangles": 3617,
+   "source_triangles": 3617,
+   "size": [
+    0.1118,
+    0.0234,
+    0.2792
+   ],
+   "parts": 4,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1d3c9418e437e2a2ac7a0d392f4bde1c",
+    "collision.npz": "fd2ea1a2de0598302ee8bd0262279565"
+   }
+  },
+  "wooden_ladder": {
+   "name": "Wooden Ladder",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Ladders",
+   "authors": [
+    "Miroslav Turura"
+   ],
+   "source_hash": "6be946b83102f13c42165cd9c4c13cc0cce50608",
+   "triangles": 8492,
+   "source_triangles": 8492,
+   "size": [
+    0.9592,
+    0.5,
+    1.3349
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "f538d95fe72fc418636224c40f09c1c8",
+    "collision.npz": "af1732899af3d389b480b56031eab3b3"
+   }
+  },
+  "wooden_ladder_02": {
+   "name": "Wooden Ladder 02",
+   "label": "prop",
+   "category": "Tools & Equipment/Workshop Equipment/Ladders",
+   "authors": [
+    "JN_3DPRINTINGNERD"
+   ],
+   "source_hash": "e84aca254b2d7b286a44bbe4a51b04954f10e394",
+   "triangles": 6126,
+   "source_triangles": 6126,
+   "size": [
+    0.9895,
+    0.6181,
+    1.7222
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "1c9caba1ffe541ef274ae6864ca33ab0",
+    "collision.npz": "87cfec4c392cad831d6cb15e06be0d9d"
+   }
+  },
+  "wooden_lantern_01": {
+   "name": "Wooden Lantern 01",
+   "label": "prop",
+   "category": "Lighting/Portable/Lanterns",
+   "authors": [
+    "James Ray Cock"
+   ],
+   "source_hash": "3bbe436bb3d4b7c1a53e679a3ba3c509009996ac",
+   "triangles": 8321,
+   "source_triangles": 8321,
+   "size": [
+    0.221,
+    0.2347,
+    0.5301
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "481dbb87221577d88e24c7876bb92324",
+    "collision.npz": "33053b73770f468d6cc3eac931fcd187"
+   }
+  },
+  "wooden_military_crate": {
+   "name": "Wooden Military Crate",
+   "label": "box",
+   "category": "Containers & Storage/Boxes & Crates/Military Crates",
+   "authors": [
+    "Prabhjinder Singh"
+   ],
+   "source_hash": "b9d3d18a67e72d739f6be8ffe564827fc8e25cdb",
+   "triangles": 20000,
+   "source_triangles": 22986,
+   "size": [
+    1.2421,
+    0.5198,
+    0.4648
+   ],
+   "parts": 2,
+   "collision": "parts",
+   "files": {
+    "model.glb": "dcce7603806e1cc619946493b3e4261a",
+    "collision.npz": "93752d8111c01b50780abe2e292b802c"
+   }
+  },
+  "wooden_spoon": {
+   "name": "Wooden Spoon",
+   "label": "prop",
+   "category": "Food & Kitchen/Utensils/Wooden Utensils",
+   "authors": [
+    "Ronnie Barter"
+   ],
+   "source_hash": "29a8451926fe0547d8dfe66b42fc835bb091e2c1",
+   "triangles": 6576,
+   "source_triangles": 6576,
+   "size": [
+    0.0867,
+    0.2776,
+    0.0251
+   ],
+   "parts": 5,
+   "collision": "parts",
+   "files": {
+    "model.glb": "55a79fc2eb68b8e2099a72f1e066717e",
+    "collision.npz": "7d778ed16dca5acf421ba140988285c4"
+   }
+  },
+  "wooden_stool_01": {
+   "name": "Wooden Stool 01",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "8649ad7ef50e62cfd22d57a62ac0c3d525fb93f3",
+   "triangles": 10946,
+   "source_triangles": 10946,
+   "size": [
+    0.4254,
+    0.4424,
+    0.4374
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "84e0d0c09a338966fef509688fc88fc3",
+    "collision.npz": "a31eb37fd52f91781c47e3a90e119a5b"
+   }
+  },
+  "wooden_stool_02": {
+   "name": "Wooden Stool 02",
+   "label": "stool",
+   "category": "Furniture/Seating/Stools & Bar Seating",
+   "authors": [
+    "Kuutti Siitonen"
+   ],
+   "source_hash": "9433cdf32f3ee601deccbfb175abe18afe31ce55",
+   "triangles": 11146,
+   "source_triangles": 11146,
+   "size": [
+    0.2652,
+    0.1831,
+    0.1819
+   ],
+   "parts": 12,
+   "collision": "parts",
+   "files": {
+    "model.glb": "0c299a80a90ed9573a76007715d3d2f3",
+    "collision.npz": "bad3ba4e71aaf62fbb7305b3735159c1"
+   }
+  },
+  "wooden_table_02": {
+   "name": "Wooden Table 02",
+   "label": "table",
+   "category": "Furniture/Tables/Dining Tables",
+   "authors": [
+    "Serhii Khromov"
+   ],
+   "source_hash": "5d6fb15377acb8e23175454e33d2d38bd3a340d2",
+   "triangles": 196,
+   "source_triangles": 196,
+   "size": [
+    1.1344,
+    0.706,
+    0.7995
+   ],
+   "parts": 6,
+   "collision": "parts",
+   "files": {
+    "model.glb": "bf579bc3109bd86cb9b438b51185bd71",
+    "collision.npz": "a75f168fb3c756297e68e9c57ffdf722"
+   }
+  },
+  "worn_metal_rack": {
+   "name": "Worn Metal Rack",
+   "label": "shelf",
+   "category": "Furniture/Storage Furniture/Shelving & Bookcases",
+   "authors": [
+    "Luca B"
+   ],
+   "source_hash": "352dfdcf30b7a585c2708b04970bb9e1524363e1",
+   "triangles": 6372,
+   "source_triangles": 6372,
+   "size": [
+    0.9154,
+    0.6,
+    1.9
+   ],
+   "parts": 16,
+   "collision": "parts",
+   "files": {
+    "model.glb": "a4c46ac5e4c20553e4f008ea1d23f2b2",
+    "collision.npz": "4da299b8af19153febdf53d2fcce4629"
+   }
+  }
+ }
+}

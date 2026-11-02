@@ -122,6 +122,33 @@ class Box(Solid):
 
 
 @dataclass(eq=False, kw_only=True)
+class Prop(Solid):
+    """A model from the asset catalog (sim/assets), e.g. a chair. `position`
+    is the middle of its base, so z = 0 stands it on the floor. Its own
+    textures replace `color` and `roughness`; `tint` multiplies them by a
+    color, (1, 1, 1) being no change. Props are static for now.
+
+        Prop(asset=Range.choice(assets.find("chair")), rotation=(0, 0, Range(0, 360)))
+    """
+
+    asset: Any = ""
+    # The same in every direction: 0.9 is 10% smaller than the model.
+    scale: Number = 1.0
+    tint: Color = (1.0, 1.0, 1.0)
+
+    def settings(self) -> dict:
+        # Its textures and the model stand in for these.
+        unused = ("color", "roughness", "mass", "velocity")
+        return {k: v for k, v in super().settings().items() if k not in unused}
+
+    def size(self) -> np.ndarray:
+        """Its full lengths along its own x, y and z, in meters."""
+        from sim import assets
+
+        return np.asarray(assets.info(self.asset)["size"], float) * self.scale
+
+
+@dataclass(eq=False, kw_only=True)
 class Floor(Solid):
     """A flat floor at z = 0, centered on the origin."""
 

@@ -62,10 +62,46 @@ class YellowBall(Scenario[Gym]):
   framework records each labeled object's exact box in every camera.
 - **What's available**: `Sphere`, `Box`, `Floor` (textures in
   `Floor.TEXTURES`), `Wall` (and `Wall.around(floor)`), `Light` (`sun`,
-  `area`, `point`, `spot`), `Camera`, `Background`. See `sim/objects.py`.
+  `area`, `point`, `spot`), `Camera`, `Background`, and `Prop` (below).
+  See `sim/objects.py`.
 - **Moving things in `step`**: set `position`, `rotation` or `velocity`, or
   call `push(impulse)`. Static things (`static=True`, the default for boxes,
   floors and walls) can't move.
+
+## Props: furniture and other models
+
+`Prop` puts a model from the asset catalog in the world: about 300 chairs,
+tables, benches, plants, crates, tools and so on from
+[Poly Haven](https://polyhaven.com/models) (CC0), each cut down to at most
+20,000 triangles. `position` is the middle of its base, so z = 0 stands it
+on the floor.
+
+```python
+from sim import Prop, Range, assets
+
+assets.labels()                         # {"chair": 13, "table": 22, ...}
+assets.find("chair")                    # every chair's id
+assets.find(category="furniture/seating", max_size=1.0)
+assets.info("ArmChair_01")              # its size in meters, category, ...
+
+self.chairs = [self.add(Prop(
+    asset=Range.choice(assets.find("chair")), label="chair",
+    position=(rng.uniform(-3, 3), rng.uniform(2, 6), 0), rotation=(0, 0, Range(0, 360)),
+    scale=Range(0.9, 1.1), tint=Range.color("white", "tan"),
+)) for _ in range(4)]
+```
+
+- **Labels**: a Prop has no label unless you give it one, like any object.
+  The catalog's labels are only for finding models.
+- **tint** multiplies the model's own colors; (1, 1, 1) leaves them.
+- **Static only, for now.** Physics uses each model's convex parts, so a
+  ball can roll under a table.
+- **On your laptop**, `check` doesn't have the models, so physics uses each
+  Prop's box from the catalog instead (and says so). Cloud jobs download
+  the models they use.
+
+`sim/assets/polyhaven.json` is the catalog. Admins make it, and the models in
+the bucket, with `python -m sim.assets.polyhaven` (see its docstring).
 
 ## Running it
 
