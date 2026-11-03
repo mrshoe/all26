@@ -13,9 +13,14 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
   - `datasets.py`: a model's `dataset.toml` (the runs it trains on, and how
     they split), downloading those runs, and its samples. Try
     `python -m shared.datasets check training/<model>` from here.
-  - `cloud.py`: reading the bucket and Firestore, as you, the same way on
-    your computer (through `wildhat login`; needs wildhat 0.4.0) and in a
-    cloud job.
+  - `training.py`: `TrainingRun`, which records every training run in the
+    `training` database, wherever it runs, and uploads its metrics and
+    checkpoints for anyone to build on. A model's `train.toml` names its
+    dataset and the checkpoints it starts from. Needs wildhat 0.5.0 on your
+    computer.
+  - `cloud.py`: reading and writing the bucket and Firestore, as you, the
+    same way on your computer (through `wildhat login`; needs wildhat 0.4.0)
+    and in a cloud job.
 - `requirements.txt` (optional): extra Python packages, installed before each
   episode starts. The cloud image already has Python 3.11, PyTorch with CUDA,
   and ultralytics.

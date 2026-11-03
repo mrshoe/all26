@@ -240,6 +240,12 @@ class Dataset:
         self._check_split(split)
         return [ep for run, index, ep in self._episodes if self.split_of(run, index) == split]
 
+    def episode_ids(self, split: str) -> list[str]:
+        """The split's episodes as "<run>/<number>", e.g. for a record of
+        exactly what a model trained on."""
+        self._check_split(split)
+        return [f"{run}/{index}" for run, index, _ in self._episodes if self.split_of(run, index) == split]
+
     def samples(self, split: str) -> list[Sample]:
         """Every picture in the split: each chosen camera, every `every`th frame."""
         self._check_split(split)

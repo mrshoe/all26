@@ -60,8 +60,9 @@ resource "google_project_iam_member" "student" {
 }
 
 # Run source, data and results. Students can read everything in it and write
-# only under src/<handle>/ (what they launch) and runs/<handle>/ (what their
-# jobs write, since jobs run as their launcher).
+# only under src/<handle>/ (what they launch), runs/<handle>/ (what their
+# jobs write, since jobs run as their launcher) and training/<handle>/ (their
+# training runs' checkpoints and metrics, from a laptop or a job).
 resource "google_storage_bucket" "wildhat" {
   name                        = "${local.project_id}-wildhat"
   location                    = local.region
@@ -87,5 +88,19 @@ resource "google_storage_bucket_iam_member" "student_upload" {
       for prefix in ["src", "runs"] :
       "resource.name.startsWith(\"projects/_/buckets/${google_storage_bucket.wildhat.name}/objects/${prefix}/${each.key}/\")"
     ])
+  }
+}
+
+# Training runs keep their newest few checkpoints and delete older ones
+# (shared/training.py), so under training/<handle>/ students may also
+# replace and delete.
+resource "google_storage_bucket_iam_member" "student_training" {
+  for_each = local.students
+  bucket   = google_storage_bucket.wildhat.name
+  role     = "roles/storage.objectUser"
+  member   = google_service_account.student[each.key].member
+  condition {
+    title      = "own-training"
+    expression = "resource.name.startsWith(\"projects/_/buckets/${google_storage_bucket.wildhat.name}/objects/training/${each.key}/\")"
   }
 }
