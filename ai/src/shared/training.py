@@ -496,10 +496,13 @@ class TrainingRun:
         name = f"{self.prefix}checkpoints/{step}/{path.name}"
         self._checkpoints[step] = {"resumable": resumable, "pruned": False}
         fields = {"last_checkpoint": step, "checkpoints": len(self._checkpoints), "heartbeat_at": now()}
+        # Only the run's best checkpoint says best: a new best clears the old one's.
+        was_best = [] if not best or self._best in (None, step) else [
+            (f"{self.record}/checkpoints/{self._best}", {"best": False})]
         if best:
             self._best = step
             fields["best"] = {"step": step, "metrics": metrics}
-        self._enqueue([{"object": name, "file": copy}], [
+        self._enqueue([{"object": name, "file": copy}], [*was_best,
             (f"{self.record}/checkpoints/{step}", {
                 "step": step, "file": name, "size": path.stat().st_size, "md5": md5_of(path),
                 "resumable": resumable, "metrics": metrics, "best": best, "saved_at": now(), "tags": [],

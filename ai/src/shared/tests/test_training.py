@@ -217,6 +217,12 @@ class TestCheckpoints(TrainingTestCase):
         self.assertEqual((record["last_checkpoint"], record["checkpoints"]), (200, 2))
         self.assertEqual(record["best"], {"step": 200, "metrics": {"val_ap50": 0.7}})
         self.assertEqual(jobs_in(run.queue), [])
+
+        # Only the run's best checkpoint says best.
+        self.checkpoint(run, 300, b"best yet", metrics={"val_ap50": 0.8}, best=True)
+        run._drain()
+        self.assertEqual([self.cloud.docs[f"training/{run.id}/checkpoints/{s}"]["best"] for s in (100, 200, 300)],
+                         [False, False, True])
         self.assertEqual([p.name for p in run.queue.iterdir()], [".lock"])  # copies deleted once sent
 
     def test_the_file_is_copied_so_it_can_be_overwritten_at_once(self):

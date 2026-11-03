@@ -4,6 +4,12 @@ A web app for looking at runs: everyone's runs, newest first, and for
 simulation episodes, each camera's video (with or without boxes) next to
 plots of the episode's signals, with a playhead that follows the video.
 
+And training runs (`ai/src/shared/training.py` records them): the list,
+filtered by model or person; each run's code, dataset, the checkpoints it
+started from and the runs that started from it, a plot of each metric
+against step (refreshed every 30 seconds while it runs), and its
+checkpoints; and several runs' metrics overlaid, to compare them.
+
 Sign in with the email address on the team roster, the same way as
 `wildhat login`. The address is printed by `terraform output visualizer_url`
 in `ai/terraform`.

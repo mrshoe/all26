@@ -86,7 +86,7 @@ class ShowTest(TrainingTestCase):
     def test_everything_about_a_run(self):
         self.training_run(A)
         self.checkpoint(A, 200, best=True, resumable=True, metrics={"val_ap50": 0.7}, tags=["fuel_detector:v1"])
-        self.checkpoint(A, 100, resumable=True, pruned=True)
+        self.checkpoint(A, 100, resumable=True, pruned=True, best=True)  # best when saved, not now
         self.training_run(B, model="robot_vision", parents={"backbone": {
             "ref": "fuel_detector:v1", "checkpoint": f"{A}/200", "model": "fuel_detector", "file": "f", "md5": "x"}},
             parent_runs=[A])

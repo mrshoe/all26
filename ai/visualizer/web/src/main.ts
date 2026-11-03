@@ -4,6 +4,9 @@
 //   /runs/<run>                a run: its episodes, and the first one
 //   /runs/<run>/episodes/<n>   the same, showing episode n: video, boxes
 //                              and signals
+//   /training                  training runs (training.ts)
+//   /training/<id>             one, with its metrics and checkpoints
+//   /training/compare?runs=a,b their metrics, overlaid
 //
 // Choosing another episode of the same run only changes the main pane.
 
@@ -14,6 +17,7 @@ import * as auth from "./auth";
 import logo from "./assets/wildhats-logo.png";
 import { h, icon, link, setRouter } from "./dom";
 import { RunView, runView, runsPage } from "./runs";
+import { compareView, trainingPage, trainingRunView } from "./training";
 
 const app = document.getElementById("app")!;
 let me: Me | null = null;
@@ -28,6 +32,9 @@ function header(): HTMLElement {
   home.className = "header__home";
   return h("header", { class: "header" },
     home,
+    me && h("nav", { class: "header__nav" },
+      navLink("/", "Runs", !location.pathname.startsWith("/training")),
+      navLink("/training", "Training", location.pathname.startsWith("/training"))),
     h("span", { class: "header__spacer" }),
     me && h("span", { class: "header__me" }, me.handle),
     me && h("button", {
@@ -35,6 +42,13 @@ function header(): HTMLElement {
       onclick: () => { auth.signOut(); me = null; route(); },
     }, icon("signout"), "Sign out"),
   );
+}
+
+function navLink(href: string, label: string, current: boolean): HTMLAnchorElement {
+  const a = link(href, label);
+  a.className = "header__link";
+  if (current) a.setAttribute("aria-current", "page");
+  return a;
 }
 
 function show(...content: Node[]): void {
@@ -110,7 +124,15 @@ async function route(): Promise<void> {
       return;
     }
     leave();
-    if (parts.length === 0) {
+    if (parts[0] === "training" && parts.length <= 2) {
+      const view = parts.length === 1
+        ? { element: await trainingPage(me), stop: () => {} }
+        : parts[1] === "compare"
+          ? await compareView((new URLSearchParams(location.search).get("runs") ?? "").split(",").filter(Boolean))
+          : await trainingRunView(parts[1]);
+      cleanup = view.stop;
+      show(view.element);
+    } else if (parts.length === 0) {
       show(await runsPage(me));
     } else {
       show(h("p", null, "There's no such page. ", link("/", "See all runs.")));

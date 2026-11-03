@@ -6,6 +6,14 @@
     GET /api/runs/<run>                     a run and its episodes
     GET /api/runs/<run>/episodes/<n>        an episode's episode.json, tables,
                                             and links to its preview videos
+    GET /api/training?model=&user=&limit=   training runs, newest first
+    GET /api/training/<id>                  a training run, its checkpoints, and
+                                            the runs that started from it
+    GET /api/training/<id>/metrics          everything it logged, as rows of
+                                            {"step", "time", <metric>: value}
+
+Training runs are written by ai/src/shared/training.py: records in the
+`training` collection, metrics files in the bucket.
 
 Everything under /api but /api/config needs a Firebase ID token, from the
 same email-link sign-in as `wildhat login`. Only people on the roster have a
@@ -41,6 +49,9 @@ FIREBASE_API_KEY = os.environ.get("FIREBASE_API_KEY", "")
 WEB = Path(os.environ.get("WEB_DIR", Path(__file__).resolve().parent.parent / "web" / "dist"))
 SIGNED_URL_SECONDS = 60 * 60
 MAX_RUNS = 200
+# Metrics files are never changed once written, so each is read once. This
+# many are kept.
+METRICS_CACHE = 5000
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +70,18 @@ class Store(Protocol):
         """An object in the bucket, or None if it isn't there."""
 
     def signed_url(self, path: str, content_type: str) -> str: ...
+
+    def training_runs(self, model: Optional[str], user: Optional[str], limit: int) -> list[dict]: ...
+
+    def training_run(self, run_id: str) -> Optional[dict]: ...
+
+    def checkpoints(self, run_id: str) -> list[dict]: ...
+
+    def children(self, run_id: str) -> list[dict]:
+        """Training runs that started from one of this run's checkpoints."""
+
+    def names(self, prefix: str) -> list[str]:
+        """The names of the bucket's objects under a prefix."""
 
 
 class GoogleStore:
@@ -87,6 +110,42 @@ class GoogleStore:
     def episodes(self, run_id):
         docs = self.db.collection("runs").document(run_id).collection("episodes").stream()
         return sorted((doc.to_dict() for doc in docs), key=lambda e: e.get("index", 0))
+
+    def training_runs(self, model, user, limit):
+        from google.cloud import firestore
+
+        query = self.db.collection("training")
+        # The indexes (../../terraform/jobs.tf) are on model, or on trained_by,
+        # with created_at; for both, filter by model here and by person below.
+        if model:
+            query = query.where(filter=firestore.FieldFilter("model", "==", model))
+        elif user:
+            query = query.where(filter=firestore.FieldFilter("trained_by", "==", user))
+        query = query.order_by("created_at", direction=firestore.Query.DESCENDING)
+        if not (model and user):
+            query = query.limit(limit)
+        found = [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+        if model and user:
+            found = [r for r in found if r.get("trained_by") == user][:limit]
+        return found
+
+    def training_run(self, run_id):
+        doc = self.db.collection("training").document(run_id).get()
+        return {"id": doc.id, **doc.to_dict()} if doc.exists else None
+
+    def checkpoints(self, run_id):
+        docs = self.db.collection("training").document(run_id).collection("checkpoints").stream()
+        return sorted((doc.to_dict() for doc in docs), key=lambda c: c.get("step", 0))
+
+    def children(self, run_id):
+        from google.cloud import firestore
+
+        query = self.db.collection("training").where(
+            filter=firestore.FieldFilter("parent_runs", "array_contains", run_id))
+        return [{"id": doc.id, **doc.to_dict()} for doc in query.stream()]
+
+    def names(self, prefix):
+        return [blob.name for blob in self.bucket.list_blobs(prefix=prefix)]
 
     def read(self, path):
         from google.api_core.exceptions import NotFound
@@ -228,6 +287,51 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
             "previews": previews,
         }
 
+    metrics_files: dict[str, list[dict]] = {}
+
+    @app.get("/api/training")
+    def training_runs(
+        who: Signed,
+        model: Annotated[Optional[str], Query(description="only this model's")] = None,
+        user: Annotated[Optional[str], Query(description="only this person's")] = None,
+        limit: Annotated[int, Query(ge=1, le=MAX_RUNS)] = 50,
+    ) -> list[dict]:
+        return [plain(training_summary(r)) for r in store.training_runs(model or None, user or None, limit)]
+
+    @app.get("/api/training/{run_id}")
+    def training_run(who: Signed, run_id: str) -> dict:
+        found = store.training_run(run_id)
+        if not found:
+            raise HTTPException(404, f"There's no training run {run_id}.")
+        dataset = dict(found.get("dataset") or {})
+        # Episode lists can be long; their counts say enough here.
+        dataset["episodes"] = {split: len(ids) for split, ids in (dataset.get("episodes") or {}).items()}
+        children = sorted(store.children(run_id), key=lambda r: r["id"])
+        return plain({
+            **found,
+            "dataset": dataset,
+            "checkpoints": store.checkpoints(run_id),
+            "children": [{k: c.get(k) for k in ("id", "model", "trained_by", "status", "heartbeat_at")}
+                         for c in children],
+        })
+
+    @app.get("/api/training/{run_id}/metrics")
+    def training_metrics(who: Signed, run_id: str) -> dict:
+        found = store.training_run(run_id)
+        if not found:
+            raise HTTPException(404, f"There's no training run {run_id}.")
+        prefix = f"training/{found.get('trained_by')}/{run_id}/metrics/"
+        names = sorted(store.names(prefix))
+        missing = [n for n in names if n not in metrics_files]
+        for name, data in zip(missing, pool.map(store.read, missing)):
+            if data is None:
+                continue
+            if len(metrics_files) > METRICS_CACHE:
+                metrics_files.clear()
+            metrics_files[name] = [json.loads(line) for line in data.decode().splitlines() if line.strip()]
+        rows = [row for name in names for row in metrics_files.get(name, [])]
+        return {"run": run_id, "rows": rows}
+
     if (WEB / "index.html").exists():
         app.mount("/assets", StaticFiles(directory=WEB / "assets"), name="assets")
 
@@ -255,6 +359,17 @@ def summarize(run: dict, episodes: list[dict]) -> dict:
     for e in episodes:
         counts[e.get("status", "pending")] = counts.get(e.get("status", "pending"), 0) + 1
     return {**run, "status_counts": counts}
+
+
+def training_summary(run: dict) -> dict:
+    """A training run for a list: without its files' text and episode lists."""
+    dataset = run.get("dataset") or {}
+    return {
+        **{k: v for k, v in run.items() if k not in ("dataset", "config", "segments", "parents")},
+        "dataset": {"path": dataset.get("path"), "samples": dataset.get("samples")},
+        "parents": {name: p.get("checkpoint") for name, p in (run.get("parents") or {}).items()},
+        "resumed": max(0, len(run.get("segments") or []) - 1),
+    }
 
 
 def read_table(data: bytes) -> dict[str, list]:

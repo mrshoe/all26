@@ -228,7 +228,9 @@ def cmd_show(args) -> int:
         print()
         rows = [["CHECKPOINT", "SIZE", "SAVED", "KIND", "METRICS", "TAGS"]]
         for c in checkpoints:
-            kind = ", ".join(filter(None, ["best" if c.get("best") else "", "resumable" if c.get("resumable") else "",
+            # The run's best, not every checkpoint that was best when saved.
+            best = (record.get("best") or {}).get("step")
+            kind = ", ".join(filter(None, ["best" if c["step"] == best else "", "resumable" if c.get("resumable") else "",
                                            "pruned" if c.get("pruned") else ""]))
             rows.append([f"{args.run_id}/{c['step']}", size(int(c.get("size", 0))), local(c.get("saved_at")),
                          kind, metrics_text(c.get("metrics")), " ".join(c.get("tags") or [])])
