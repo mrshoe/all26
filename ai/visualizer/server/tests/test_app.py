@@ -78,6 +78,28 @@ class FakeStore:
     def signed_url(self, path, content_type):
         return f"https://signed.example/{path}?type={content_type}"
 
+    # Training runs, as ai/src/shared/training.py writes them.
+    training_docs: dict = {}
+    checkpoint_docs: dict = {}
+
+    def training_runs(self, model, user, limit):
+        found = [{"id": k, **v} for k, v in self.training_docs.items()
+                 if (not model or v["model"] == model) and (not user or v["trained_by"] == user)]
+        return sorted(found, key=lambda r: r["created_at"], reverse=True)[:limit]
+
+    def training_run(self, run_id):
+        return {"id": run_id, **self.training_docs[run_id]} if run_id in self.training_docs else None
+
+    def checkpoints(self, run_id):
+        return sorted(self.checkpoint_docs.get(run_id, []), key=lambda c: c["step"])
+
+    def children(self, run_id):
+        return [{"id": k, **v} for k, v in self.training_docs.items() if run_id in v.get("parent_runs", [])]
+
+    def names(self, prefix):
+        self.listed = getattr(self, "listed", 0) + 1
+        return sorted(n for n in self.objects if n.startswith(prefix))
+
 
 class TestApi(unittest.TestCase):
     def setUp(self):
@@ -142,6 +164,72 @@ class TestApi(unittest.TestCase):
         client = TestClient(app.create_app(store, verify))
         response = client.get("/api/runs/r1/episodes/0", headers={"Authorization": "Bearer kai"})
         self.assertEqual(response.status_code, 404)
+
+
+def training_record(model, who, created, **more):
+    return {"model": model, "trained_by": who, "created_at": created, "status": "finished",
+            "heartbeat_at": created, "where": {"kind": "laptop", "host": "kai-mac"},
+            "segments": [{"source": "gs://b/src/x.tar.gz", "git": {"commit": "abc1234", "branch": "main", "dirty": False}}],
+            "config": {"path": "training/fuel_detector/train.toml", "toml": "epochs = 3\n"},
+            "dataset": {"path": "training/fuel_detector/dataset.toml", "toml": "runs = []\n",
+                        "episodes": {"train": ["r1/0", "r1/1"], "validation": ["r1/2"], "test": []},
+                        "samples": {"train": 20, "validation": 10, "test": 0}},
+            "parents": {}, "parent_runs": [], "step": 300, "latest": {"loss": 0.25},
+            **more}
+
+
+class TestTraining(unittest.TestCase):
+    def setUp(self):
+        self.store = FakeStore()
+        self.store.training_docs = {
+            "t1": training_record("fuel_detector", "kai-morales", WHEN),
+            "t2": training_record("robot_vision", "dana-wells", WHEN + datetime.timedelta(hours=1),
+                                  parents={"backbone": {"ref": "fuel_detector:v1", "checkpoint": "t1/200",
+                                                        "model": "fuel_detector", "file": "f", "md5": "x"}},
+                                  parent_runs=["t1"]),
+        }
+        self.store.checkpoint_docs = {"t1": [{"step": 300, "best": False}, {"step": 200, "best": True}]}
+        prefix = "training/kai-morales/t1/metrics/"
+        self.store.objects[prefix + "000000.jsonl"] = b'{"step": 0, "time": 1.0, "loss": 2.0}\n'
+        self.store.objects[prefix + "000001.jsonl"] = (b'{"step": 1, "time": 2.0, "loss": 1.5}\n'
+                                                      b'{"step": 2, "time": 3.0, "loss": 1.0, "val_ap50": 0.4}\n')
+        self.client = TestClient(app.create_app(self.store, verify))
+
+    def get(self, path):
+        return self.client.get(path, headers={"Authorization": "Bearer kai"})
+
+    def test_list(self):
+        runs = self.get("/api/training").json()
+        self.assertEqual([r["id"] for r in runs], ["t2", "t1"])
+        self.assertEqual(runs[0]["parents"], {"backbone": "t1/200"})
+        self.assertEqual(runs[1]["dataset"], {"path": "training/fuel_detector/dataset.toml",
+                                              "samples": {"train": 20, "validation": 10, "test": 0}})
+        self.assertNotIn("config", runs[1])  # the files' text is for one run's page
+        self.assertEqual(runs[1]["resumed"], 0)
+        self.assertEqual([r["id"] for r in self.get("/api/training?model=fuel_detector").json()], ["t1"])
+        self.assertEqual([r["id"] for r in self.get("/api/training?user=dana-wells").json()], ["t2"])
+        self.assertEqual(self.client.get("/api/training").status_code, 401)
+
+    def test_a_training_run(self):
+        run = self.get("/api/training/t1").json()
+        self.assertEqual(run["config"]["toml"], "epochs = 3\n")
+        self.assertEqual(run["dataset"]["episodes"], {"train": 2, "validation": 1, "test": 0})
+        self.assertEqual([c["step"] for c in run["checkpoints"]], [200, 300])
+        self.assertEqual([c["id"] for c in run["children"]], ["t2"])
+        self.assertEqual(run["created_at"], "2026-10-30T21:30:00+00:00")
+        self.assertEqual(self.get("/api/training/nope").status_code, 404)
+
+    def test_metrics_in_order_each_file_read_once(self):
+        metrics = self.get("/api/training/t1/metrics").json()
+        self.assertEqual([(r["step"], r["loss"]) for r in metrics["rows"]], [(0, 2.0), (1, 1.5), (2, 1.0)])
+        self.assertEqual(metrics["rows"][2]["val_ap50"], 0.4)
+
+        prefix = "training/kai-morales/t1/metrics/"
+        self.store.objects[prefix + "000000.jsonl"] = b'{"step": 0, "loss": 999}\n'  # never changes, really
+        self.store.objects[prefix + "000002.jsonl"] = b'{"step": 3, "loss": 0.5}\n'
+        rows = self.get("/api/training/t1/metrics").json()["rows"]
+        self.assertEqual([(r["step"], r["loss"]) for r in rows], [(0, 2.0), (1, 1.5), (2, 1.0), (3, 0.5)])
+        self.assertEqual(self.get("/api/training/t2/metrics").json()["rows"], [])
 
 
 if __name__ == "__main__":
