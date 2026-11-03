@@ -84,6 +84,19 @@ def firestore_value(value) -> dict:
     raise TypeError(f"Can't store {value!r} in Firestore")
 
 
+def patch_body(fields: dict) -> tuple[list[str], dict]:
+    """A record update's field mask, and its fields in Firestore's typed form.
+    A dotted name like "best.step" sets a field inside a map."""
+    nested: dict = {}
+    for name, value in fields.items():
+        *parents, last = name.split(".")
+        where = nested
+        for parent in parents:
+            where = where.setdefault(parent, {})
+        where[last] = value
+    return list(fields), firestore_value(nested)["mapValue"]["fields"]
+
+
 def now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
@@ -204,16 +217,17 @@ class Cloud:
     def update(self, path: str, fields: dict) -> None:
         """Set these fields of a record (creating it if need be), leaving its
         others alone. A dotted name like "best.step" sets a field inside a map."""
-        mask = "&".join("updateMask.fieldPaths=" + urllib.parse.quote(name) for name in fields)
-        nested: dict = {}
-        for name, value in fields.items():
-            *parents, last = name.split(".")
-            where = nested
-            for parent in parents:
-                where = where.setdefault(parent, {})
-            where[last] = value
-        self._json(f"{self._firestore()}/{path}?{mask}", "PATCH",
-                   {"fields": firestore_value(nested)["mapValue"]["fields"]})
+        self.patch(path, *patch_body(fields))
+
+    def patch(self, path: str, mask: list[str], typed: dict) -> None:
+        """update() with the fields already in Firestore's typed form, as
+        patch_body() makes them (and the training upload queue stores them)."""
+        query = "&".join("updateMask.fieldPaths=" + urllib.parse.quote(name) for name in mask)
+        self._json(f"{self._firestore()}/{path}?{query}", "PATCH", {"fields": typed})
+
+    def delete_document(self, path: str) -> None:
+        with self._open(f"{self._firestore()}/{path}", "DELETE"):
+            pass
 
     # --- The bucket -------------------------------------------------------------
 

@@ -151,7 +151,25 @@ runs a model's `dataset.toml` lists, and `shared/training.py` records
 training runs (see `ai/src/README.md`). On your computer they work through
 two hidden commands, `wildhat access-token` (your credentials) and `wildhat
 pack-source` (uploads `ai/src` as launch does, so a training run records its
-exact code). Datasets need wildhat 0.4.0 or newer, training runs 0.5.0.
+exact code). Datasets need wildhat 0.4.0 or newer, training runs 0.6.0.
+
+### Training runs
+
+`shared/training.py` records every training run, on your computer or in
+the cloud, with its code, dataset, the checkpoints it started from, its
+metrics and its checkpoints. These show and use them:
+
+| Command | What it does |
+|---|---|
+| `wildhat training list` | The newest training runs (`--model NAME`, `--mine`, `--user HANDLE`, `--limit N`): model, who, when, status, step and latest metrics. `stopped?` means one still marked running that hasn't been heard from for 3 minutes: its computer closed or went offline, say. |
+| `wildhat training show RUN` | One run: its code (each time it was resumed, too), dataset, the checkpoints it started from, the runs that started from it, and its checkpoints, with which are best, resumable, pruned or tagged. |
+| `wildhat training tag CHECKPOINT MODEL:TAG` | Names a checkpoint, e.g. `fuel_detector:v2`, for a `train.toml`'s `[start]`. Moving a tag to another checkpoint is a decision, so it's never done automatically. |
+| `wildhat training download CHECKPOINT` | Downloads a checkpoint's file (`--to DIR`). |
+| `wildhat training sync` | Sends uploads a training run on this computer couldn't, being offline when it ended. |
+
+A CHECKPOINT is a training run (its best checkpoint, or its last if none was
+best), `RUN/STEP`, or `MODEL:TAG`. Anyone can tag, so agree as a team on
+what tags mean.
 
 You can see, follow and download everyone's runs, but only cancel your own.
 A run's status is `starting`, `running (2 of 5 done)`, `succeeded`,

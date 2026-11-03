@@ -354,13 +354,13 @@ class FakeGoogle:
     def _may_access(self, request: dict, bucket: str, name: str, write: bool) -> bool:
         """IAM for the buckets (ai/terraform/students.tf): mentors may do
         anything; wh- accounts may read the wildhat bucket and write only
-        their own src/ and runs/ folders."""
+        their own src/, runs/ and training/ folders."""
         if self._is_mentor(request):
             return True
         handle = self._service_account(request)
         if handle is None or bucket != WILDHAT_BUCKET:
             return False
-        return not write or name.startswith((f"src/{handle}/", f"runs/{handle}/"))
+        return not write or name.startswith((f"src/{handle}/", f"runs/{handle}/", f"training/{handle}/"))
 
     def _storage(self, request: dict):
         path = request["path"]
@@ -392,9 +392,9 @@ class FakeGoogle:
             name = request["query"]["name"]
             if not self._may_access(request, bucket, name, write=True):
                 return 403, "Caller does not have storage.objects.create access", None
-            want = int(request["query"]["ifGenerationMatch"])
+            want = request["query"].get("ifGenerationMatch")
             have = self.objects.get((bucket, name), (None, 0))[1]
-            if want != have:
+            if want is not None and int(want) != have:
                 return 412, "At least one of the pre-conditions you specified did not hold.", None
             generation = self.put_object(bucket, name, request["body"])
             return 200, {"name": name, "generation": str(generation)}, None
@@ -435,16 +435,25 @@ class FakeGoogle:
         if path.endswith(":runQuery"):
             query = json.loads(request["body"])["structuredQuery"]
             (collection,) = [c["collectionId"] for c in query["from"]]
-            assert collection == "runs", query
-            assert query["orderBy"] == [{"field": {"fieldPath": "created_at"}, "direction": "DESCENDING"}], query
-            names = [n for n in self.typed_documents if n.count("/") == 1 and n.startswith("runs/")
+            assert collection in ("runs", "training"), query
+            names = [n for n in self.typed_documents if n.count("/") == 1 and n.startswith(collection + "/")
                      and "created_at" in self.typed_documents[n]]
             if "where" in query:
                 f = query["where"]["fieldFilter"]
-                assert f["field"]["fieldPath"] == "launched_by" and f["op"] == "EQUAL", f
-                names = [n for n in names if self.documents[n]["launched_by"] == f["value"]["stringValue"]]
-            names.sort(key=lambda n: self.documents[n]["created_at"], reverse=True)
-            rows = [{"document": as_document(n)} for n in names[:query["limit"]]]
+                field, value = f["field"]["fieldPath"], f["value"]["stringValue"]
+                # The filters the Firestore indexes in ai/terraform/jobs.tf allow.
+                allowed = {("runs", "launched_by", "EQUAL"), ("training", "model", "EQUAL"),
+                           ("training", "trained_by", "EQUAL"), ("training", "parent_runs", "ARRAY_CONTAINS")}
+                assert (collection, field, f["op"]) in allowed, f
+                if f["op"] == "EQUAL":
+                    names = [n for n in names if self.documents[n].get(field) == value]
+                else:
+                    names = [n for n in names if value in (self.documents[n].get(field) or [])]
+                    assert "orderBy" not in query, "array-contains with orderBy needs an index there isn't"
+            if "orderBy" in query:
+                assert query["orderBy"] == [{"field": {"fieldPath": "created_at"}, "direction": "DESCENDING"}], query
+                names.sort(key=lambda n: self.documents[n]["created_at"], reverse=True)
+            rows = [{"document": as_document(n)} for n in names[:query.get("limit", len(names))]]
             return 200, rows or [{"readTime": "2026-10-26T00:00:00Z"}], None
         if request["method"] == "GET" and doc.count("/") % 2 == 0:  # A collection
             names = sorted(n for n in self.typed_documents if n.rsplit("/", 1)[0] == doc)
@@ -461,8 +470,20 @@ class FakeGoogle:
         if request["method"] == "PATCH":
             typed = json.loads(request["body"])["fields"]
             mask = urllib.parse.parse_qs(urllib.parse.urlsplit(request["url"]).query)["updateMask.fieldPaths"]
-            assert sorted(mask) == sorted(typed), (mask, typed)
-            self.update_document(doc, typed)
+            assert sorted({m.split(".")[0] for m in mask}) == sorted(typed), (mask, typed)
+            # As Firestore does: each masked path is set, and a dotted one
+            # (tags.`v2`) only inside its map.
+            current = self.typed_documents.setdefault(doc, {})
+            for m in mask:
+                parts = [part.strip("`") for part in re.findall(r"`[^`]*`|[^.]+", m)]
+                value = typed[parts[0]]
+                for part in parts[1:]:
+                    value = value["mapValue"]["fields"][part]
+                where = current
+                for part in parts[:-1]:
+                    where = where.setdefault(part, {"mapValue": {"fields": {}}})["mapValue"].setdefault("fields", {})
+                where[parts[-1]] = value
+            self.update_document(doc, {})
             return 200, {"name": doc}, None
         if request["method"] == "DELETE":
             self.documents.pop(doc, None)

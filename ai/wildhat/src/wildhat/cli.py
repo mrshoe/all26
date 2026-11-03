@@ -696,6 +696,7 @@ def cmd_logout(args) -> int:
 HELP_SECTIONS = [
     ("Sign in", ["login", "whoami", "logout"]),
     ("Run in the cloud", ["launch", "runs", "logs", "cancel", "download"]),
+    ("Training", ["training"]),
     ("Mentors", ["admin"]),
 ]
 
@@ -737,10 +738,11 @@ def build_parser() -> tuple[argparse.ArgumentParser, argparse._SubParsersAction]
         func=cmd_logout
     )
     # Imported here because these import from this module.
-    from wildhat import admin, launch, runs
+    from wildhat import admin, launch, runs, training
 
     launch.add_parsers(sub)
     runs.add_parsers(sub)
+    training.add_parsers(sub)
     admin.add_parsers(sub)
     parser.description = sectioned_help(sub)
     return parser, sub

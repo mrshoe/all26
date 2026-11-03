@@ -192,6 +192,8 @@ def firestore_value(value) -> dict:
         return {"booleanValue": value}
     if isinstance(value, int):
         return {"integerValue": str(value)}
+    if isinstance(value, float):
+        return {"doubleValue": value}
     if isinstance(value, str):
         return {"stringValue": value}
     if isinstance(value, datetime.datetime):
