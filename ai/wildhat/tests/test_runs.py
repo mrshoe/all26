@@ -376,3 +376,18 @@ class TimesTest(RunsTestCase):
         for stamp, micro in [("2026-10-26T06:46:28.664906Z", 664906), ("2026-10-26T06:46:28Z", 0),
                              ("2026-10-26T07:24:11.691053123Z", 691053), ("2026-10-26T06:46:28.5-07:00", 500000)]:
             self.assertEqual(runs.parse_time(stamp).microsecond, micro, stamp)
+
+
+class AccessTokenTest(RunsTestCase):
+    def test_prints_the_service_accounts_token_as_json(self):
+        run = self.wildhat("access-token")
+
+        self.assertSucceeded(run)
+        reply = __import__("json").loads(run.out)
+        self.assertEqual(reply["access_token"], f"ya29.sa:wh-kai-morales@{runs.PROJECT_ID}.iam.gserviceaccount.com")
+        self.assertEqual(reply["bucket"], WILDHAT_BUCKET)
+        self.assertEqual(reply["project"], runs.PROJECT_ID)
+        self.assertEqual(reply["handle"], "kai-morales")
+
+    def test_it_isnt_listed_in_help(self):
+        self.assertNotIn("access-token", self.wildhat("--help").out)

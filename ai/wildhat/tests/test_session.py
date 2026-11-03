@@ -153,8 +153,8 @@ class CommandLineTest(WildhatTestCase):
                 self.assertNotIn(name, listed, "listed twice")
                 listed[name] = (heading, help_text)
         _, sub = cli.build_parser()
-        # id-token is for gcloud, not people, so it isn't listed.
-        self.assertEqual(sorted(listed), sorted(set(sub.choices) - {"id-token"}))
+        # id-token (for gcloud) and access-token (for ai/src code) are for programs, not people, so they aren't listed.
+        self.assertEqual(sorted(listed), sorted(set(sub.choices) - {"id-token", "access-token"}))
         self.assertEqual(listed["launch"], ("Run in the cloud", "run a command in the cloud"))
         self.assertEqual(listed["login"][0], "Sign in")
         self.assertEqual(listed["admin"][0], "Mentors")
