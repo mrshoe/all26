@@ -6,6 +6,9 @@ on a laptop and in a `wildhat launch` job:
     cloud.documents("runs/20261102-0019-w22f/episodes")
     cloud.objects("runs/kai-morales/20261102-0019-w22f/")   [("runs/.../episode.json", 812), ...]
     cloud.download("runs/.../episode.json", Path("episode.json"))
+    cloud.create("training/<id>", {...}); cloud.update("training/<id>", {...})
+    cloud.upload("training/<handle>/<id>/metrics/000001.jsonl", b"...")
+    cloud.handle                                     "kai-morales": who you are
 
 On a laptop it uses `wildhat access-token`, so you need to have run
 `wildhat login` (and have wildhat 0.4.0 or newer). In a cloud job it uses the
@@ -17,6 +20,7 @@ Only the standard library, so it works anywhere ai/src runs.
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import shutil
@@ -60,6 +64,30 @@ def plain(value: dict):
     return v
 
 
+def firestore_value(value) -> dict:
+    if isinstance(value, bool):
+        return {"booleanValue": value}
+    if isinstance(value, int):
+        return {"integerValue": str(value)}
+    if isinstance(value, float):
+        return {"doubleValue": value}
+    if isinstance(value, str):
+        return {"stringValue": value}
+    if isinstance(value, datetime.datetime):
+        return {"timestampValue": value.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z")}
+    if isinstance(value, (list, tuple)):
+        return {"arrayValue": {"values": [firestore_value(v) for v in value]}}
+    if isinstance(value, dict):
+        return {"mapValue": {"fields": {str(k): firestore_value(v) for k, v in value.items()}}}
+    if value is None:
+        return {"nullValue": None}
+    raise TypeError(f"Can't store {value!r} in Firestore")
+
+
+def now() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 class Cloud:
     def __init__(self):
         self._lock = threading.Lock()
@@ -67,17 +95,25 @@ class Cloud:
         self._expires = 0.0
         self.project: str | None = None
         self.bucket: str | None = None
+        self._handle: str | None = None
+
+    @property
+    def handle(self) -> str:
+        """Who this is acting as, e.g. kai-morales."""
+        self.token()
+        return self._handle
 
     # --- Credentials ------------------------------------------------------
 
     def token(self) -> str:
         with self._lock:
             if self._token is None or time.time() > self._expires:
-                self._token, self.project, self.bucket = self._from_job() if in_cloud_job() else self._from_wildhat()
+                self._token, self.project, self.bucket, self._handle = (
+                    self._from_job() if in_cloud_job() else self._from_wildhat())
                 self._expires = time.time() + TOKEN_SECONDS
             return self._token
 
-    def _from_job(self) -> tuple[str, str, str]:
+    def _from_job(self) -> tuple[str, str, str, str]:
         def metadata(path: str) -> bytes:
             req = urllib.request.Request(f"{METADATA}/{path}", headers={"Metadata-Flavor": "Google"})
             with urllib.request.urlopen(req, timeout=10) as resp:
@@ -85,11 +121,11 @@ class Cloud:
 
         token = json.loads(metadata("instance/service-accounts/default/token"))["access_token"]
         project = metadata("project/project-id").decode()
-        # gs://<bucket>/runs/<handle>/<run>/
-        bucket = os.environ["WILDHAT_OUTPUT"].removeprefix("gs://").split("/")[0]
-        return token, project, bucket
+        # gs://<bucket>/runs/<handle>/<run>/: jobs run as the person who launched them.
+        bucket, _, handle = os.environ["WILDHAT_OUTPUT"].removeprefix("gs://").split("/")[:3]
+        return token, project, bucket, handle
 
-    def _from_wildhat(self) -> tuple[str, str, str]:
+    def _from_wildhat(self) -> tuple[str, str, str, str]:
         wildhat = shutil.which("wildhat")
         if not wildhat:
             raise CloudError("Can't find the wildhat command. Install it (ai/wildhat/README.md), "
@@ -102,14 +138,17 @@ class Cloud:
             raise CloudError(f"Couldn't get your credentials from wildhat: {message} "
                              "(Have you run wildhat login?)")
         reply = json.loads(result.stdout)
-        return reply["access_token"], reply["project"], reply["bucket"]
+        return reply["access_token"], reply["project"], reply["bucket"], reply["handle"]
 
     # --- Requests -----------------------------------------------------------
 
-    def _open(self, url: str, method="GET", body: dict | None = None, timeout=120):
-        data = json.dumps(body).encode() if body is not None else None
-        req = urllib.request.Request(url, data=data, method=method, headers={
-            "Authorization": f"Bearer {self.token()}", "Content-Type": "application/json"})
+    def _open(self, url: str, method="GET", body=None, timeout=120, content_type="application/json",
+              length: int | None = None):
+        data = json.dumps(body).encode() if isinstance(body, dict) else body
+        headers = {"Authorization": f"Bearer {self.token()}", "Content-Type": content_type}
+        if length is not None:
+            headers["Content-Length"] = str(length)
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
         try:
             return urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.HTTPError as e:
@@ -155,6 +194,27 @@ class Cloud:
             if not page:
                 return out
 
+    def create(self, path: str, fields: dict) -> None:
+        """A new record; fails if there's one already."""
+        collection, doc_id = path.rsplit("/", 1)
+        query = urllib.parse.urlencode({"documentId": doc_id})
+        self._json(f"{self._firestore()}/{collection}?{query}", "POST",
+                   {"fields": firestore_value(fields)["mapValue"]["fields"]})
+
+    def update(self, path: str, fields: dict) -> None:
+        """Set these fields of a record (creating it if need be), leaving its
+        others alone. A dotted name like "best.step" sets a field inside a map."""
+        mask = "&".join("updateMask.fieldPaths=" + urllib.parse.quote(name) for name in fields)
+        nested: dict = {}
+        for name, value in fields.items():
+            *parents, last = name.split(".")
+            where = nested
+            for parent in parents:
+                where = where.setdefault(parent, {})
+            where[last] = value
+        self._json(f"{self._firestore()}/{path}?{mask}", "PATCH",
+                   {"fields": firestore_value(nested)["mapValue"]["fields"]})
+
     # --- The bucket -------------------------------------------------------------
 
     def objects(self, prefix: str) -> list[tuple[str, int]]:
@@ -169,6 +229,25 @@ class Cloud:
             page = reply.get("nextPageToken")
             if not page:
                 return out
+
+    def upload(self, name: str, data: bytes | Path, content_type="application/octet-stream") -> None:
+        """Save bytes, or a file (streamed, so big checkpoints are fine), as
+        an object, replacing any there."""
+        self.token()
+        query = urllib.parse.urlencode({"uploadType": "media", "name": name})
+        url = f"{STORAGE}/upload/storage/v1/b/{self.bucket}/o?{query}"
+        if isinstance(data, Path):
+            with data.open("rb") as f, self._open(url, "POST", f, 600, content_type, data.stat().st_size):
+                pass
+        else:
+            with self._open(url, "POST", data, 120, content_type):
+                pass
+
+    def delete(self, name: str) -> None:
+        self.token()
+        quoted = urllib.parse.quote(name, safe="")
+        with self._open(f"{STORAGE}/storage/v1/b/{self.bucket}/o/{quoted}", "DELETE"):
+            pass
 
     def download(self, name: str, path: Path) -> None:
         """Save one object to path. A partial download never takes path's

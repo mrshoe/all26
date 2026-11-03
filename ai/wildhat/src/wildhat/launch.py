@@ -259,6 +259,36 @@ def size(n: int) -> str:
     return f"{n / 1e3:.0f} KB" if n >= 1000 else f"{n} B"
 
 
+def pack_and_upload(token: str, handle: str, root: Path):
+    """Pack ai/src and upload it to src/<handle>/<sha256>.tar.gz unless it's
+    already there."""
+    files, untracked = source_files(root)
+    data = pack(root, files)
+    if len(data) > MAX_SOURCE_BYTES:
+        raise WildhatError(
+            f"{SOURCE_DIR} packs to {size(len(data))}, over the {size(MAX_SOURCE_BYTES)} "
+            "limit. Put data in the bucket instead, or add big folders to .gitignore."
+        )
+    sha = hashlib.sha256(data).hexdigest()
+    source = f"src/{handle}/{sha}.tar.gz"
+    state = git_state(root)
+    uploaded = upload_source(token, source, data)
+    return files, untracked, data, sha, source, state, uploaded
+
+
+def cmd_pack_source(args) -> int:
+    """Pack and upload ai/src exactly as launch does, and print where it went
+    as JSON, for a training run on a laptop (shared/training.py) to record
+    the code it ran. Only the JSON goes to stdout."""
+    handle = load_account()["handle"]
+    token = gcloud("auth", "print-access-token", f"--account={service_account(handle)}").stdout.strip()
+    root, _ = find_root()
+    files, untracked, data, sha, source, state, _ = pack_and_upload(token, handle, root)
+    print(json.dumps({"source": f"gs://{BUCKET}/{source}", "source_sha256": sha, "git": state,
+                      "files": len(files), "bytes": len(data), "untracked": untracked}))
+    return 0
+
+
 def cmd_launch(args) -> int:
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
@@ -276,20 +306,9 @@ def cmd_launch(args) -> int:
     account = load_account()
     handle = account["handle"]
     sa = service_account(handle)
-    root, cwd = find_root()
-    files, untracked = source_files(root)
-    data = pack(root, files)
-    if len(data) > MAX_SOURCE_BYTES:
-        raise WildhatError(
-            f"{SOURCE_DIR} packs to {size(len(data))}, over the {size(MAX_SOURCE_BYTES)} "
-            "limit. Put data in the bucket instead, or add big folders to .gitignore."
-        )
-    sha = hashlib.sha256(data).hexdigest()
-    source = f"src/{handle}/{sha}.tar.gz"
-    state = git_state(root)
-
     token = gcloud("auth", "print-access-token", f"--account={sa}").stdout.strip()
-    uploaded = upload_source(token, source, data)
+    root, cwd = find_root()
+    files, untracked, data, sha, source, state, uploaded = pack_and_upload(token, handle, root)
     changes = ", with uncommitted changes" if state["dirty"] else ""
     print(
         f"Packed {len(files)} files ({size(len(data))}) from {SOURCE_DIR}/ at "
@@ -369,6 +388,12 @@ def cmd_launch(args) -> int:
 
 
 def add_parsers(sub) -> None:
+    # No help, so it isn't listed: shared/training.py runs it, people never need to.
+    sub.add_parser(
+        "pack-source", description="Pack and upload ai/src as launch does; print where, as JSON. "
+        "Code in ai/src runs this; you don't need to."
+    ).set_defaults(func=cmd_pack_source)
+
     launch = sub.add_parser(
         "launch",
         help="run a command in the cloud",

@@ -109,6 +109,34 @@ resource "google_firestore_index" "runs_by_person" {
   }
 }
 
+# For `wildhat training list --model` and `--mine`, and the visualizer's
+# training pages: one model's or one person's training runs, newest first.
+resource "google_firestore_index" "training_by_model" {
+  database   = google_firestore_database.default.name
+  collection = "training"
+  fields {
+    field_path = "model"
+    order      = "ASCENDING"
+  }
+  fields {
+    field_path = "created_at"
+    order      = "DESCENDING"
+  }
+}
+
+resource "google_firestore_index" "training_by_person" {
+  database   = google_firestore_database.default.name
+  collection = "training"
+  fields {
+    field_path = "trained_by"
+    order      = "ASCENDING"
+  }
+  fields {
+    field_path = "created_at"
+    order      = "DESCENDING"
+  }
+}
+
 # --- Each person's jobs -------------------------------------------------------
 
 resource "google_cloud_run_v2_job" "cpu" {

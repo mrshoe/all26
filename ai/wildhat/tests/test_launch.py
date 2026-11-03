@@ -313,3 +313,25 @@ class LaunchTest(LaunchTestCase):
         self.assertSucceeded(self.wildhat("logout"))
 
         self.assertFailedWith(self.launch("--", "python", "sim.py"), "You're not signed in")
+
+
+class PackSourceTest(LaunchTestCase):
+    """What a training run on a laptop records as its code (shared/training.py)."""
+
+    def test_packs_and_uploads_like_launch_and_prints_json(self):
+        run = self.wildhat("pack-source")
+
+        self.assertSucceeded(run)
+        reply = json.loads(run.out)
+        name, files = self.tarball()
+        self.assertEqual(reply["source"], f"gs://{WILDHAT_BUCKET}/{name}")
+        self.assertEqual(name, f"src/kai-morales/{reply['source_sha256']}.tar.gz")
+        self.assertEqual(set(files), {".gitignore", "requirements.txt", "sim/sim.py", "sim/new.py", "shared/util.py"})
+        self.assertEqual(reply["git"], {"commit": self.commit, "branch": "main", "dirty": True})
+        self.assertEqual((reply["files"], reply["untracked"]), (5, ["sim/new.py"]))
+        # No run is created.
+        self.assertFalse([k for k in self.google.documents if k.startswith("runs/")])
+
+    def test_outside_ai_src(self):
+        self.cd(self.repo)
+        self.assertFailedWith(self.wildhat("pack-source"), "from inside ai/src/")
