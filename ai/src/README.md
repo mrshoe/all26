@@ -10,6 +10,12 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
   `PostProcessor` ([../README.md](../README.md)), and `episodes.py`, which
   reads what the `Logger` writes. Import it as `from shared.logger import
   Logger`, with `ai/src` on the path (`sim` puts it there).
+  - `datasets.py`: a model's `dataset.toml` (the runs it trains on, and how
+    they split), downloading those runs, and its samples. Try
+    `python -m shared.datasets check training/<model>` from here.
+  - `cloud.py`: reading the bucket and Firestore, as you, the same way on
+    your computer (through `wildhat login`; needs wildhat 0.4.0) and in a
+    cloud job.
 - `requirements.txt` (optional): extra Python packages, installed before each
   episode starts. The cloud image already has Python 3.11, PyTorch with CUDA,
   and ultralytics.

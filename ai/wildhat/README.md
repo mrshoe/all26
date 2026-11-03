@@ -146,6 +146,11 @@ wildhat download 20261026-1430-ab12
 | `wildhat cancel RUN` | Cancels one of your runs, after asking (`--yes` doesn't ask). Running episodes get a `SIGTERM` and a few seconds to save their outputs. |
 | `wildhat download RUN` | Downloads a run's outputs to `./RUN/episode-<n>/` (`--episode N` for one, `--to DIR` for somewhere else). `--source` downloads the exact code it ran instead. Not into `ai/src`, which the next launch would upload. |
 
+Code in `ai/src` reads runs too: `shared/datasets.py` downloads the runs a
+model's `dataset.toml` lists (see `ai/src/README.md`). On your computer it
+gets your credentials from wildhat, through a hidden `wildhat access-token`
+command, so it needs wildhat 0.4.0 or newer.
+
 You can see, follow and download everyone's runs, but only cancel your own.
 A run's status is `starting`, `running (2 of 5 done)`, `succeeded`,
 `failed (1 of 5)` or `cancelled`; an episode that was cancelled before it

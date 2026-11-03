@@ -13,6 +13,7 @@ Cloud Run enforces anyway: you may only run and cancel your own job.
 
 import concurrent.futures
 import datetime
+import json
 import os
 import re
 import shutil
@@ -476,7 +477,21 @@ def cmd_download(args) -> int:
     return 0
 
 
+def cmd_access_token(args) -> int:
+    """Print an access token for the person's service account, as JSON, for
+    code in ai/src (shared/cloud.py) that reads the bucket and Firestore on a
+    laptop. Only the JSON goes to stdout."""
+    tok, handle = token()
+    print(json.dumps({"access_token": tok, "project": PROJECT_ID, "bucket": BUCKET, "handle": handle}))
+    return 0
+
+
 def add_parsers(sub) -> None:
+    # No help, so it isn't listed: shared/cloud.py runs it, people never need to.
+    sub.add_parser(
+        "access-token", description="Print an access token as JSON. Code in ai/src runs this; you don't need to."
+    ).set_defaults(func=cmd_access_token)
+
     runs = sub.add_parser("runs", help="list runs, or show one")
     runs.add_argument("run_id", nargs="?", help="show this run in detail")
     who = runs.add_mutually_exclusive_group()
