@@ -17,7 +17,7 @@ import numpy as np
 
 from shared import datasets
 from shared.cloud import CloudError
-from shared.datasets import Dataset, split_share
+from shared.datasets import Dataset, _yolo_line, split_share
 from shared.logger import Logger
 
 BUCKET = "test-project-wildhat"
@@ -279,6 +279,109 @@ class TestCheck(DatasetTestCase):
         self.assertTrue(self.said[0].startswith("✓ 20261102-0019-w22f: 20 episode(s) succeeded, by kai-morales"))
 
 
+class TestOldFormat(DatasetTestCase):
+    """The first runs (format 1) have pictures but no tables."""
+
+    RUN, NEW = "20261030-2208-rfsf", "20261102-0019-w22f"
+
+    def setUp(self):
+        super().setUp()
+        self.cloud.add_run(self.RUN, ["succeeded", "succeeded"])
+        for name in [n for n in self.cloud.files if n.startswith(f"runs/kai-morales/{self.RUN}/") and
+                     n.endswith(".parquet")]:
+            del self.cloud.files[name]
+        self.cloud.add_run(self.NEW, ["succeeded"])
+
+    def test_check_says_so(self):
+        ds = Dataset.load(self.write(f'runs = ["{self.RUN}", "{self.NEW}"]\nvalidation = 0\n'))
+        self.assertFalse(ds.check(self.cloud, self.say))
+        self.assertEqual(self.said[0], f"✗ {self.RUN}: it's in the old format, from before the episode tables, "
+                                       "so it can't be trained on")
+        self.assertTrue(self.said[1].startswith(f"✓ {self.NEW}"))
+
+    def test_fetch_leaves_them_out(self):
+        ds = Dataset.load(self.write(f'runs = ["{self.RUN}", "{self.NEW}"]\nvalidation = 0\n'))
+        ds.fetch(self.cloud, self.say)
+        self.assertIn(f"{self.RUN}: 2 episode(s) are in the old format, from before the episode tables, "
+                      "so they're left out", self.said)
+        self.assertEqual([s.run for s in ds.samples("train")], [self.NEW] * 4)
+        self.assertFalse(any(self.RUN in name for name in self.cloud.downloads))
+
+
+class TestYolo(DatasetTestCase):
+    RUN, OTHER = "20261102-0019-w22f", "20261106-0900-p7tz"
+
+    def dataset(self, validation=0.5) -> Dataset:
+        # Enough episodes that both train and validation get some.
+        self.cloud.add_run(self.RUN, ["succeeded"] * 6, frames=3)
+        self.cloud.add_run(self.OTHER, ["succeeded"], frames=3)
+        return Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = {validation}\n'
+                                       f'[test]\nruns = ["{self.OTHER}"]\n')).fetch(self.cloud, self.say)
+
+    def test_exports_pictures_labels_and_data_yaml(self):
+        ds = self.dataset()
+        data_yaml = ds.yolo(["ball"], say=self.say)
+        folder = data_yaml.parent
+        self.assertEqual(folder.parent, self.tmp / "cache" / "yolo")
+        self.assertTrue(folder.name.startswith("fuel_detector-"))
+        self.assertEqual(data_yaml.read_text().splitlines()[1:], [
+            f'path: "{folder}"', "train: images/train", "val: images/validation", "test: images/test",
+            "names:", '  0: "ball"'])
+
+        for split in ("train", "validation", "test"):
+            samples = ds.samples(split)
+            labels = sorted((folder / "labels" / split).iterdir())
+            self.assertEqual(len(labels), len(samples))
+            self.assertEqual(len(list((folder / "images" / split).iterdir())), len(samples))
+        s = ds.samples("test")[1]
+        stem = f"{self.OTHER}_0_front_000001"
+        # The box is x 1-5, y 1-5 in a 32x24 picture.
+        self.assertEqual((folder / "labels" / "test" / f"{stem}.txt").read_text(),
+                         "0 0.093750 0.125000 0.125000 0.166667\n")
+        picture = folder / "images" / "test" / f"{stem}.jpg"
+        self.assertEqual(picture.stat().st_ino, (s.episode.folder / "cam" / "front" / "000001.jpg").stat().st_ino)
+        self.assertIn(f"YOLO dataset: {folder}", self.said)
+        self.assertIn("test 3 picture(s), 3 box(es)", self.said[-1])
+
+    def test_the_same_export_is_reused(self):
+        ds = self.dataset()
+        first = ds.yolo(["ball"], say=self.say)
+        (first.parent / "marker").touch()
+        self.assertEqual(ds.yolo(["ball"], say=self.say), first)
+        self.assertTrue((first.parent / "marker").exists())
+        self.assertIn("(already exported)", self.said[-1])
+        self.assertNotEqual(ds.yolo(["ball"], min_pixels=20, say=self.say), first)
+
+    def test_other_labels_and_hidden_objects_leave_empty_label_files(self):
+        ds = self.dataset()
+        for options in [dict(classes=["fuel"]), dict(classes=["ball"], min_pixels=20)]:  # the box covers 16
+            folder = ds.yolo(say=self.say, **options).parent
+            texts = {p.read_text() for p in (folder / "labels" / "train").iterdir()}
+            self.assertEqual(texts, {""})
+        self.assertIn("  ! No training boxes labeled fuel. Is that the right label?", self.said)
+
+    def test_two_classes(self):
+        folder = self.dataset().yolo(["fuel", "ball"], say=self.say).parent
+        self.assertIn('  0: "fuel"\n  1: "ball"\n', (folder / "data.yaml").read_text())
+        self.assertTrue(next((folder / "labels" / "train").iterdir()).read_text().startswith("1 "))
+
+    def test_boxes_are_clipped_to_the_picture(self):
+        self.assertEqual(_yolo_line(0, {"x0": -4, "y0": 20, "x1": 4, "y1": 30}, 32, 24),
+                         "0 0.062500 0.916667 0.125000 0.166667")
+        self.assertIsNone(_yolo_line(0, {"x0": 40, "y0": 0, "x1": 50, "y1": 4}, 32, 24))
+
+    def test_mistakes(self):
+        ds = self.dataset()
+        for kwargs, message in [(dict(classes=[]), "classes must be"), (dict(classes="ball"), "classes must be"),
+                                (dict(classes=["ball", "ball"]), "in classes twice"),
+                                (dict(classes=["ball"], min_pixels=-1), "min_pixels")]:
+            with self.subTest(**kwargs), self.assertRaisesRegex(ValueError, message):
+                ds.yolo(say=self.say, **kwargs)
+        no_validation = Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = 0\n'))
+        with self.assertRaisesRegex(ValueError, "no validation episodes, and YOLO needs some"):
+            no_validation.yolo(["ball"], say=self.say)
+
+
 class TestCommandLine(DatasetTestCase):
     def test_fetch_prints_the_counts(self):
         self.cloud.add_run("20261102-0019-w22f", ["succeeded"], frames=2)
@@ -289,6 +392,16 @@ class TestCommandLine(DatasetTestCase):
         lines = [c.args[0] for c in printed.call_args_list]
         self.assertIn("train: 1 episode(s), 2 sample(s); ball 2", lines)
         self.assertIn("validation: 0 episode(s), 0 sample(s); no boxes", lines)
+
+    def test_yolo(self):
+        self.cloud.add_run("20261102-0019-w22f", ["succeeded"] * 6, frames=2)
+        self.write('runs = ["20261102-0019-w22f"]\nvalidation = 0.5\n')
+        with mock.patch.object(datasets, "Cloud", lambda: self.cloud), \
+                mock.patch("builtins.print") as printed:
+            self.assertEqual(datasets.main(["yolo", str(self.model), "--classes", "ball"]), 0)
+        self.assertTrue(str(printed.call_args_list[-1].args[0]).endswith("data.yaml"))
+        with mock.patch("sys.stderr"), self.assertRaises(SystemExit):
+            datasets.main(["yolo", str(self.model)])
 
     def test_mistakes_are_one_line(self):
         self.write('runs = ["oops"]\n')
