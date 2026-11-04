@@ -11,7 +11,8 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
   reads what the `Logger` writes. Import it as `from shared.logger import
   Logger`, with `ai/src` on the path (`sim` puts it there).
   - `datasets.py`: a model's `dataset.toml` (the runs it trains on, and how
-    they split), downloading those runs, and its samples. Try
+    they split), downloading those runs, and its samples, or all of it in
+    ultralytics YOLO's format (`dataset.yolo(classes=["ball"])`). Try
     `python -m shared.datasets check training/<model>` from here.
   - `training.py`: `TrainingRun`, which records every training run in the
     `training` database, wherever it runs, and uploads its metrics and

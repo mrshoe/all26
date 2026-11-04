@@ -26,6 +26,13 @@ Or check one, and fetch it, from the command line (also from ai/src):
     python -m shared.datasets check training/fuel_detector
     python -m shared.datasets fetch training/fuel_detector
 
+For ultralytics YOLO, export it in YOLO's format and train on the data.yaml:
+
+    data_yaml = ds.yolo(classes=["fuel"], min_pixels=20)
+    YOLO("yolo26n.pt").train(data=str(data_yaml), ...)
+
+    python -m shared.datasets yolo training/fuel_detector --classes fuel
+
 How it splits:
 
 - By episode, never by frame: an episode's frames are nearly the same, so
@@ -38,9 +45,12 @@ Only episodes that succeeded are used. A run that's still going is fetched
 as far as it has got, with a warning, and the dataset grows as it finishes,
 so list runs once they're done.
 
+Only episodes in the current format are used: the first runs, from before
+the episode tables (Oct 30-31, 2026), have only pictures and videos.
+
 Downloads go to ~/.cache/wildhat/runs/<run>/episode-<n>/ (or $WILDHAT_CACHE),
 without the preview videos. Once a finished run is fetched, using it needs no
-network.
+network. YOLO exports go to ~/.cache/wildhat/yolo/.
 """
 
 from __future__ import annotations
@@ -51,6 +61,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import tomllib
 from collections import Counter
@@ -68,6 +79,10 @@ KEYS = {"runs", "every", "validation", "cameras", "test"}
 SKIP = ("preview/",)
 FETCHED = ".fetched"
 DOWNLOADS = 16
+# Every episode in the current format has this; the first ones (format 1) don't.
+TABLES = "objects.parquet"
+# Bump when the YOLO export changes, so old exports aren't reused.
+YOLO_VERSION = 1
 
 
 def cache_dir() -> Path:
@@ -208,6 +223,11 @@ class Dataset:
                 say(f"✗ {run}: no episode succeeded{note}")
                 ok = False
                 continue
+            prefix = record["outputs"].split("/", 3)[3]
+            if not cloud.objects(f"{prefix}episode-{good[0]}/{TABLES}"):
+                say(f"✗ {run}: it's in the old format, from before the episode tables, so it can't be trained on")
+                ok = False
+                continue
             mark = "!" if others else "✓"
             say(f"{mark} {run}: {len(good)} episode(s) succeeded{note}, by {record.get('launched_by', '?')}")
             if others.get("pending") or others.get("running"):
@@ -283,6 +303,97 @@ class Dataset:
             out[split] = {"episodes": len(self.episodes(split)), "samples": len(samples), "labels": dict(labels)}
         return out
 
+    # --- Exporting ---------------------------------------------------------------
+
+    def yolo(self, classes: list[str], min_pixels: int = 0, say=None) -> Path:
+        """Export the dataset in ultralytics YOLO's detection format, and
+        return its data.yaml, for YOLO(...).train(data=str(path)).
+
+        `classes` are the labels to detect, in order: the first is class 0.
+        Boxes with other labels are left out, and so are boxes covering fewer
+        than `min_pixels` pixels (objects almost entirely hidden). Pictures
+        with no boxes left stay in, with empty label files: they teach the
+        model what "nothing here" looks like.
+
+        It goes to ~/.cache/wildhat/yolo/<model>-<hash>/, never into ai/src,
+        with the pictures hard-linked from the cache (copied if they can't
+        be). The hash covers the episodes, every, cameras and these options,
+        so exporting the same dataset again reuses what's there."""
+        say = say or print
+        if (not isinstance(classes, (list, tuple)) or not classes
+                or not all(isinstance(c, str) and c for c in classes)):
+            raise ValueError("classes must be a list of labels, like [\"ball\"]")
+        repeated = [c for c, n in Counter(classes).items() if n > 1]
+        if repeated:
+            raise ValueError(f"{', '.join(repeated)} is in classes twice")
+        if not isinstance(min_pixels, int) or isinstance(min_pixels, bool) or min_pixels < 0:
+            raise ValueError("min_pixels must be a whole number, 0 or more")
+
+        splits = {split: self.episode_ids(split) for split in SPLITS}
+        if not splits["train"]:
+            raise ValueError("There are no training episodes to export.")
+        if not splits["validation"]:
+            raise ValueError("There are no validation episodes, and YOLO needs some. "
+                             "Add runs, or raise validation in dataset.toml.")
+        key = json.dumps({"version": YOLO_VERSION, "splits": splits, "every": self.every, "cameras": self.cameras,
+                          "classes": list(classes), "min_pixels": min_pixels}, sort_keys=True)
+        folder = cache_dir() / "yolo" / f"{self.name}-{hashlib.sha256(key.encode()).hexdigest()[:12]}"
+        data_yaml = folder / "data.yaml"
+        if data_yaml.exists():
+            say(f"YOLO dataset: {folder} (already exported)")
+            return data_yaml
+
+        # Build it next to where it goes, then move it there in one step, so
+        # a crash halfway never leaves an export that looks finished.
+        building = folder.with_name(f"{folder.name}.building-{os.getpid()}")
+        shutil.rmtree(building, ignore_errors=True)
+        ids = {label: n for n, label in enumerate(classes)}
+        counts = {}
+        for split in SPLITS:
+            images, labels = building / "images" / split, building / "labels" / split
+            images.mkdir(parents=True)
+            labels.mkdir(parents=True)
+            pictures = boxes = 0
+            for ep, group in _by_episode(self.samples(split)):
+                sizes = {r["object"]: (r["width"], r["height"]) for r in ep.table("cameras").to_pylist()}
+                files = {(r["camera"], r["frame"]): r["image"] for r in ep.table("images").to_pylist()}
+                lines: dict[tuple[int, int], list[str]] = {}
+                if "boxes" in ep.info["tables"]:
+                    for r in ep.table("boxes").to_pylist():
+                        if r["source"] != "truth" or r["label"] not in ids or (r["pixels"] or 0) < min_pixels:
+                            continue
+                        line = _yolo_line(ids[r["label"]], r, *sizes[r["camera"]])
+                        if line:
+                            lines.setdefault((r["camera"], r["frame"]), []).append(line)
+                for s in group:
+                    camera = ep.objects[s.camera]["object"]
+                    stem = f"{s.run}_{s.index}_{s.camera}_{s.frame:06d}"
+                    source = ep.folder / files[(camera, s.frame)]
+                    _link(source, images / f"{stem}{source.suffix}")
+                    found = lines.get((camera, s.frame), [])
+                    (labels / f"{stem}.txt").write_text("".join(f"{line}\n" for line in found))
+                    pictures += 1
+                    boxes += len(found)
+            counts[split] = (pictures, boxes)
+
+        names = "".join(f"  {n}: {json.dumps(label)}\n" for n, label in enumerate(classes))
+        test = "test: images/test\n" if counts["test"][0] else ""
+        (building / "data.yaml").write_text(
+            f"# {self.path}, exported by shared.datasets for ultralytics YOLO\n"
+            f"path: {json.dumps(str(folder))}\ntrain: images/train\nval: images/validation\n{test}"
+            f"names:\n{names}")
+        try:
+            building.rename(folder)
+        except OSError:  # someone else just finished the same export
+            shutil.rmtree(building, ignore_errors=True)
+            if not data_yaml.exists():
+                raise
+        say(f"YOLO dataset: {folder}")
+        say("  " + ", ".join(f"{split} {n} picture(s), {b} box(es)" for split, (n, b) in counts.items()))
+        if not counts["train"][1]:
+            say(f"  ! No training boxes labeled {', '.join(classes)}. Is that the right label?")
+        return data_yaml
+
     @staticmethod
     def _check_split(split: str) -> None:
         if split not in SPLITS:
@@ -294,6 +405,23 @@ def _by_episode(samples: list[Sample]):
     for s in samples:
         groups.setdefault(id(s.episode), []).append(s)
     return [(g[0].episode, g) for g in groups.values()]
+
+
+def _yolo_line(class_id: int, box: dict, width: int, height: int) -> str | None:
+    """`class cx cy w h`, as shares of the picture's size, clipped to it."""
+    x0, x1 = max(box["x0"], 0), min(box["x1"], width)
+    y0, y1 = max(box["y0"], 0), min(box["y1"], height)
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return (f"{class_id} {(x0 + x1) / 2 / width:.6f} {(y0 + y1) / 2 / height:.6f} "
+            f"{(x1 - x0) / width:.6f} {(y1 - y0) / height:.6f}")
+
+
+def _link(source: Path, target: Path) -> None:
+    try:
+        os.link(source, target)
+    except OSError:  # another disk, or a filesystem without hard links
+        shutil.copyfile(source, target)
 
 
 def fetch_run(cloud: Cloud, run: str, say) -> None:
@@ -311,7 +439,7 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
     succeeded = sorted(i for i, s in statuses.items() if s == "succeeded")
     prefix = record["outputs"].split("/", 3)[3]  # gs://<bucket>/runs/<handle>/<run>/ -> runs/<handle>/<run>/
 
-    episodes, files, total = [], [], 0
+    episodes, files, total, old = [], [], 0, 0
     for index in succeeded:
         where = folder / f"episode-{index}"
         if (where / FETCHED).exists():
@@ -321,6 +449,9 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
                    if not name.removeprefix(f"{prefix}episode-{index}/").startswith(SKIP)]
         if not any(name.endswith("/episode.json") for name, _ in objects):
             say(f"{run} episode {index} has no episode.json (not a simulation?), so it's left out")
+            continue
+        if not any(name == f"{prefix}episode-{index}/{TABLES}" for name, _ in objects):
+            old += 1
             continue
         episodes.append(index)
         for name, n in objects:
@@ -335,6 +466,8 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
     for index in episodes:
         (folder / f"episode-{index}" / FETCHED).touch()
 
+    if old:
+        say(f"{run}: {old} episode(s) are in the old format, from before the episode tables, so they're left out")
     failed = len(statuses) - len(succeeded) - len(unfinished)
     if failed:
         say(f"{run}: {failed} episode(s) failed or stopped, so they're left out")
@@ -347,15 +480,25 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m shared.datasets", description=__doc__.split("\n\n")[0])
-    parser.add_argument("action", choices=["check", "fetch"],
-                        help="check: look up its runs without downloading; fetch: download them, then count")
+    parser.add_argument("action", choices=["check", "fetch", "yolo"],
+                        help="check: look up its runs without downloading; fetch: download them, then count; "
+                             "yolo: fetch, then export it for ultralytics YOLO")
     parser.add_argument("dataset", help="a model directory, or its dataset.toml")
+    parser.add_argument("--classes", nargs="+", metavar="LABEL",
+                        help="yolo: the labels to detect, in order (the first is class 0)")
+    parser.add_argument("--min-pixels", type=int, default=0, metavar="N",
+                        help="yolo: leave out boxes covering fewer than N pixels")
     args = parser.parse_args(argv)
+    if args.action == "yolo" and not args.classes:
+        parser.error("yolo needs --classes, e.g. --classes ball")
     try:
         ds = Dataset.load(args.dataset)
         if args.action == "check":
             return 0 if ds.check() else 1
         ds.fetch()
+        if args.action == "yolo":
+            print(ds.yolo(args.classes, args.min_pixels))
+            return 0
         for split, s in ds.summary().items():
             labels = ", ".join(f"{label} {n}" for label, n in sorted(s["labels"].items())) or "no boxes"
             print(f"{split}: {s['episodes']} episode(s), {s['samples']} sample(s); {labels}")
