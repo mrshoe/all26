@@ -307,8 +307,12 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
         # Episode lists can be long; their counts say enough here.
         dataset["episodes"] = {split: len(ids) for split, ids in (dataset.get("episodes") or {}).items()}
         children = sorted(store.children(run_id), key=lambda r: r["id"])
+        # Kept files (run.keep): plots and pictures, each with a link to it.
+        files = [{**f, "url": store.signed_url(f["object"], f.get("content_type") or "application/octet-stream")}
+                 for f in found.get("files") or [] if f.get("object", "").startswith("training/")]
         return plain({
             **found,
+            "files": files,
             "dataset": dataset,
             "checkpoints": store.checkpoints(run_id),
             "children": [{k: c.get(k) for k in ("id", "model", "trained_by", "status", "heartbeat_at")}
@@ -365,7 +369,7 @@ def training_summary(run: dict) -> dict:
     """A training run for a list: without its files' text and episode lists."""
     dataset = run.get("dataset") or {}
     return {
-        **{k: v for k, v in run.items() if k not in ("dataset", "config", "segments", "parents")},
+        **{k: v for k, v in run.items() if k not in ("dataset", "config", "segments", "parents", "files")},
         "dataset": {"path": dataset.get("path"), "samples": dataset.get("samples")},
         "parents": {name: p.get("checkpoint") for name, p in (run.get("parents") or {}).items()},
         "resumed": max(0, len(run.get("segments") or []) - 1),

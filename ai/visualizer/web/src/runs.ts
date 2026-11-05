@@ -6,8 +6,15 @@ import { defaultPrefs, episodeView, EpisodeView } from "./episode";
 
 const FILTERS = "wildhat.filters";
 
-function what(run: Run): string {
-  return run.sim ? `${run.sim.scenario.split(":").pop()} in ${run.sim.scene}` : run.command.join(" ");
+function what(run: Run): (Node | string)[] {
+  if (run.sim) return [`${run.sim.scenario.split(":").pop()} in ${run.sim.scene}`];
+  if (run.training) return [trainingBadge(run.training), " ", run.command.join(" ")];
+  return [run.command.join(" ")];
+}
+
+/** A job that ran a training run: a badge linking to it. */
+function trainingBadge(id: string): HTMLElement {
+  return link(`/training/${id}`, h("span", { class: "tag", title: `Training run ${id}` }, "training"));
 }
 
 function statuses(counts: Record<string, number>): HTMLElement {
@@ -46,7 +53,7 @@ export async function runsPage(me: Me): Promise<HTMLElement> {
           h("td", null, link(`/runs/${run.id}`, run.id)),
           h("td", null, run.launched_by),
           h("td", null, when(run.created_at)),
-          h("td", { class: "what" }, what(run)),
+          h("td", { class: "what" }, ...what(run)),
           h("td", { class: "num" }, run.episodes),
           h("td", null, statuses(run.status_counts)),
         ),
@@ -115,6 +122,7 @@ export async function runView(id: string): Promise<RunView> {
     if (run.sim) rows.push(["Backend", run.sim.backend]);
     if (run.git) rows.push(["Code", `${run.git.branch} at ${run.git.commit.slice(0, 7)}${run.git.dirty ? ", with uncommitted changes" : ""}`]);
     if (run.gpu) rows.push(["GPU", "yes"]);
+    if (run.training) rows.push(["Training run", link(`/training/${run.training}`, h("span", { class: "mono" }, run.training))]);
     facts.replaceChildren(
       h("summary", null, "Details"),
       h("dl", { class: "facts" }, ...rows.flatMap(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
@@ -201,12 +209,11 @@ export async function runView(id: string): Promise<RunView> {
 
   drawFacts();
   drawList();
-  const what = run.sim ? `${run.sim.scenario.split(":").pop()} in ${run.sim.scene}` : run.command.join(" ");
   const element = h("section", { class: "run" },
     h("aside", { class: "sidebar" },
       h("p", null, link("/", icon("back"), "Runs")),
       h("h1", { class: "run-id mono" }, run.id),
-      h("p", { class: "muted" }, what),
+      h("p", { class: "muted" }, ...what(run)),
       facts,
       h("h2", null, `Episodes (${run.episodes_detail.length})`),
       list,

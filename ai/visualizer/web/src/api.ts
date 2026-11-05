@@ -25,6 +25,8 @@ export interface Run {
   gpu: boolean;
   git?: { commit: string; branch: string; dirty: boolean };
   sim?: SimInfo;
+  /** Set when the job is a training run's (shared/training.py marks it). */
+  training?: string;
   status_counts: Record<string, number>;
 }
 
@@ -93,6 +95,8 @@ export interface TrainingSummary {
   step: number | null;
   latest: Record<string, number>;
   best: { step: number; metrics: Record<string, number> } | null;
+  /** Results that aren't on the training curve (run.final), e.g. the test split's. */
+  final?: Record<string, number>;
   last_checkpoint: number | null;
   checkpoints: number;
   dataset: { path: string; samples: Record<string, number> };
@@ -120,7 +124,17 @@ export interface TrainingDetail extends Omit<TrainingSummary, "parents" | "datas
   dataset: { path: string; toml: string; samples: Record<string, number>; episodes: Record<string, number> };
   parents: Record<string, { ref: string; checkpoint: string; model: string }>;
   checkpoints: Checkpoint[];
+  /** What run.keep() kept, each with a signed link. */
+  files: KeptFile[];
   children: { id: string; model: string; trained_by: string; status: string; heartbeat_at?: string }[];
+}
+
+export interface KeptFile {
+  name: string;
+  size: number;
+  content_type: string;
+  kept_at?: string;
+  url: string;
 }
 
 /** One log() call: its step, time, and metrics. */
