@@ -223,6 +223,10 @@ def cmd_show(args) -> int:
         print(f"  step:     {record['step']}   {metrics_text(record.get('latest'))}")
     if record.get("best"):
         print(f"  best:     step {record['best']['step']}   {metrics_text(record['best'].get('metrics'))}")
+    if record.get("final"):
+        print(f"  final:    {metrics_text(record['final'])}")
+    if record.get("files"):
+        print(f"  files:    {', '.join(f['name'] for f in record['files'])}")
     checkpoints = checkpoints_of(tok, args.run_id)
     if checkpoints:
         print()
@@ -302,7 +306,8 @@ def send_job(tok: str, path: Path) -> None:
     for upload in job["uploads"]:
         query_text = urllib.parse.urlencode({"uploadType": "media", "name": upload["object"]})
         if "file" in upload:
-            data, kind = (path.parent / upload["file"]).read_bytes(), "application/octet-stream"
+            data = (path.parent / upload["file"]).read_bytes()
+            kind = upload.get("content_type", "application/octet-stream")
         else:
             data, kind = upload["text"].encode(), upload["content_type"]
         request(tok, "POST", f"{STORAGE}/upload/storage/v1/b/{BUCKET}/o?{query_text}", data, kind)

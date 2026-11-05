@@ -35,6 +35,7 @@ class FakeTrainingCloud(FakeCloud):
     def __init__(self, root: Path):
         super().__init__(root)
         self.uploads: list[str] = []
+        self.content_types: dict[str, str] = {}
         self.deleted: list[str] = []
         self.offline = False
         self.lock = threading.Lock()
@@ -68,6 +69,7 @@ class FakeTrainingCloud(FakeCloud):
         with self.lock:
             self.files[name] = path
             self.uploads.append(name)
+            self.content_types[name] = content_type
 
     def delete(self, name):
         self.check_online()
@@ -238,6 +240,86 @@ class TestCheckpoints(TrainingTestCase):
     def test_no_such_file(self):
         with self.assertRaisesRegex(FileNotFoundError, "no checkpoint file"):
             self.start().save(self.tmp / "missing.pt", 1)
+
+
+class TestFinalAndFiles(TrainingTestCase):
+    def setUp(self):
+        super().setUp()
+        self.make_model("fuel_detector")
+        self.run_ = self.start()
+
+    def test_final_results(self):
+        self.run_.log(30, loss=0.2)
+        self.run_.final(test_ap50=0.91)
+        self.run_.final(test_ap50_95=0.8)
+        self.run_.finish()
+        record = self.record(self.run_)
+        self.assertEqual(record["final"], {"test_ap50": 0.91, "test_ap50_95": 0.8})
+        self.assertEqual(record["step"], 30)  # not a step of its own
+        with self.assertRaisesRegex(TypeError, "test_ap50 must be a number"):
+            self.run_.final(test_ap50="good")
+
+    def test_keeping_files_and_folders(self):
+        plots = self.run_.folder / "plots"
+        plots.mkdir()
+        (plots / "results.png").write_bytes(b"png")
+        (plots / "results.csv").write_text("epoch,loss\n")
+        (plots / ".hidden").write_text("x")
+        (plots / "deeper").mkdir()
+        (self.run_.folder / "val_pred.jpg").write_bytes(b"first")
+        self.run_.keep(plots, self.run_.folder / "val_pred.jpg")
+        (self.run_.folder / "val_pred.jpg").write_bytes(b"second")  # the next epoch's
+        self.run_.keep(self.run_.folder / "val_pred.jpg")
+        self.run_.finish()
+
+        prefix = f"training/kai-morales/{self.run_.id}/files/"
+        self.assertEqual([(f["name"], f["content_type"], f["size"]) for f in self.record(self.run_)["files"]], [
+            ("results.csv", "text/csv", 11), ("results.png", "image/png", 3), ("val_pred.jpg", "image/jpeg", 6)])
+        self.assertEqual(self.cloud.files[prefix + "val_pred.jpg"].read_bytes(), b"second")
+        self.assertEqual(self.cloud.content_types[prefix + "results.png"], "image/png")
+        self.assertNotIn(prefix + ".hidden", self.cloud.files)
+
+    def test_keep_mistakes(self):
+        with self.assertRaisesRegex(FileNotFoundError, "no file or folder"):
+            self.run_.keep(self.run_.folder / "nope.png")
+        (self.run_.folder / "a b.png").write_bytes(b"x")
+        with self.assertRaisesRegex(ValueError, "name files with"):
+            self.run_.keep(self.run_.folder / "a b.png")
+        big = self.run_.folder / "model.pt"
+        big.write_bytes(b"x")
+        with mock.patch.object(training, "KEEP_BYTES", 0), self.assertRaisesRegex(ValueError, "go through save"):
+            self.run_.keep(big)
+
+    def test_resuming_keeps_both(self):
+        (self.run_.folder / "a.png").write_bytes(b"a")
+        self.run_.keep(self.run_.folder / "a.png")
+        self.run_.final(test_ap50=0.5)
+        self.checkpoint(self.run_, 10, b"10", resumable=True)
+        self.run_.finish("stopped")
+        again = self.start(resume=self.run_.id)
+        (again.folder / "b.png").write_bytes(b"b")
+        again.keep(again.folder / "b.png")
+        again.final(test_ap50_95=0.4)
+        again.finish()
+        record = self.record(again)
+        self.assertEqual([f["name"] for f in record["files"]], ["a.png", "b.png"])
+        self.assertEqual(record["final"], {"test_ap50": 0.5, "test_ap50_95": 0.4})
+
+
+class TestCloudJob(TrainingTestCase):
+    def test_marks_its_job_as_training(self):
+        self.make_model("fuel_detector")
+        job = "20261103-2334-twgu"
+        self.cloud.docs[f"runs/{job}"] = {"launched_by": "kai-morales"}
+        with mock.patch.object(training, "in_cloud_job", lambda: True), \
+                mock.patch.object(training, "where", lambda: {"kind": "cloud", "run": job, "episode": 0}):
+            run = self.start()
+        self.assertEqual(self.cloud.docs[f"runs/{job}"]["training"], run.id)
+
+    def test_not_on_a_laptop(self):
+        self.make_model("fuel_detector")
+        self.start()
+        self.assertFalse(any("training" in d for p, d in self.cloud.docs.items() if p.startswith("runs/")))
 
 
 class TestOffline(TrainingTestCase):
