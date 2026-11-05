@@ -4,6 +4,7 @@ like the ones ai/src/shared/training.py writes."""
 import datetime
 import json
 import os
+import time
 from unittest import mock
 
 from harness import WILDHAT_BUCKET, WildhatTestCase
@@ -114,6 +115,13 @@ class ShowTest(TrainingTestCase):
         self.assertIn("resumed at step 4000: 52bd9dd on main with uncommitted changes, cloud run 20261101-1000-zzzz",
                       out)
 
+    def test_final_results_and_kept_files(self):
+        self.training_run(A, final={"test_ap50": 0.91},
+                          files=[{"name": "results.png", "object": "x", "size": 3, "content_type": "image/png"}])
+        out = self.wildhat("training", "show", A).out
+        self.assertIn("final:    test_ap50 0.91", out)
+        self.assertIn("files:    results.png", out)
+
     def test_no_such_run(self):
         self.assertFailedWith(self.wildhat("training", "show", C), f"There's no training run {C}.")
         self.assertFailedWith(self.wildhat("training", "show", "latest"), "isn't a training run")
@@ -195,7 +203,7 @@ class SyncTest(TrainingTestCase):
                          "fields": {"status": {"stringValue": "finished"}}}]}))
         if lock_age is not None:
             (folder / ".lock").touch()
-            stamp = NOW.timestamp() - lock_age
+            stamp = time.time() - lock_age  # now, not when the tests started
             os.utime(folder / ".lock", (stamp, stamp))
         return folder
 

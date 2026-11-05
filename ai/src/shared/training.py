@@ -13,6 +13,17 @@ checkpoints in the cloud for anyone to build on.
         for step in ...:
             run.log(step, loss=loss, lr=lr)
             run.save(run.folder / "model.pt", step, resumable=True, metrics={"val_ap50": ap}, best=True)
+        run.final(test_ap50=test_ap)             # results that aren't on the training curve
+        run.keep(run.folder / "predictions.jpg")    # plots, pictures: anything worth looking at later
+
+`step` is whatever your script counts, as long as it only goes up: epochs,
+or batches (optimizer steps). Pick one per model and say which.
+
+run.folder is ~/.cache/wildhat/training/<id>/, never in ai/src. In a cloud
+job it's gone when the job ends: what you save(), keep(), log() and final()
+is what lasts. keep() is for files you'll want to look at (the run's page
+in the visualizer shows its pictures), up to 20 MB each; checkpoints go
+through save().
 
 Leaving the `with` block finishes the run: "finished", "failed" (an
 exception, recorded with the run) or "stopped" (Ctrl-C, or the cloud's time
@@ -41,7 +52,9 @@ Every run is recorded in Firestore as training/<id> (ids look like a run's,
 20261110-2210-ab12), with its source, both files, the exact episodes of
 each split, the exact checkpoints [start] resolved to, its latest metrics
 and its checkpoints. Files go to the bucket under training/<handle>/<id>/:
-checkpoints/<step>/<file> and metrics/*.jsonl.
+checkpoints/<step>/<file>, metrics/*.jsonl and files/<name>. In a cloud
+job, the job's own record (runs/<job>) says `training: <id>`, so the Runs
+page can tell it from a simulation.
 
 Uploads happen in the background, so training never waits on them, in the
 order they were made. Each one waits in a queue folder,
@@ -64,6 +77,7 @@ import atexit
 import datetime
 import hashlib
 import json
+import mimetypes
 import os
 import re
 import secrets
@@ -106,6 +120,9 @@ KEEP_RESUMABLE = 3
 # LOCK_SECONDS.
 TOUCH_SECONDS = 20
 LOCK_SECONDS = 120
+# keep() is for plots and pictures, not checkpoints.
+KEEP_BYTES = 20_000_000
+FILE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 def new_id() -> str:
@@ -237,7 +254,7 @@ def download_checkpoint(cloud: Cloud, checkpoint: str, file: str, md5: str, say)
 #
 # A queue folder holds jobs, numbered in order: <n>.json, each
 #
-#   {"uploads": [{"object": "training/...", "file": "<a file in the queue folder>"}
+#   {"uploads": [{"object": "training/...", "file": "<a file in the queue folder>", "content_type"?: "..."}
 #                or {"object": "training/...", "text": "...", "content_type": "..."}],
 #    "patches": [{"doc": "training/<id>", "mask": [...], "fields": {Firestore's typed fields}}]}
 #
@@ -258,7 +275,8 @@ def send_job(cloud: Cloud, path: Path) -> None:
     job = json.loads(path.read_text())
     for upload in job["uploads"]:
         if "file" in upload:
-            cloud.upload(upload["object"], path.parent / upload["file"])
+            cloud.upload(upload["object"], path.parent / upload["file"],
+                         upload.get("content_type", "application/octet-stream"))
         else:
             cloud.upload(upload["object"], upload["text"].encode(), upload["content_type"])
     for patch in job["patches"]:
@@ -295,6 +313,8 @@ class TrainingRun:
         # step -> {"resumable": bool, "pruned": bool}, and the best step
         self._checkpoints: dict[int, dict] = {}
         self._best: int | None = None
+        self._final: dict[str, float] = {}
+        self._files: list[dict] = []  # what keep() kept, as the record lists them
         self._jobs = 0
         self._done = False
         self._lock = threading.Lock()
@@ -358,8 +378,11 @@ class TrainingRun:
             "best": None,
             "last_checkpoint": None,
             "checkpoints": 0,
+            "final": {},
+            "files": [],
         })
         run = cls(cloud, run_id, model, config, dataset, parents, say)
+        run._mark_job()
         run._begin()
         counts = ", ".join(f"{s} {len(dataset.samples(s))}" for s in SPLITS)
         say(f"Training run {run_id}: {model}, by {cloud.handle}. Samples: {counts}.")
@@ -425,6 +448,9 @@ class TrainingRun:
         run._sent = len(cloud.objects(f"{run.prefix}metrics/"))
         run._step = record.get("step")
         run._latest = dict(record.get("latest") or {})
+        run._final = dict(record.get("final") or {})
+        run._files = list(record.get("files") or [])
+        run._mark_job()
         run.resume_step = step
         run.resume_from = download_checkpoint(cloud, f"{run_id}/{step}", checkpoints[step]["file"],
                                               checkpoints[step]["md5"], say)
@@ -436,6 +462,17 @@ class TrainingRun:
         """Each [start] checkpoint's file, downloaded (once) and checked."""
         return {name: download_checkpoint(self.cloud, p["checkpoint"], p["file"], p["md5"], self.say)
                 for name, p in self.parents.items()}
+
+    def _mark_job(self) -> None:
+        """In a cloud job, say on the job's own record that it's this
+        training run, so it isn't taken for a simulation."""
+        if not in_cloud_job():
+            return
+        job = where()["run"]
+        try:
+            self.cloud.update(f"runs/{job}", {"training": self.id})
+        except CloudError as e:
+            self.say(f"! Couldn't mark run {job} as this training job ({e}); the Runs page will list it.")
 
     def _begin(self) -> None:
         self._jobs = max([int(p.stem) for p in jobs_in(self.queue)], default=-1) + 1
@@ -510,6 +547,54 @@ class TrainingRun:
             (self.record, fields),
         ], checkpoint=True)
         return f"{self.id}/{step}"
+
+    def final(self, **metrics) -> None:
+        """Record results that aren't on the training curve, like the test
+        split's score at the end. Calling it again adds to (or replaces)
+        what's there."""
+        for name, value in metrics.items():
+            try:
+                self._final[name] = float(value)
+            except (TypeError, ValueError):
+                raise TypeError(f"{name} must be a number, not {type(value).__name__}") from None
+        self.flush()
+        self._enqueue([], [(self.record, {"final": dict(self._final), "heartbeat_at": now()})])
+        self.say(f"{self.model} {self.id} final: " + "  ".join(f"{k} {v:.4g}" for k, v in self._final.items()))
+
+    def keep(self, *paths) -> None:
+        """Keep files worth looking at later: plots, pictures of predictions,
+        a CSV. A folder keeps every file directly in it. Each is kept by its
+        name, so keeping another file of the same name replaces it. Copied
+        first, uploaded in the background, like save()."""
+        files = []
+        for path in map(Path, paths):
+            if path.is_dir():
+                files += sorted(p for p in path.iterdir() if p.is_file() and not p.name.startswith("."))
+            elif path.is_file():
+                files.append(path)
+            else:
+                raise FileNotFoundError(f"There's no file or folder {path}")
+        for path in files:
+            if not FILE_NAME.match(path.name):
+                raise ValueError(f"Can't keep {path}: name files with letters, digits, dots, - and _")
+            if path.stat().st_size > KEEP_BYTES:
+                raise ValueError(f"{path} is {path.stat().st_size / 1e6:.0f} MB; keep() takes files up to "
+                                 f"{KEEP_BYTES // 1_000_000} MB. Checkpoints go through save().")
+        if not files:
+            return
+        uploads = []
+        for path in files:
+            with self._lock:
+                number = self._jobs
+            copy = f"{number:06d}-{len(uploads)}-{path.name}"
+            shutil.copyfile(path, self.queue / copy)
+            content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+            name = f"{self.prefix}files/{path.name}"
+            uploads.append({"object": name, "file": copy, "content_type": content_type})
+            entry = {"name": path.name, "object": name, "size": path.stat().st_size, "content_type": content_type,
+                     "kept_at": now()}
+            self._files = [f for f in self._files if f["name"] != path.name] + [entry]
+        self._enqueue(uploads, [(self.record, {"files": list(self._files), "heartbeat_at": now()})])
 
     def _enqueue(self, uploads: list[dict], patches: list[tuple[str, dict]], checkpoint=False) -> None:
         job = {"uploads": uploads, "checkpoint": checkpoint, "patches": [

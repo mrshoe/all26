@@ -15,8 +15,9 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
     ultralytics YOLO's format (`dataset.yolo(classes=["ball"])`). Try
     `python -m shared.datasets check training/<model>` from here.
   - `training.py`: `TrainingRun`, which records every training run in the
-    `training` database, wherever it runs, and uploads its metrics and
-    checkpoints in the background for anyone to build on. A model's
+    `training` database, wherever it runs, and uploads its metrics,
+    checkpoints, final results and kept files (plots, pictures) in the
+    background for anyone to build on. A model's
     `train.toml` names its dataset and the checkpoints it starts from; a run
     that stopped can be resumed. `wildhat training` lists, shows, tags and
     downloads them. Needs wildhat 0.6.0 on your computer.
