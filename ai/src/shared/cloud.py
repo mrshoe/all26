@@ -23,6 +23,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import random
 import shutil
 import subprocess
 import threading
@@ -37,10 +38,18 @@ FIRESTORE = "https://firestore.googleapis.com/v1"
 METADATA = "http://metadata.google.internal/computeMetadata/v1"
 # Google's access tokens last an hour; get a new one well before then.
 TOKEN_SECONDS = 45 * 60
+# Reads that fail for a reason that may pass (the network, Google busy) are
+# tried this many times in all, waiting 1, 2, 4, 8 s (and a little) between.
+TRIES = 5
+TRANSIENT_HTTP = {408, 429, 500, 502, 503, 504}
 
 
 class CloudError(Exception):
     pass
+
+
+class TransientCloudError(CloudError):
+    """A failure that may well not happen if tried again."""
 
 
 def in_cloud_job() -> bool:
@@ -170,14 +179,35 @@ class Cloud:
                     message = json.load(e)["error"]["message"]
                 except (ValueError, KeyError, TypeError):
                     message = e.reason
-            raise CloudError(f"Google said (HTTP {e.code}): {message}") from None
+            error = TransientCloudError if e.code in TRANSIENT_HTTP else CloudError
+            raise error(f"Google said (HTTP {e.code}): {message}") from None
         except urllib.error.URLError as e:
-            raise CloudError(f"Couldn't reach Google ({e.reason}). Are you online?") from None
+            raise TransientCloudError(f"Couldn't reach Google ({e.reason}). Are you online?") from None
+        except (ConnectionError, TimeoutError) as e:
+            raise TransientCloudError(f"Lost the connection to Google ({e}). Are you online?") from None
+
+    @staticmethod
+    def _retrying(attempt):
+        """attempt(), tried again after failures that may pass. Only for
+        requests that do the same thing however often they're made."""
+        for n in range(TRIES):
+            try:
+                return attempt()
+            except TransientCloudError:
+                if n == TRIES - 1:
+                    raise
+                time.sleep(2 ** n + random.random())
+            except (ConnectionError, TimeoutError) as e:  # while reading the reply
+                if n == TRIES - 1:
+                    raise TransientCloudError(f"Lost the connection to Google ({e}). Are you online?") from None
+                time.sleep(2 ** n + random.random())
 
     def _json(self, url: str, method="GET", body: dict | None = None):
-        with self._open(url, method, body) as resp:
-            text = resp.read()
-            return json.loads(text) if text else {}
+        def attempt():
+            with self._open(url, method, body) as resp:
+                text = resp.read()
+                return json.loads(text) if text else {}
+        return self._retrying(attempt) if method == "GET" else attempt()
 
     def _firestore(self) -> str:
         self.token()
@@ -270,7 +300,10 @@ class Cloud:
         path.parent.mkdir(parents=True, exist_ok=True)
         quoted = urllib.parse.quote(name, safe="")
         partial = path.with_name(path.name + ".part")
-        with self._open(f"{STORAGE}/storage/v1/b/{self.bucket}/o/{quoted}?alt=media", timeout=300) as resp, \
-                partial.open("wb") as f:
-            shutil.copyfileobj(resp, f, 1 << 20)
+
+        def attempt():
+            with self._open(f"{STORAGE}/storage/v1/b/{self.bucket}/o/{quoted}?alt=media", timeout=300) as resp, \
+                    partial.open("wb") as f:
+                shutil.copyfileobj(resp, f, 1 << 20)
+        self._retrying(attempt)
         os.replace(partial, path)

@@ -23,7 +23,7 @@ from shared.logger import Logger
 BUCKET = "test-project-wildhat"
 
 
-def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1) -> None:
+def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1, box=(1, 1, 5, 5)) -> None:
     """A small simulated episode: cameras, a labeled ball, a box in every
     frame of every camera, and a preview video."""
     log = Logger(folder, {"scenario": "test"})
@@ -42,7 +42,8 @@ def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1
             log.image(frame, cid, cam, frame * 0.1, image, mask)
             for _ in range(boxes_per_frame):
                 log.add("boxes", {"frame": frame, "camera": cid, "object": ball, "label": "ball",
-                                  "x0": 1, "y0": 1, "x1": 5, "y1": 5, "pixels": 16, "source": "truth"})
+                                  "x0": box[0], "y0": box[1], "x1": box[2], "y1": box[3],
+                                  "pixels": (box[2] - box[0]) * (box[3] - box[1]), "source": "truth"})
     log.finish()
     (folder / "preview").mkdir()
     (folder / "preview" / "front.mp4").write_bytes(b"video")
@@ -60,7 +61,8 @@ class FakeCloud:
 
     def add_run(self, run: str, statuses: list[str], who="kai-morales", **episode_options) -> None:
         prefix = f"runs/{who}/{run}/"
-        self.docs[f"runs/{run}"] = {"launched_by": who, "outputs": f"gs://{BUCKET}/{prefix}"}
+        self.docs[f"runs/{run}"] = {"launched_by": who, "outputs": f"gs://{BUCKET}/{prefix}",
+                                    "sim": {"scenario": "scenarios/test.py:Test"}}
         for index, status in enumerate(statuses):
             self.docs[f"runs/{run}/episodes/{index}"] = {"index": index, "status": status}
             if status == "succeeded":
@@ -210,6 +212,22 @@ class TestFetching(DatasetTestCase):
         self.assertEqual(len(ds.episodes("train")), 1)
         self.assertIn(f"{self.RUN} episode 1 has no episode.json (not a simulation?), so it's left out", self.said)
 
+    def test_a_fetch_that_stopped_partway_carries_on(self):
+        self.cloud.add_run(self.RUN, ["succeeded"])
+        name = f"runs/kai-morales/{self.RUN}/episode-0/episode.json"
+        done = self.tmp / "cache" / "runs" / self.RUN / "episode-0" / "episode.json"
+        done.parent.mkdir(parents=True)
+        shutil.copyfile(self.cloud.files[name], done)
+        Dataset.load(self.write(f'runs = ["{self.RUN}"]\n')).fetch(self.cloud, self.say)
+        self.assertNotIn(name, self.cloud.downloads)
+        self.assertTrue(self.cloud.downloads)
+
+    def test_runs_that_arent_simulations(self):
+        self.cloud.add_run(self.RUN, ["succeeded"])
+        del self.cloud.docs[f"runs/{self.RUN}"]["sim"]
+        with self.assertRaisesRegex(CloudError, "isn't a simulation run.*Take it out"):
+            Dataset.load(self.write(f'runs = ["{self.RUN}"]\n')).fetch(self.cloud, self.say)
+
     def test_a_missing_run(self):
         with self.assertRaisesRegex(CloudError, f"There's no run {self.RUN}"):
             Dataset.load(self.write(f'runs = ["{self.RUN}"]\n')).fetch(self.cloud, self.say)
@@ -272,11 +290,54 @@ class TestCheck(DatasetTestCase):
         self.assertEqual(self.said[5], "Episodes: train 3, validation 0, test 0")
         self.assertFalse(self.cloud.downloads)
 
+    def test_training_jobs_and_other_jobs(self):
+        self.cloud.add_run("20261102-0019-w22f", ["succeeded"])
+        self.cloud.add_run("20261104-1830-k3rq", ["succeeded"])
+        for run in ("20261102-0019-w22f", "20261104-1830-k3rq"):
+            del self.cloud.docs[f"runs/{run}"]["sim"]
+        self.cloud.docs["runs/20261102-0019-w22f"]["training"] = "20261104-0738-ekkd"
+        ds = Dataset.load(self.write('runs = ["20261102-0019-w22f", "20261104-1830-k3rq"]\n'))
+        self.assertFalse(ds.check(self.cloud, self.say))
+        self.assertEqual(self.said[:2], [
+            "✗ 20261102-0019-w22f: it's a training job (training run 20261104-0738-ekkd), not a simulation",
+            "✗ 20261104-1830-k3rq: it isn't a simulation run, so it has nothing to train on"])
+
+    def test_few_validation_episodes(self):
+        self.cloud.add_run("20261102-0019-w22f", ["succeeded"] * 20)
+        ds = Dataset.load(self.write('runs = ["20261102-0019-w22f"]\nvalidation = 0.1\n'))
+        ds.check(self.cloud, self.say)
+        self.assertTrue(any(line.startswith("! Only ") and "validation episode(s)" in line for line in self.said))
+
     def test_all_good(self):
         self.cloud.add_run("20261102-0019-w22f", ["succeeded"] * 20)
         ds = Dataset.load(self.write('runs = ["20261102-0019-w22f"]\n'))
         self.assertTrue(ds.check(self.cloud, self.say))
         self.assertTrue(self.said[0].startswith("✓ 20261102-0019-w22f: 20 episode(s) succeeded, by kai-morales"))
+
+
+class TestWarnings(DatasetTestCase):
+    """Splits whose scores won't mean much, as fetch() warns."""
+
+    RUN, OTHER = "20261102-0019-w22f", "20261106-0900-p7tz"
+
+    def test_a_small_unlike_test_split(self):
+        self.cloud.add_run(self.RUN, ["succeeded"] * 3, frames=40)  # 4 px balls
+        self.cloud.add_run(self.OTHER, ["succeeded"], frames=4, box=(1, 1, 21, 13))  # 20 px across
+        ds = Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = 0\n[test]\nruns = ["{self.OTHER}"]\n'))
+        ds.fetch(self.cloud, self.say)
+        self.assertEqual(ds.warnings(), [
+            "! test has only 1 episode(s), so its scores will be noisy. Runs with more, shorter episodes split better.",
+            "! test has few boxes of ball 4, so its scores for them will be noisy.",
+            "! test's boxes are a different size from train's (median across: ball 20 px against 4), "
+            "so its scores say little about train's kind of picture.",
+        ])
+        self.assertEqual(self.said[-3:], ds.warnings())  # fetch said them
+
+    def test_a_good_split_says_nothing(self):
+        self.cloud.add_run(self.RUN, ["succeeded"] * 3, frames=40)
+        self.cloud.add_run(self.OTHER, ["succeeded"] * 5, frames=40, box=(1, 1, 7, 7))
+        ds = Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = 0\n[test]\nruns = ["{self.OTHER}"]\n'))
+        self.assertEqual(ds.fetch(self.cloud, self.say).warnings(), [])
 
 
 class TestOldFormat(DatasetTestCase):

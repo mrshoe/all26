@@ -41,7 +41,8 @@ How it splits:
   never moves an episode that's already in the dataset.
 - [test] runs are always "test", whole.
 
-Only episodes that succeeded are used. A run that's still going is fetched
+Only simulation runs can be in a dataset (not, say, a training job), and only
+their episodes that succeeded are used. A run that's still going is fetched
 as far as it has got, with a warning, and the dataset grows as it finishes,
 so list runs once they're done.
 
@@ -51,6 +52,10 @@ the episode tables (Oct 30-31, 2026), have only pictures and videos.
 Downloads go to ~/.cache/wildhat/runs/<run>/episode-<n>/ (or $WILDHAT_CACHE),
 without the preview videos. Once a finished run is fetched, using it needs no
 network. YOLO exports go to ~/.cache/wildhat/yolo/.
+
+fetch() ends with warnings about splits too small, or too unlike train, for
+their scores to mean much: e.g. validation with 2 episodes and 28 balls, all
+large, when train's are small. More, shorter episodes split better.
 """
 
 from __future__ import annotations
@@ -78,7 +83,13 @@ KEYS = {"runs", "every", "validation", "cameras", "test"}
 # Training doesn't need the preview videos and contact sheets.
 SKIP = ("preview/",)
 FETCHED = ".fetched"
-DOWNLOADS = 16
+DOWNLOADS = 8
+# A validation or test split with fewer episodes or boxes than these gives
+# noisy scores, and one whose boxes' median size is more than SIZE_RATIO
+# times train's (bigger or smaller) measures something else.
+FEW_EPISODES = 5
+FEW_BOXES = 100
+SIZE_RATIO = 2
 # Every episode in the current format has this; the first ones (format 1) don't.
 TABLES = "objects.parquet"
 # Bump when the YOLO export changes, so old exports aren't reused.
@@ -200,6 +211,8 @@ class Dataset:
         cloud, say = cloud or Cloud(), say or print
         for run in self.runs + self.test_runs:
             fetch_run(cloud, run, say)
+        for warning in self.warnings():
+            say(warning)
         return self
 
     def check(self, cloud: Cloud | None = None, say=None) -> bool:
@@ -213,6 +226,10 @@ class Dataset:
             record = cloud.document(f"runs/{run}")
             if record is None:
                 say(f"✗ {run}: there's no such run")
+                ok = False
+                continue
+            if "sim" not in record:
+                say(f"✗ {run}: {not_a_simulation(record)}")
                 ok = False
                 continue
             statuses = {int(e.get("index", i)): e.get("status") for i, e in cloud.documents(f"runs/{run}/episodes").items()}
@@ -240,6 +257,10 @@ class Dataset:
             ok = False
         if self.validation and not counts["validation"]:
             say("! No validation episodes. Add runs, or raise validation.")
+        for split in ("validation", "test"):
+            if 0 < counts[split] < FEW_EPISODES:
+                say(f"! Only {counts[split]} {split} episode(s), so its scores will be noisy. "
+                    "Runs with more, shorter episodes split better.")
         return ok
 
     # --- Using it ------------------------------------------------------------------
@@ -288,20 +309,55 @@ class Dataset:
     def summary(self) -> dict[str, dict]:
         """For each split: how many episodes and samples, and how many of each
         label the samples' ground-truth boxes hold."""
-        out = {}
-        for split in SPLITS:
-            samples = self.samples(split)
-            labels = Counter()
-            for ep, group in _by_episode(samples):
-                if "boxes" not in ep.info["tables"]:
-                    continue
-                chosen = {(ep.objects[s.camera]["object"], s.frame) for s in group}
-                t = ep.table("boxes").to_pydict()
-                for frame, camera, label, source in zip(t["frame"], t["camera"], t["label"], t["source"]):
-                    if source == "truth" and (camera, frame) in chosen:
-                        labels[label] += 1
-            out[split] = {"episodes": len(self.episodes(split)), "samples": len(samples), "labels": dict(labels)}
+        return {split: {"episodes": len(self.episodes(split)), "samples": len(self.samples(split)),
+                        "labels": {label: len(sizes) for label, sizes in self._box_sizes(split).items()}}
+                for split in SPLITS}
+
+    def warnings(self) -> list[str]:
+        """What makes the validation and test splits' scores mean less:
+        too few episodes or boxes, or boxes of another size than train's."""
+        out = []
+        train = self._box_sizes("train")
+        for split in ("validation", "test"):
+            episodes = len(self.episodes(split))
+            if not episodes:
+                continue
+            if episodes < FEW_EPISODES:
+                out.append(f"! {split} has only {episodes} episode(s), so its scores will be noisy. "
+                           "Runs with more, shorter episodes split better.")
+            sizes = self._box_sizes(split)
+            # Only labels train has plenty of: a handful of benches is
+            # background, not something the model is learning.
+            common = {label: v for label, v in sorted(train.items()) if len(v) >= FEW_BOXES}
+            few = [f"{label} {len(sizes.get(label, []))}" for label in common
+                   if len(sizes.get(label, [])) < FEW_BOXES]
+            if few:
+                out.append(f"! {split} has few boxes of {', '.join(few)}, so its scores for them will be noisy.")
+            unlike = []
+            for label, train_sizes in common.items():
+                if sizes.get(label):
+                    mine, theirs = _median(sizes[label]), _median(train_sizes)
+                    if mine > SIZE_RATIO * theirs or theirs > SIZE_RATIO * mine:
+                        unlike.append(f"{label} {mine:.0f} px against {theirs:.0f}")
+            if unlike:
+                out.append(f"! {split}'s boxes are a different size from train's (median across: "
+                           f"{', '.join(unlike)}), so its scores say little about train's kind of picture.")
         return out
+
+    def _box_sizes(self, split: str) -> dict[str, list[float]]:
+        """For each label, every ground-truth box's longer side, in pixels,
+        in the split's samples."""
+        sizes: dict[str, list[float]] = {}
+        for ep, group in _by_episode(self.samples(split)):
+            if "boxes" not in ep.info["tables"]:
+                continue
+            chosen = {(ep.objects[s.camera]["object"], s.frame) for s in group}
+            t = ep.table("boxes").to_pydict()
+            for frame, camera, label, source, x0, y0, x1, y1 in zip(
+                    t["frame"], t["camera"], t["label"], t["source"], t["x0"], t["y0"], t["x1"], t["y1"]):
+                if source == "truth" and (camera, frame) in chosen:
+                    sizes.setdefault(label, []).append(max(x1 - x0, y1 - y0))
+        return sizes
 
     # --- Exporting ---------------------------------------------------------------
 
@@ -407,6 +463,18 @@ def _by_episode(samples: list[Sample]):
     return [(g[0].episode, g) for g in groups.values()]
 
 
+def _median(values: list[float]) -> float:
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    return ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) / 2
+
+
+def not_a_simulation(record: dict) -> str:
+    if record.get("training"):
+        return f"it's a training job (training run {record['training']}), not a simulation"
+    return "it isn't a simulation run, so it has nothing to train on"
+
+
 def _yolo_line(class_id: int, box: dict, width: int, height: int) -> str | None:
     """`class cx cy w h`, as shares of the picture's size, clipped to it."""
     x0, x1 = max(box["x0"], 0), min(box["x1"], width)
@@ -434,6 +502,8 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
     record = cloud.document(f"runs/{run}")
     if record is None:
         raise CloudError(f"There's no run {run}.")
+    if "sim" not in record:
+        raise CloudError(f"{run}: {not_a_simulation(record)}. Take it out of the dataset.")
     statuses = {int(e.get("index", i)): e.get("status") for i, e in cloud.documents(f"runs/{run}/episodes").items()}
     unfinished = sorted(i for i, s in statuses.items() if s in ("pending", "running"))
     succeeded = sorted(i for i, s in statuses.items() if s == "succeeded")
@@ -455,7 +525,10 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
             continue
         episodes.append(index)
         for name, n in objects:
-            files.append((name, where / name.removeprefix(f"{prefix}episode-{index}/")))
+            path = where / name.removeprefix(f"{prefix}episode-{index}/")
+            if path.exists() and path.stat().st_size == n:
+                continue  # from a fetch that stopped partway
+            files.append((name, path))
             total += n
 
     if files:
