@@ -57,7 +57,11 @@ class FakeStore:
         self.objects[prefix + "objects.parquet"] = parquet({"object": [1, 2], "name": ["ball", "front"]})
         self.objects[prefix + "cameras.parquet"] = parquet({"object": [2], "width": [640]})
         self.objects[prefix + "poses.parquet"] = parquet({"frame": [0, 1], "object": [1, 1], "z": [0.5, float("nan")]})
-        self.objects[prefix + "keypoints.parquet"] = parquet({"frame": [0], "object": [1], "x": [3.0]})
+        self.objects[prefix + "keypoints.parquet"] = parquet({
+            "frame": [0, 0, 1], "camera": [2, 2, 2], "object": [1, 1, 1], "label": ["top", "top", "top"],
+            "index": [0, 1, 0], "x": [3.04, 900.0, 3.5], "y": [4.0, 4.0, 4.5], "depth": [2.0, 2.0, 2.0],
+            "in_frame": [True, False, True], "visible": [True, True, False], "occluded_by": [None, None, 1],
+            "score": [None, None, None], "source": ["truth"] * 3})
         # Format 1, from before the tables.
         old = "runs/kai-morales/r1/episode-2/"
         self.objects[old + "episode.json"] = json.dumps({"cameras": {"side": {}}, "frames": 2}).encode()
@@ -141,19 +145,29 @@ class TestApi(unittest.TestCase):
         ep = self.get("/api/runs/r1/episodes/0").json()
         self.assertEqual(ep["format"], 2)
         self.assertEqual(ep["info"]["frames"], 2)
-        # Not images, nor keypoints: they're drawn in the previews.
+        # Not images, nor keypoints: those come a camera at a time.
         self.assertEqual(sorted(ep["tables"]), ["cameras", "objects", "poses"])
         self.assertEqual(ep["tables"]["poses"], {"frame": [0, 1], "object": [1, 1], "z": [0.5, None]})
         self.assertEqual(list(ep["previews"]), ["front"])
+        # Boxes are drawn over it in the browser, from the tables.
         self.assertEqual(ep["previews"]["front"], {
             "plain": "https://signed.example/runs/kai-morales/r1/episode-0/preview/front.mp4?type=video/mp4",
-            "boxes": "https://signed.example/runs/kai-morales/r1/episode-0/preview/front.boxes.mp4?type=video/mp4",
         })
+
+    def test_keypoints_a_camera_at_a_time(self):
+        points = self.get("/api/runs/r1/episodes/0/keypoints?camera=front").json()
+        # Only those in the picture, with what drawing needs.
+        self.assertEqual(points, {"frame": [0, 1], "object": [1, 1], "label": ["top", "top"], "index": [0, 0],
+                                  "x": [3.0, 3.5], "y": [4.0, 4.5], "visible": [True, False],
+                                  "occluded_by": [None, 1], "score": [None, None], "source": ["truth", "truth"]})
+        self.assertEqual(self.get("/api/runs/r1/episodes/0/keypoints?camera=ball").status_code, 404)
+        self.assertEqual(self.get("/api/runs/r1/episodes/2/keypoints?camera=side").status_code, 404)
 
     def test_an_old_episode_still_has_its_videos(self):
         ep = self.get("/api/runs/r1/episodes/2").json()
         self.assertEqual((ep["format"], ep["tables"]), (1, {}))
         self.assertEqual(list(ep["previews"]), ["side"])
+        self.assertIn("boxes", ep["previews"]["side"])
 
     def test_an_episode_without_data_yet(self):
         response = self.get("/api/runs/r1/episodes/1")

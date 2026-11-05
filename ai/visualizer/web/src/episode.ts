@@ -1,10 +1,12 @@
-// One episode: a camera's video, with or without boxes, and plots of its
-// signals with a playhead that follows the video. Click a plot to jump there.
+// One episode: a camera's video with its labels drawn over it (overlay.ts),
+// and plots of its signals with a playhead that follows the video. Click a
+// plot to jump there.
 // It fills the run page's main pane (runs.ts).
 
 import uPlot from "uplot";
 import { api, EpisodeData } from "./api";
 import { h, icon } from "./dom";
+import { defaultOverlayPrefs, keypointsFrom, Overlay, OverlayPrefs } from "./overlay";
 import { Catalog, seriesKey } from "./tables";
 
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2];
@@ -12,12 +14,14 @@ const SPEEDS = [0.1, 0.25, 0.5, 1, 2];
 /** What the viewer chose, kept from one episode to the next. */
 export interface Prefs {
   camera?: string;
+  /** Format 1 episodes: play the video with boxes drawn in. */
   boxes: boolean;
+  overlay: OverlayPrefs;
   speed: number;
   plots?: string[][];
 }
 
-export const defaultPrefs = (): Prefs => ({ boxes: false, speed: 1 });
+export const defaultPrefs = (): Prefs => ({ boxes: false, overlay: defaultOverlayPrefs(), speed: 1 });
 
 // The Hattracker's subteam colors, which read well on its dark surfaces.
 // None is orange, so the playhead (the brand orange) stands apart.
@@ -171,11 +175,27 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   let camera = prefs.camera && cameras.includes(prefs.camera) ? prefs.camera : cameras[0];
   let boxes = prefs.boxes;
   const video = h("video", { muted: true, playsInline: true, preload: "auto", class: "video" });
-  const source = () => (camera ? (boxes ? ep.previews[camera].boxes : ep.previews[camera].plain) : "");
+  const source = () => {
+    if (!camera) return "";
+    const preview = ep.previews[camera];
+    return boxes && preview.boxes ? preview.boxes : preview.plain;
+  };
   video.src = source();
   video.defaultPlaybackRate = video.playbackRate = prefs.speed;
+  // Labels over the video, from the tables (format 2).
+  const overlay = ep.format >= 2
+    ? new Overlay(video, ep.tables, info.tables ?? [], keypointsFrom(runId, index), prefs.overlay)
+    : null;
+  overlay?.setCamera(camera ?? "");
 
   const frameOf = () => Math.min(info.frames - 1, Math.floor(video.currentTime * fps + 1e-6));
+  // While playing, the browser says which frame it's showing, so the labels
+  // never run ahead of the picture or lag behind it.
+  const frameCallbacks = "requestVideoFrameCallback" in HTMLVideoElement.prototype;
+  const onFrame = (_now: number, meta: { mediaTime: number }) => {
+    overlay?.draw(Math.min(info.frames - 1, Math.round(meta.mediaTime * fps)));
+    if (!video.paused) video.requestVideoFrameCallback(onFrame);
+  };
   const playhead = () => frameOf() / fps;
   const seek = (t: number) => {
     // The middle of a frame, so the video shows that frame and not its neighbor.
@@ -226,6 +246,7 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
       playButton.replaceChildren(icon(video.paused ? "play" : "pause"));
     }
     for (const plot of plots) plot.refresh();
+    if (!(frameCallbacks && !video.paused)) overlay?.draw(frame);
   }
 
   let frameRequest = 0;
@@ -233,7 +254,10 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     update();
     if (!video.paused) frameRequest = requestAnimationFrame(tick);
   };
-  video.addEventListener("play", () => (frameRequest = requestAnimationFrame(tick)));
+  video.addEventListener("play", () => {
+    frameRequest = requestAnimationFrame(tick);
+    if (frameCallbacks) video.requestVideoFrameCallback(onFrame);
+  });
   video.addEventListener("pause", update);
   video.addEventListener("seeked", update);
   video.addEventListener("loadedmetadata", update);
@@ -250,12 +274,17 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
   };
 
   const cameraPicker = cameras.length > 1
-    ? h("select", { onchange: (e: Event) => { prefs.camera = camera = (e.target as HTMLSelectElement).value; swap(); } },
+    ? h("select", { onchange: (e: Event) => {
+        prefs.camera = camera = (e.target as HTMLSelectElement).value;
+        overlay?.setCamera(camera);
+        swap();
+      } },
         ...cameras.map((c) => h("option", { value: c, selected: c === camera }, c)))
     : h("span", { class: "muted" }, camera ? `Camera: ${camera}` : "No cameras");
-  const boxToggle = h("label", { class: "check", title: "Boxes; thin full boxes around partly hidden objects; keypoints, filled if seen and hollow if hidden" },
+  // Format 1 episodes have no tables, only a second video with boxes drawn in.
+  const boxToggle = overlay ? null : h("label", { class: "check" },
     h("input", { type: "checkbox", checked: boxes, onchange: (e: Event) => { prefs.boxes = boxes = (e.target as HTMLInputElement).checked; swap(); } }),
-    " Labels");
+    " Boxes");
 
   const keys = (e: KeyboardEvent) => {
     if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "SELECT") return;
@@ -263,6 +292,7 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     if (e.key === " ") { e.preventDefault(); video.paused ? video.play() : video.pause(); }
     if (e.key === "ArrowRight") { video.pause(); seek((frameOf() + 1) / fps); }
     if (e.key === "ArrowLeft") { video.pause(); seek((frameOf() - 1) / fps); }
+    if (e.key === "l" || e.key === "L") overlay?.toggle();
   };
   document.addEventListener("keydown", keys);
 
@@ -281,7 +311,8 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     h("div", { class: "player" },
       h("div", { class: "viewer" },
         h("div", { class: "toolbar" }, cameraPicker, boxToggle),
-        video,
+        overlay ? overlay.stage : h("div", { class: "stage" }, video),
+        overlay?.bar,
         h("div", { class: "controls" },
           h("button", {
             class: "btn btn--icon", title: "Previous frame (←)", "aria-label": "Previous frame",

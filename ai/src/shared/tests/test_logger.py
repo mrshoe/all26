@@ -53,7 +53,7 @@ class TestLogger(unittest.TestCase):
         self.assertEqual([(b.name, b.label, round(b.score, 2)) for b in found], [(None, "ball", 0.9)])
 
         made = PostProcessor(self.folder).run()
-        self.assertEqual(made, ["preview/front.mp4", "preview/front.boxes.mp4"])
+        self.assertEqual(made, ["preview/front.mp4"])
 
     def test_rows_are_checked(self):
         log = Logger(self.folder)
