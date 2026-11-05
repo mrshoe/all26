@@ -795,6 +795,63 @@ details > summary {
   margin-top: 24px;
 }
 
+/* Latest values, with the best so far underneath when it differs. */
+.metrics-table {
+  margin-bottom: 12px;
+}
+
+.metrics-table td.num {
+  white-space: nowrap;
+}
+
+.metric-value {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-best {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+tr.metric-other td {
+  color: var(--text-muted);
+}
+
+/* What run.keep() kept. */
+.kept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.kept {
+  margin: 0;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+}
+
+.kept img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.kept figcaption {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.kept-list {
+  padding-left: 18px;
+}
+
 tr.pruned td {
   color: var(--text-faint);
 }

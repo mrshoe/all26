@@ -182,7 +182,9 @@ class TestTraining(unittest.TestCase):
     def setUp(self):
         self.store = FakeStore()
         self.store.training_docs = {
-            "t1": training_record("fuel_detector", "kai-morales", WHEN),
+            "t1": training_record("fuel_detector", "kai-morales", WHEN, final={"test_ap50": 0.9}, files=[
+                {"name": "results.png", "object": "training/kai-morales/t1/files/results.png", "size": 3,
+                 "content_type": "image/png"}]),
             "t2": training_record("robot_vision", "dana-wells", WHEN + datetime.timedelta(hours=1),
                                   parents={"backbone": {"ref": "fuel_detector:v1", "checkpoint": "t1/200",
                                                         "model": "fuel_detector", "file": "f", "md5": "x"}},
@@ -217,7 +219,15 @@ class TestTraining(unittest.TestCase):
         self.assertEqual([c["step"] for c in run["checkpoints"]], [200, 300])
         self.assertEqual([c["id"] for c in run["children"]], ["t2"])
         self.assertEqual(run["created_at"], "2026-10-30T21:30:00+00:00")
+        self.assertEqual(run["final"], {"test_ap50": 0.9})
+        self.assertEqual(run["files"][0]["url"],
+                         "https://signed.example/training/kai-morales/t1/files/results.png?type=image/png")
         self.assertEqual(self.get("/api/training/nope").status_code, 404)
+
+    def test_the_list_leaves_kept_files_out(self):
+        listed = {r["id"]: r for r in self.get("/api/training").json()}
+        self.assertNotIn("files", listed["t1"])
+        self.assertEqual(listed["t1"]["final"], {"test_ap50": 0.9})
 
     def test_metrics_in_order_each_file_read_once(self):
         metrics = self.get("/api/training/t1/metrics").json()

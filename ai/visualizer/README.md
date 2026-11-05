@@ -6,9 +6,12 @@ plots of the episode's signals, with a playhead that follows the video.
 
 And training runs (`ai/src/shared/training.py` records them): the list,
 filtered by model or person; each run's code, dataset, the checkpoints it
-started from and the runs that started from it, a plot of each metric
-against step (refreshed every 30 seconds while it runs), and its
-checkpoints; and several runs' metrics overlaid, to compare them.
+started from and the runs that started from it, a table of its metrics
+by split (train, val, test: the names' prefixes) with each one's best,
+a plot of each metric against step with its splits together (refreshed
+every 30 seconds while it runs), the pictures and files it kept, and its
+checkpoints; and several runs' metrics overlaid, to compare them. A cloud
+job that ran a training run links to it from the Runs page.
 
 Sign in with the email address on the team roster, the same way as
 `wildhat login`. The address is printed by `terraform output visualizer_url`
