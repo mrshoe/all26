@@ -99,9 +99,9 @@ self.goal = self.add(Box(size=(2, 0.1, 1), keypoints={"post_top": [(-1, 0, 0.5),
   (`box.full`, `box.share`), or `sample.keypoints()` from a dataset. For
   YOLO, `ds.yolo(classes, boxes="full", min_share=0.25)` exports full boxes
   of objects at least a quarter seen.
-- **The visualizer** draws them in the Labels video: thin full boxes
-  around partly hidden objects, and a dot for each keypoint, filled if
-  it's seen and hollow if it's hidden.
+- **The visualizer** draws them over the video: dashed full boxes around
+  partly hidden objects, and a dot for each keypoint, filled if it's seen
+  and hollow if it's hidden. Chips under the video turn each on and off.
 
 `scenarios/crate_corners.py` is an example.
 
@@ -254,7 +254,7 @@ wildhat launch --episodes 20 --timeout 2h -- python -m sim run scenarios/yellow_
 | `keypoints.parquet` | One row per keypoint per camera per frame: pixel, depth, in the picture or not, seen or not, and what hides it |
 | `cam/<camera>/000000.jpg` | What each camera saw, per frame |
 | `mask/<camera>/000000.png` | Which object each pixel shows (16-bit object ids, from `objects`) |
-| `preview/<camera>.mp4`, `.boxes.mp4` | Small preview videos for the visualizer, without and with boxes and keypoints |
+| `preview/<camera>.mp4` | A small preview video for the visualizer, which draws the labels over it from the tables |
 
 Tables join on `frame` and `object` (a camera is an object too). The
 schemas are in `ai/src/shared/logger.py`: the shared `Logger` and

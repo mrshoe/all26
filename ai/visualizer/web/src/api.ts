@@ -64,7 +64,9 @@ export interface EpisodeData {
   };
   /** objects, cameras, sim, poses, boxes … (format 2; empty for format 1). */
   tables: Record<string, Table>;
-  previews: Record<string, { plain: string; boxes: string }>;
+  /** Each camera's video; `boxes`, with boxes drawn in, only for format 1
+   *  (later episodes' labels are drawn over the plain one, from the tables). */
+  previews: Record<string, { plain: string; boxes?: string }>;
 }
 
 // Training runs (ai/src/shared/training.py writes them).
@@ -161,6 +163,9 @@ export const api = {
   },
   run: (id: string) => get<RunDetail>(`/api/runs/${encodeURIComponent(id)}`),
   episode: (id: string, n: number) => get<EpisodeData>(`/api/runs/${encodeURIComponent(id)}/episodes/${n}`),
+  /** One camera's keypoints that are in the picture. */
+  keypoints: (id: string, n: number, camera: string) =>
+    get<Table>(`/api/runs/${encodeURIComponent(id)}/episodes/${n}/keypoints?camera=${encodeURIComponent(camera)}`),
   trainingRuns: (opts: { model?: string; user?: string }) => {
     const q = new URLSearchParams({ limit: "100" });
     if (opts.model) q.set("model", opts.model);

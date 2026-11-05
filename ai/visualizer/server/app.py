@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Annotated, Any, Optional, Protocol
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -200,6 +201,8 @@ class Config(BaseModel):
 
 def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
     app = FastAPI(title="Wildhat visualizer", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    # Tables as JSON shrink to about a tenth.
+    app.add_middleware(GZipMiddleware, minimum_size=4096)
     verified: dict[str, dict] = {}
     pool = ThreadPoolExecutor(8)
 
@@ -263,9 +266,10 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
         info = json.loads(info)
         tables: dict[str, dict] = {}
         if info.get("format", 1) >= 2:
-            # Pictures' paths aren't needed: the browser plays the previews,
-            # which have the keypoints drawn in (the biggest table, and
-            # nothing in it to plot against time).
+            # Pictures' paths aren't needed: the browser plays the previews.
+            # Keypoints are the biggest table, with nothing to plot against
+            # time, so the browser asks for them a camera at a time
+            # (/keypoints) when it draws them.
             names = [t for t in info.get("tables", []) if t not in ("images", "keypoints")]
             found = pool.map(lambda t: store.read(f"{prefix}{t}.parquet"), names)
             tables = {t: read_table(data) for t, data in zip(names, found) if data is not None}
@@ -273,10 +277,13 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
         else:
             # Format 1, from before the tables: only its videos can be shown.
             cameras = list(info.get("cameras", {}))
+        # The browser draws boxes and keypoints over the plain video from the
+        # tables. Format 1 episodes have no tables, only a video with boxes.
         previews = {
             camera: {
                 "plain": store.signed_url(f"{prefix}preview/{camera}.mp4", "video/mp4"),
-                "boxes": store.signed_url(f"{prefix}preview/{camera}.boxes.mp4", "video/mp4"),
+                **({"boxes": store.signed_url(f"{prefix}preview/{camera}.boxes.mp4", "video/mp4")}
+                   if not tables else {}),
             }
             for camera in cameras
         }
@@ -288,6 +295,24 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
             "tables": tables,
             "previews": previews,
         }
+
+    @app.get("/api/runs/{run_id}/episodes/{index}/keypoints")
+    def keypoints(who: Signed, run_id: str, index: int, camera: str) -> dict:
+        """One camera's keypoints that are in the picture, as columns."""
+        found = store.run(run_id)
+        if not found:
+            raise HTTPException(404, f"There's no run {run_id}.")
+        prefix = episode_prefix(found, index)
+        objects, cams, points = pool.map(lambda t: store.read(f"{prefix}{t}.parquet"),
+                                         ["objects", "cameras", "keypoints"])
+        if objects is None or cams is None or points is None:
+            raise HTTPException(404, f"Episode {index} of {run_id} has no keypoints.")
+        objects = read_table(objects)
+        names = dict(zip(objects["object"], objects["name"]))
+        ids = [i for i in read_table(cams)["object"] if names.get(i) == camera]
+        if not ids:
+            raise HTTPException(404, f"There's no camera {camera} in episode {index} of {run_id}.")
+        return keypoint_columns(points, ids[0])
 
     metrics_files: dict[str, list[dict]] = {}
 
@@ -386,6 +411,25 @@ def read_table(data: bytes) -> dict[str, list]:
 
     columns = pq.read_table(io.BytesIO(data)).to_pydict()
     return {k: [None if isinstance(v, float) and math.isnan(v) else v for v in vs] for k, vs in columns.items()}
+
+
+KEYPOINT_COLUMNS = ("frame", "object", "label", "index", "x", "y", "visible", "occluded_by", "score", "source")
+
+
+def keypoint_columns(data: bytes, camera: int) -> dict[str, list]:
+    """A keypoints table's rows for one camera, in the picture, with only
+    the columns drawing needs, and pixels to a tenth."""
+    import io
+
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+
+    table = pq.read_table(io.BytesIO(data))
+    table = table.filter(pc.and_(pc.equal(table["camera"], camera), table["in_frame"]))
+    out = {c: table[c].to_pylist() for c in KEYPOINT_COLUMNS if c in table.column_names}
+    for c in ("x", "y"):
+        out[c] = [round(v, 1) for v in out[c]]
+    return out
 
 
 def camera_names(tables: dict[str, dict]) -> list[str]:

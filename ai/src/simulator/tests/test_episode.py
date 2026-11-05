@@ -89,7 +89,7 @@ class TestEpisode(unittest.TestCase):
         self.assertEqual(episode["frames"], 20)
         self.assertEqual(len(list((self.folder / "cam/front").glob("*.jpg"))), 20)
         self.assertEqual(len(list((self.folder / "mask/front").glob("*.png"))), 20)
-        self.assertEqual(previews, ["preview/front.mp4", "preview/front.boxes.mp4"])
+        self.assertEqual(previews, ["preview/front.mp4"])
         for preview in previews:
             self.assertGreater((self.folder / preview).stat().st_size, 1000)
         saved = json.loads((self.folder / "episode.json").read_text())
