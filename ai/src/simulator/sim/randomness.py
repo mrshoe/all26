@@ -110,9 +110,12 @@ class _Sphere(Range):
 
 
 def resolve(value: Any, rng: np.random.Generator) -> Any:
-    """`value` with every Range in it drawn, looking inside tuples and lists."""
+    """`value` with every Range in it drawn, looking inside tuples, lists and
+    dicts' values."""
     if isinstance(value, Range):
         return value.draw(rng)
     if isinstance(value, (tuple, list)):
         return type(value)(resolve(v, rng) for v in value)
+    if isinstance(value, dict):
+        return {k: resolve(v, rng) for k, v in value.items()}
     return value

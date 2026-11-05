@@ -94,6 +94,11 @@ class Solid(Item):
     # (the coefficient of restitution). Above 0.95 counts as 0.95.
     bounciness: Number = 0.3
     friction: Number = 0.6
+    # Named points on it, in its own coordinates (before `rotation` and
+    # `position`), by class: {"corner": [(x, y, z), ...]}. Each is recorded
+    # in every camera's picture, seen or hidden. A Prop's catalog can give
+    # some too; these add to them, replacing a class of the same name.
+    keypoints: Any = None
 
     LIVE: ClassVar[tuple[str, ...]] = ("position", "rotation", "velocity")
 
@@ -119,6 +124,14 @@ class Sphere(Solid):
 class Box(Solid):
     # Full lengths along x, y and z.
     size: Vec3 = (1.0, 1.0, 1.0)
+
+    @staticmethod
+    def corners(size) -> list[tuple]:
+        """A box's 8 corners around its center, e.g. as its keypoints:
+        `Box(size=s, keypoints={"corner": Box.corners(s)})`. Corner i is at
+        -x or +x as bit 2 of i is 0 or 1, y bit 1, z bit 0."""
+        hx, hy, hz = (float(v) / 2 for v in size)
+        return [(sx * hx, sy * hy, sz * hz) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)]
 
 
 @dataclass(eq=False, kw_only=True)

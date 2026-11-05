@@ -1,7 +1,8 @@
 # The visualizer
 
 A web app for looking at runs: everyone's runs, newest first, and for
-simulation episodes, each camera's video (with or without boxes) next to
+simulation episodes, each camera's video (with or without its labels:
+boxes, full boxes and keypoints) next to
 plots of the episode's signals, with a playhead that follows the video.
 
 And training runs (`ai/src/shared/training.py` records them): the list,

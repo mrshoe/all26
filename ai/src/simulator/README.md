@@ -59,7 +59,9 @@ class YellowBall(Scenario[Gym]):
   from the episode's seed, so `--seed` replays an episode exactly. `Range`s
   are drawn after both `setup`s, so a Scenario can replace a Scene's Range.
 - **Labels**: give the things a detector should find a `label`. The
-  framework records each labeled object's exact box in every camera.
+  framework records each labeled object's exact box in every camera, and
+  its full box (below).
+- **Keypoints**: named points on an object, for keypoint detectors (below).
 - **What's available**: `Sphere`, `Box`, `Floor` (textures in
   `Floor.TEXTURES`), `Wall` (and `Wall.around(floor)`), `Light` (`sun`,
   `area`, `point`, `spot`), `Camera`, `Background`, `Prop`, `GamePiece`,
@@ -67,6 +69,41 @@ class YellowBall(Scenario[Gym]):
 - **Moving things in `step`**: set `position`, `rotation` or `velocity`, or
   call `push(impulse)`. Static things (`static=True`, the default for boxes,
   floors and walls) can't move.
+
+## Keypoints and full boxes
+
+Give any object named points, in its own coordinates (before its
+`rotation` and `position`), and the framework records where each lands in
+every camera's picture, every frame, and whether it's seen:
+
+```python
+size = (0.5, 0.4, 0.3)
+self.crate = self.add(Box(size=size, label="crate", keypoints={"corner": Box.corners(size)}))
+self.goal = self.add(Box(size=(2, 0.1, 1), keypoints={"post_top": [(-1, 0, 0.5), (1, 0, 0.5)]}))
+```
+
+- **Every point is recorded**, seen or hidden, so whoever trains chooses
+  which to use. Each says whether it's in the picture, whether it's seen,
+  and if not, what hides it: the object itself (`"self"`, its far side) or
+  the thing in front. A point behind the camera has no pixel, so it isn't
+  recorded. A Prop's own coordinates have z = 0 at its base.
+- **Seen** comes from a depth image Blender renders next to the mask: a
+  point is hidden when what's drawn at its pixel, and at every pixel next
+  to it, is more than a few centimeters in front of it.
+- **Full boxes**: each labeled object's box is around the part that's seen.
+  Its full box is around its whole shape, as if nothing hid it (a Prop's
+  from its collision hulls, so a little loose around chair legs), cut to
+  the picture like the other. With it comes how many pixels the whole
+  object would cover, so `box.share` says how much of it is seen.
+- **Reading them**: `ep.keypoints("front", 12)` and `ep.boxes("front", 12)`
+  (`box.full`, `box.share`), or `sample.keypoints()` from a dataset. For
+  YOLO, `ds.yolo(classes, boxes="full", min_share=0.25)` exports full boxes
+  of objects at least a quarter seen.
+- **The visualizer** draws them in the Labels video: thin full boxes
+  around partly hidden objects, and a dot for each keypoint, filled if
+  it's seen and hollow if it's hidden.
+
+`scenarios/crate_corners.py` is an example.
 
 ## Groups: objects that go together
 
@@ -213,10 +250,11 @@ wildhat launch --episodes 20 --timeout 2h -- python -m sim run scenarios/yellow_
 | `sim.parquet` | Per frame: time, and how long `step()`, physics, rendering and logging took |
 | `poses.parquet` | Per frame, each moving object, camera and light: position, rotation, linear and angular velocity (static things once, at frame 0) |
 | `images.parquet` | Per frame, each camera's picture and mask |
-| `boxes.parquet` | One row per labeled object seen by a camera: its box in pixels and how many pixels it covers |
+| `boxes.parquet` | One row per labeled object seen by a camera: its box in pixels and how many pixels it covers, and its full box and how many it would cover if nothing hid it |
+| `keypoints.parquet` | One row per keypoint per camera per frame: pixel, depth, in the picture or not, seen or not, and what hides it |
 | `cam/<camera>/000000.jpg` | What each camera saw, per frame |
 | `mask/<camera>/000000.png` | Which object each pixel shows (16-bit object ids, from `objects`) |
-| `preview/<camera>.mp4`, `.boxes.mp4` | Small preview videos for the visualizer, without and with boxes |
+| `preview/<camera>.mp4`, `.boxes.mp4` | Small preview videos for the visualizer, without and with boxes and keypoints |
 
 Tables join on `frame` and `object` (a camera is an object too). The
 schemas are in `ai/src/shared/logger.py`: the shared `Logger` and

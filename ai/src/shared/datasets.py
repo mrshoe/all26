@@ -18,7 +18,7 @@ And from ai/src:
     ds = Dataset.load("training/fuel_detector")   # the directory, or its dataset.toml
     ds.fetch()                                    # downloads what's missing
     for sample in ds.samples("train"):            # or "validation", "test"
-        sample.image(), sample.boxes(), sample.mask()
+        sample.image(), sample.boxes(), sample.mask(), sample.keypoints()
     ds.episodes("validation")                     # shared.episodes.Episode objects
 
 Or check one, and fetch it, from the command line (also from ai/src):
@@ -30,6 +30,10 @@ For ultralytics YOLO, export it in YOLO's format and train on the data.yaml:
 
     data_yaml = ds.yolo(classes=["fuel"], min_pixels=20)
     YOLO("yolo26n.pt").train(data=str(data_yaml), ...)
+
+    # Boxes around each whole piece, even the hidden part, for pieces at
+    # least a quarter seen:
+    ds.yolo(classes=["fuel"], boxes="full", min_share=0.25)
 
     python -m shared.datasets yolo training/fuel_detector --classes fuel
 
@@ -75,7 +79,7 @@ from functools import cached_property
 from pathlib import Path
 
 from shared.cloud import Cloud, CloudError
-from shared.episodes import Box, Episode
+from shared.episodes import Box, Episode, Keypoint
 
 RUN_ID = re.compile(r"^\d{8}-\d{4}-[a-z0-9]{4}$")
 SPLITS = ("train", "validation", "test")
@@ -117,7 +121,13 @@ class Sample:
         return self.episode.mask(self.camera, self.frame)
 
     def boxes(self) -> list[Box]:
+        """Each labeled object seen: its box, and (episodes simulated since
+        they were added) its full box and the share of it seen."""
         return self.episode.boxes(self.camera, self.frame)
+
+    def keypoints(self) -> list[Keypoint]:
+        """Every keypoint in the picture, seen or hidden."""
+        return self.episode.keypoints(self.camera, self.frame)
 
 
 def split_share(run: str, index: int) -> float:
@@ -361,15 +371,21 @@ class Dataset:
 
     # --- Exporting ---------------------------------------------------------------
 
-    def yolo(self, classes: list[str], min_pixels: int = 0, say=None) -> Path:
+    def yolo(self, classes: list[str], min_pixels: int = 0, say=None, boxes: str = "visible",
+             min_share: float = 0.0) -> Path:
         """Export the dataset in ultralytics YOLO's detection format, and
         return its data.yaml, for YOLO(...).train(data=str(path)).
 
         `classes` are the labels to detect, in order: the first is class 0.
-        Boxes with other labels are left out, and so are boxes covering fewer
-        than `min_pixels` pixels (objects almost entirely hidden). Pictures
-        with no boxes left stay in, with empty label files: they teach the
-        model what "nothing here" looks like.
+        Boxes with other labels are left out, and so are objects showing
+        fewer than `min_pixels` pixels, or less than `min_share` (0 to 1) of
+        themselves: almost entirely hidden. Pictures with no boxes left stay
+        in, with empty label files: they teach the model what "nothing here"
+        looks like.
+
+        `boxes` is "visible", around the part of each object that's seen,
+        or "full", around its whole shape, hidden parts too. Full boxes and
+        `min_share` need episodes simulated since full boxes were added.
 
         It goes to ~/.cache/wildhat/yolo/<model>-<hash>/, never into ai/src,
         with the pictures hard-linked from the cache (copied if they can't
@@ -384,6 +400,11 @@ class Dataset:
             raise ValueError(f"{', '.join(repeated)} is in classes twice")
         if not isinstance(min_pixels, int) or isinstance(min_pixels, bool) or min_pixels < 0:
             raise ValueError("min_pixels must be a whole number, 0 or more")
+        if boxes not in ("visible", "full"):
+            raise ValueError('boxes must be "visible" or "full"')
+        if not isinstance(min_share, (int, float)) or isinstance(min_share, bool) or not 0 <= min_share <= 1:
+            raise ValueError("min_share must be between 0 and 1")
+        full = boxes == "full"
 
         splits = {split: self.episode_ids(split) for split in SPLITS}
         if not splits["train"]:
@@ -391,8 +412,15 @@ class Dataset:
         if not splits["validation"]:
             raise ValueError("There are no validation episodes, and YOLO needs some. "
                              "Add runs, or raise validation in dataset.toml.")
-        key = json.dumps({"version": YOLO_VERSION, "splits": splits, "every": self.every, "cameras": self.cameras,
-                          "classes": list(classes), "min_pixels": min_pixels}, sort_keys=True)
+        options = {"version": YOLO_VERSION, "splits": splits, "every": self.every, "cameras": self.cameras,
+                   "classes": list(classes), "min_pixels": min_pixels}
+        # Only when they're not the defaults, so exports from before they
+        # existed are still found.
+        if full:
+            options["boxes"] = boxes
+        if min_share:
+            options["min_share"] = min_share
+        key = json.dumps(options, sort_keys=True)
         folder = cache_dir() / "yolo" / f"{self.name}-{hashlib.sha256(key.encode()).hexdigest()[:12]}"
         data_yaml = folder / "data.yaml"
         if data_yaml.exists():
@@ -418,7 +446,16 @@ class Dataset:
                     for r in ep.table("boxes").to_pylist():
                         if r["source"] != "truth" or r["label"] not in ids or (r["pixels"] or 0) < min_pixels:
                             continue
-                        line = _yolo_line(ids[r["label"]], r, *sizes[r["camera"]])
+                        if (full or min_share) and r.get("full_pixels") is None:
+                            shutil.rmtree(building, ignore_errors=True)
+                            raise ValueError(
+                                f"{ep.folder.parent.name} episode {ep.folder.name.split('-')[-1]} has no full "
+                                "boxes: it was simulated before they were added. Simulate it again, or leave "
+                                "out boxes=\"full\" and min_share.")
+                        if min_share and r["pixels"] < min_share * r["full_pixels"]:
+                            continue
+                        box = {k: r[f"full_{k}"] for k in ("x0", "y0", "x1", "y1")} if full else r
+                        line = _yolo_line(ids[r["label"]], box, *sizes[r["camera"]])
                         if line:
                             lines.setdefault((r["camera"], r["frame"]), []).append(line)
                 for s in group:
@@ -560,7 +597,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--classes", nargs="+", metavar="LABEL",
                         help="yolo: the labels to detect, in order (the first is class 0)")
     parser.add_argument("--min-pixels", type=int, default=0, metavar="N",
-                        help="yolo: leave out boxes covering fewer than N pixels")
+                        help="yolo: leave out objects showing fewer than N pixels")
+    parser.add_argument("--min-share", type=float, default=0.0, metavar="S",
+                        help="yolo: leave out objects less than S (0 to 1) of which is seen")
+    parser.add_argument("--boxes", choices=["visible", "full"], default="visible",
+                        help="yolo: around what's seen of each object (visible), or all of it (full)")
     args = parser.parse_args(argv)
     if args.action == "yolo" and not args.classes:
         parser.error("yolo needs --classes, e.g. --classes ball")
@@ -570,7 +611,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if ds.check() else 1
         ds.fetch()
         if args.action == "yolo":
-            print(ds.yolo(args.classes, args.min_pixels))
+            print(ds.yolo(args.classes, args.min_pixels, boxes=args.boxes, min_share=args.min_share))
             return 0
         for split, s in ds.summary().items():
             labels = ", ".join(f"{label} {n}" for label, n in sorted(s["labels"].items())) or "no boxes"

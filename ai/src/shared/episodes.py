@@ -7,6 +7,7 @@ e.g. after `wildhat download`:
     ep.image("front", 12)       height x width x 3 uint8
     ep.mask("front", 12)        height x width uint16 object ids (simulation)
     ep.boxes("front", 12)       [Box(label="ball", name="ball", x0=..., ...)]
+    ep.keypoints("front", 12)   [Keypoint(label="corner", name="crate", index=0, x=..., visible=True, ...)]
     ep.table("poses")           a pyarrow Table; .to_pandas() if you have pandas
 
 Needs numpy, pillow and pyarrow.
@@ -41,6 +42,40 @@ class Box:
     x1: float
     y1: float
     pixels: Optional[int] = None
+    score: Optional[float] = None
+    source: str = "truth"
+    # Simulation only: the box of the object's whole shape, as if nothing
+    # hid it (x0, y0, x1, y1, cut to the picture), and how many pixels it
+    # would cover.
+    full: Optional[tuple[float, float, float, float]] = None
+    full_pixels: Optional[int] = None
+
+    @property
+    def share(self) -> Optional[float]:
+        """How much of the object is seen, 0 to 1: pixels / full_pixels."""
+        if not self.pixels or not self.full_pixels:
+            return None
+        return min(1.0, self.pixels / self.full_pixels)
+
+
+@dataclass
+class Keypoint:
+    """A named point on an object, in one picture. `label` is its class
+    ("corner") and `index` which of the object's points of that class. `x`
+    and `y` are pixels (it may be outside the picture: see `in_frame`);
+    `depth` is meters in front of the camera. `occluded_by` is None if it's
+    seen or out of the picture, "self" if its own object's far side hides
+    it, else the name of what's in front."""
+
+    label: str
+    name: Optional[str]
+    index: int
+    x: float
+    y: float
+    depth: Optional[float]
+    in_frame: bool
+    visible: Optional[bool]
+    occluded_by: Optional[str] = None
     score: Optional[float] = None
     source: str = "truth"
 
@@ -97,14 +132,34 @@ class Episode:
         with Image.open(self.folder / path) as img:
             return np.asarray(img).astype(np.uint16)
 
+    def _rows(self, table: str, camera: str, frame: int, source: str) -> list[dict]:
+        if table not in self.info["tables"]:
+            return []
+        t = self.table(table)
+        return t.filter(pc.and_(pc.and_(pc.equal(t["camera"], self.objects[camera]["object"]),
+                                        pc.equal(t["frame"], frame)),
+                                pc.equal(t["source"], source))).to_pylist()
+
     def boxes(self, camera: str, frame: int, source: str = "truth") -> list[Box]:
         """The boxes in this camera's picture in this frame, from `source`:
         "truth", or a model's name."""
-        if "boxes" not in self.info["tables"]:
-            return []
-        t = self.table("boxes")
-        rows = t.filter(pc.and_(pc.and_(pc.equal(t["camera"], self.objects[camera]["object"]),
-                                        pc.equal(t["frame"], frame)),
-                                pc.equal(t["source"], source))).to_pylist()
-        return [Box(r["label"], self.names.get(r["object"]), r["x0"], r["y0"], r["x1"], r["y1"],
-                    r["pixels"], r["score"], r["source"]) for r in rows]
+        out = []
+        for r in self._rows("boxes", camera, frame, source):
+            full = None
+            if r.get("full_x0") is not None:
+                full = (r["full_x0"], r["full_y0"], r["full_x1"], r["full_y1"])
+            out.append(Box(r["label"], self.names.get(r["object"]), r["x0"], r["y0"], r["x1"], r["y1"],
+                           r["pixels"], r["score"], r["source"], full, r.get("full_pixels")))
+        return out
+
+    def keypoints(self, camera: str, frame: int, source: str = "truth") -> list[Keypoint]:
+        """Every keypoint in this camera's picture in this frame, seen or
+        hidden, from `source`: "truth", or a model's name. (Episodes from
+        before keypoints have none.)"""
+        out = []
+        for r in self._rows("keypoints", camera, frame, source):
+            by = r["occluded_by"]
+            by = None if by is None else "self" if by == r["object"] else self.names.get(by)
+            out.append(Keypoint(r["label"], self.names.get(r["object"]), r["index"], r["x"], r["y"],
+                                r["depth"], r["in_frame"], r["visible"], by, r["score"], r["source"]))
+        return out
