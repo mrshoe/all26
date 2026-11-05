@@ -12,7 +12,11 @@
              and lights.
     images   each camera's picture and mask
     boxes    each labeled object's box in each camera's picture, from the
-             mask, in frames where it's seen
+             mask, in frames where it's seen; and its full box, from its
+             whole shape, as if nothing hid it (sim/labels.py)
+    keypoints
+             every object's named points (Solid.keypoints) in each camera's
+             picture, seen or hidden, from the depth image (sim/labels.py)
 """
 
 from __future__ import annotations
@@ -24,6 +28,7 @@ from pathlib import Path
 import numpy as np
 
 from shared.logger import Logger
+from sim import labels
 from sim.backends import Picture
 from sim.geometry import intrinsics, quat_from_euler, quat_looking_at, spin_between
 from sim.objects import Background, Camera, Item, Light, Solid, Wall
@@ -65,6 +70,9 @@ class SimLogger:
         self.world, self.info, self.render = world, info, render
         self.log = Logger(folder)
         self.last: dict[int, tuple[float, np.ndarray, np.ndarray]] = {}  # id -> (t, position, quat)
+        # Worked out once: each labeled object's shape, and each object's keypoints.
+        self.shapes = {item.id: labels.shape(item) for item in world.labeled()} if render else {}
+        self.points = {item.id: found for item in world.solids if (found := labels.keypoints_of(item))}
         for item in world.items:
             settings = {k: v for k, v in world.drawn[item.name].items() if k not in ("type", "id", "label")}
             self.log.add("objects", {
@@ -120,11 +128,27 @@ class SimLogger:
         for name, picture in pictures.items():
             cam = named[name]
             self.log.image(index, cam.id, name, t, picture.rgb, picture.ids)
+            view = labels.View(*cameras[name], intrinsics(cam.resolution, cam.fov))
             for item, (x0, y0, x1, y1, n) in boxes(picture.ids, world.labeled()).items():
-                self.log.add("boxes", {"frame": index, "camera": cam.id, "object": item.id, "label": item.label,
-                                       "x0": x0, "y0": y0, "x1": x1, "y1": y1, "pixels": n,
-                                       "source": "truth"})
+                row = {"frame": index, "camera": cam.id, "object": item.id, "label": item.label,
+                       "x0": x0, "y0": y0, "x1": x1, "y1": y1, "pixels": n, "source": "truth"}
+                full = labels.full_box(view, item, self.shapes[item.id])
+                if full:
+                    row.update(zip(("full_x0", "full_y0", "full_x1", "full_y1", "full_pixels"), full))
+                self.log.add("boxes", row)
+            if picture.depth is not None:
+                self.keypoints(index, cam, view, picture)
         self.log.add("sim", {"frame": index, "time": t, **timing, "log_s": time.perf_counter() - started})
+
+    def keypoints(self, index: int, cam: Camera, view: labels.View, picture: Picture) -> None:
+        for item in self.world.solids:
+            if item.id not in self.points:
+                continue
+            for p in labels.keypoints(view, item, self.points[item.id], picture.ids, picture.depth):
+                self.log.add("keypoints", {
+                    "frame": index, "camera": cam.id, "object": item.id, "label": p.label, "index": p.index,
+                    "x": p.x, "y": p.y, "depth": p.depth, "in_frame": p.in_frame, "visible": p.visible,
+                    "occluded_by": p.occluded_by, "source": "truth"})
 
     def finish(self) -> dict:
         """Write the episode's files; return episode.json's contents."""

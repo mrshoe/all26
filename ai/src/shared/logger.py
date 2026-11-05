@@ -21,7 +21,20 @@ an object too.
     boxes    one row per box seen: frame, camera, object (null for a model's
              detection), label, x0 y0 x1 y1 in pixels ((x1, y1) is one past
              the bottom-right corner), pixels, score (null for ground
-             truth), source ("truth" or the model's name)
+             truth), source ("truth" or the model's name). In simulation,
+             also the full box: full_x0 full_y0 full_x1 full_y1, the box of
+             the object's whole shape as if nothing hid it (cut to the
+             picture, like the visible one), and full_pixels, how many
+             pixels it would cover; pixels / full_pixels is the share seen
+    keypoints
+             one row per named point on an object, per camera, per frame,
+             seen or hidden (but not behind the camera): frame, camera,
+             object (null for a model's), label (the point's class, e.g.
+             "corner"), index (which of the object's points of that class),
+             x y in pixels, depth in meters along the camera's axis,
+             in_frame, visible, occluded_by (null if seen; the object's own
+             id when its own far side hides it; otherwise the id of what's
+             in front), score (null for ground truth), source
 
 A robot logs its own per-frame table (frame, time, its own columns) in place
 of `sim`: pass its schema to Logger.
@@ -83,7 +96,14 @@ SCHEMAS: dict[str, pa.Schema] = {
         ("frame", i32), ("camera", i32), ("object", i32, "null"), ("label", text),
         ("x0", f32), ("y0", f32), ("x1", f32), ("y1", f32),
         ("pixels", i32, "null"), ("score", f32, "null"), ("source", text),
+        ("full_x0", f32, "null"), ("full_y0", f32, "null"), ("full_x1", f32, "null"), ("full_y1", f32, "null"),
+        ("full_pixels", i32, "null"),
         key=("frame", "camera", "object")),
+    "keypoints": schema(
+        ("frame", i32), ("camera", i32), ("object", i32, "null"), ("label", text), ("index", i32),
+        ("x", f32), ("y", f32), ("depth", f32, "null"), ("in_frame", flag), ("visible", flag, "null"),
+        ("occluded_by", i32, "null"), ("score", f32, "null"), ("source", text),
+        key=("frame", "camera", "object", "label", "index")),
 }
 
 

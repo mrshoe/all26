@@ -53,10 +53,11 @@ class FakeStore:
         self.objects = {}
         prefix = "runs/kai-morales/r1/episode-0/"
         self.objects[prefix + "episode.json"] = json.dumps(
-            {"format": 2, "frames": 2, "tables": ["objects", "cameras", "poses", "images"]}).encode()
+            {"format": 2, "frames": 2, "tables": ["objects", "cameras", "poses", "images", "keypoints"]}).encode()
         self.objects[prefix + "objects.parquet"] = parquet({"object": [1, 2], "name": ["ball", "front"]})
         self.objects[prefix + "cameras.parquet"] = parquet({"object": [2], "width": [640]})
         self.objects[prefix + "poses.parquet"] = parquet({"frame": [0, 1], "object": [1, 1], "z": [0.5, float("nan")]})
+        self.objects[prefix + "keypoints.parquet"] = parquet({"frame": [0], "object": [1], "x": [3.0]})
         # Format 1, from before the tables.
         old = "runs/kai-morales/r1/episode-2/"
         self.objects[old + "episode.json"] = json.dumps({"cameras": {"side": {}}, "frames": 2}).encode()
@@ -140,7 +141,8 @@ class TestApi(unittest.TestCase):
         ep = self.get("/api/runs/r1/episodes/0").json()
         self.assertEqual(ep["format"], 2)
         self.assertEqual(ep["info"]["frames"], 2)
-        self.assertEqual(sorted(ep["tables"]), ["cameras", "objects", "poses"])  # not images
+        # Not images, nor keypoints: they're drawn in the previews.
+        self.assertEqual(sorted(ep["tables"]), ["cameras", "objects", "poses"])
         self.assertEqual(ep["tables"]["poses"], {"frame": [0, 1], "object": [1, 1], "z": [0.5, None]})
         self.assertEqual(list(ep["previews"]), ["front"])
         self.assertEqual(ep["previews"]["front"], {

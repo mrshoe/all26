@@ -192,8 +192,13 @@ class Blender(Physics):
         obj.rotation_quaternion = tuple(quat_looking_at(light.position, target))
 
     def _mask_output(self) -> None:
-        """Write the object index pass to an EXR file next to each render."""
-        self.scene.view_layers[0].use_pass_object_index = True
+        """Write the object index and depth passes to EXR files next to each
+        render. Like the index pass, Cycles takes depth from each pixel's
+        first sample only, so it isn't blended at edges either: each pixel's
+        depth is the depth of the object its mask names."""
+        layer = self.scene.view_layers[0]
+        layer.use_pass_object_index = True
+        layer.use_pass_z = True
         self.scene.use_nodes = True
         tree = self.scene.node_tree
         layers = tree.nodes["Render Layers"]
@@ -201,7 +206,9 @@ class Blender(Physics):
         out.format.file_format = "OPEN_EXR"
         out.format.color_depth = "32"
         out.file_slots[0].path = "ids"
+        out.file_slots.new("depth")
         tree.links.new(layers.outputs["IndexOB"], out.inputs[0])
+        tree.links.new(layers.outputs["Depth"], out.inputs[1])
         self.mask_node = out
 
     # --- Each frame ------------------------------------------------------
@@ -226,19 +233,27 @@ class Blender(Physics):
 
         with Image.open(out / "rgb.png") as img:
             rgb = np.asarray(img.convert("RGB")).copy()
-        (exr,) = out.glob("ids*.exr")
-        image = bpy.data.images.load(str(exr))
-        try:
-            pixels = np.empty(len(image.pixels), dtype=np.float32)
-            image.pixels.foreach_get(pixels)
-        finally:
-            bpy.data.images.remove(image)
-        # Blender's rows start at the bottom.
-        ids = pixels.reshape(height, width, -1)[::-1, :, 0]
-        return Picture(rgb=rgb, ids=np.rint(ids).astype(np.uint16))
+        ids = read_exr(out, "ids", width, height)
+        depth = read_exr(out, "depth", width, height)
+        # Nothing there (the background): Cycles says 1e10 meters.
+        depth[ids < 0.5] = np.inf
+        return Picture(rgb=rgb, ids=np.rint(ids).astype(np.uint16), depth=depth)
 
     def close(self) -> None:
         shutil.rmtree(self.tmp, ignore_errors=True)
+
+
+def read_exr(folder: Path, name: str, width: int, height: int) -> np.ndarray:
+    """The first channel of the compositor's `name` EXR, top row first."""
+    (exr,) = folder.glob(f"{name}*.exr")
+    image = bpy.data.images.load(str(exr))
+    try:
+        pixels = np.empty(len(image.pixels), dtype=np.float32)
+        image.pixels.foreach_get(pixels)
+    finally:
+        bpy.data.images.remove(image)
+    # Blender's rows start at the bottom.
+    return pixels.reshape(height, width, -1)[::-1, :, 0].copy()
 
 
 def apply_scale() -> None:

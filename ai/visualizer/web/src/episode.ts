@@ -253,9 +253,9 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
     ? h("select", { onchange: (e: Event) => { prefs.camera = camera = (e.target as HTMLSelectElement).value; swap(); } },
         ...cameras.map((c) => h("option", { value: c, selected: c === camera }, c)))
     : h("span", { class: "muted" }, camera ? `Camera: ${camera}` : "No cameras");
-  const boxToggle = h("label", { class: "check" },
+  const boxToggle = h("label", { class: "check", title: "Boxes; thin full boxes around partly hidden objects; keypoints, filled if seen and hollow if hidden" },
     h("input", { type: "checkbox", checked: boxes, onchange: (e: Event) => { prefs.boxes = boxes = (e.target as HTMLInputElement).checked; swap(); } }),
-    " Boxes");
+    " Labels");
 
   const keys = (e: KeyboardEvent) => {
     if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "SELECT") return;

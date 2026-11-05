@@ -1,6 +1,6 @@
 """A whole episode: logs, previews and records. A stand-in renderer draws
-each labeled sphere as a disc, so these run without Blender; test_blender
-checks the real one."""
+each labeled sphere as a flat disc facing the camera, so these run without
+Blender; test_blender checks the real one."""
 
 import json
 import os
@@ -14,7 +14,7 @@ import numpy as np
 import pyarrow.parquet as pq
 
 from sim import Camera, Floor, Range, Scenario, Scene, Sphere
-from sim import backends, records, runner
+from sim import backends, labels, records, runner
 from sim.backends import Picture
 from sim.backends.physics import Physics
 from sim.geometry import intrinsics, project
@@ -33,6 +33,7 @@ class Discs(Physics):
         k = intrinsics(camera.resolution, camera.fov)
         w, h = camera.resolution
         ids = np.zeros((h, w), np.uint16)
+        depth = np.full((h, w), np.inf, np.float32)
         ys, xs = np.mgrid[0:h, 0:w]
         for item in self.world.solids:
             if isinstance(item, Sphere):
@@ -40,9 +41,12 @@ class Discs(Physics):
                 if center:
                     distance = np.linalg.norm(np.subtract(item.position, position))
                     r = k["fx"] * item.radius / distance
-                    ids[(xs - center[0]) ** 2 + (ys - center[1]) ** 2 <= r * r] = item.id
+                    disc = (xs - center[0]) ** 2 + (ys - center[1]) ** 2 <= r * r
+                    ids[disc] = item.id
+                    # The disc is at the sphere's center (along the camera's axis).
+                    depth[disc] = labels.View(position, quat, k).local([item.position])[0, 2] * -1
         rgb = np.where(ids[..., None] > 0, [250, 220, 10], [90, 70, 50]).astype(np.uint8)
-        return Picture(rgb=rgb, ids=ids)
+        return Picture(rgb=rgb, ids=ids, depth=depth)
 
 
 class Plain(Scene):
@@ -54,7 +58,10 @@ class Roll(Scenario[Plain]):
     duration, fps = 2.0, 10
 
     def setup(self, rng):
-        self.ball = self.add(Sphere(radius=0.1, label="ball", position=(0, 3, 0.5), velocity=(Range(-1, 1), 0, 0)))
+        # Its center, and points 2 cm in front of and behind it: the disc
+        # hides the one behind.
+        self.ball = self.add(Sphere(radius=0.1, label="ball", position=(0, 3, 0.5), velocity=(Range(-1, 1), 0, 0),
+                                    keypoints={"center": [(0, 0, 0)], "pin": [(0, -0.2, 0), (0, 0.2, 0)]}))
         self.front = self.add(Camera(position=(0, 0, 0.4), look_at=(0, 3, 0.1), resolution=(320, 240)))
 
 
@@ -88,7 +95,7 @@ class TestEpisode(unittest.TestCase):
         saved = json.loads((self.folder / "episode.json").read_text())
         self.assertEqual(saved["format"], 2)
         self.assertEqual(saved["seed"], 4)
-        self.assertEqual(saved["tables"], ["objects", "cameras", "poses", "images", "boxes", "sim"])
+        self.assertEqual(saved["tables"], ["objects", "cameras", "poses", "images", "boxes", "keypoints", "sim"])
         for table in saved["tables"]:
             self.assertTrue((self.folder / f"{table}.parquet").exists())
 
@@ -154,7 +161,7 @@ class TestEpisode(unittest.TestCase):
         self.addCleanup(shutil.rmtree, other)
         run_episode(self.folder)
         run_episode(other)
-        for table in ("objects", "cameras", "poses", "images", "boxes"):
+        for table in ("objects", "cameras", "poses", "images", "boxes", "keypoints"):
             self.assertEqual(pq.read_table(self.folder / f"{table}.parquet").to_pydict(),
                              pq.read_table(other / f"{table}.parquet").to_pydict(), table)
         # The sim table's timings differ, but not its times.
@@ -173,6 +180,39 @@ class TestEpisode(unittest.TestCase):
         self.assertLess(boxes[0].x0, boxes[0].x1)
         self.assertEqual(ep.objects["ball"]["settings"]["radius"], 0.1)
         self.assertEqual(ep.boxes("front", 0, source="some-model"), [])
+
+    def test_full_boxes(self):
+        run_episode(self.folder)
+        ep = episodes.Episode(self.folder)
+        # Near the middle of the picture, nothing hides the ball, so its full
+        # box is its box.
+        (box,) = ep.boxes("front", 0)
+        np.testing.assert_allclose(box.full, (box.x0, box.y0, box.x1, box.y1), atol=1)
+        self.assertAlmostEqual(box.share, 1, delta=0.05)
+        # Off to the side, a sphere's outline stretches, but the stand-in's
+        # discs don't (test_blender checks real outlines), so only: it holds
+        # the box seen.
+        (box,) = ep.boxes("front", 19)
+        x0, y0, x1, y1 = box.full
+        self.assertTrue(x0 <= box.x0 and y0 <= box.y0 and x1 >= box.x1 and y1 >= box.y1)
+
+    def test_keypoints(self):
+        run_episode(self.folder)
+        ep = episodes.Episode(self.folder)
+        points = ep.keypoints("front", 0)
+        self.assertEqual([(p.name, p.label, p.index) for p in points],
+                         [("ball", "center", 0), ("ball", "pin", 0), ("ball", "pin", 1)])
+        center, near, far = points
+        self.assertTrue(center.visible and center.in_frame)
+        self.assertEqual(center.occluded_by, None)
+        (box,) = ep.boxes("front", 0)
+        self.assertAlmostEqual(center.x, (box.x0 + box.x1) / 2, delta=1)
+        # 20 cm toward the camera: nothing in front of it.
+        self.assertEqual((near.visible, near.occluded_by), (True, None))
+        # 20 cm behind: the ball's own disc hides it.
+        self.assertEqual((far.visible, far.occluded_by), (False, "self"))
+        self.assertGreater(far.depth, center.depth)
+        self.assertEqual(ep.keypoints("front", 0, source="some-model"), [])
 
     def test_records(self):
         episode, previews = run_episode(self.folder)

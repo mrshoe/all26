@@ -263,8 +263,10 @@ def create_app(store: Store, verify=verify_firebase_token) -> FastAPI:
         info = json.loads(info)
         tables: dict[str, dict] = {}
         if info.get("format", 1) >= 2:
-            # Pictures' paths aren't needed: the browser plays the previews.
-            names = [t for t in info.get("tables", []) if t != "images"]
+            # Pictures' paths aren't needed: the browser plays the previews,
+            # which have the keypoints drawn in (the biggest table, and
+            # nothing in it to plot against time).
+            names = [t for t in info.get("tables", []) if t not in ("images", "keypoints")]
             found = pool.map(lambda t: store.read(f"{prefix}{t}.parquet"), names)
             tables = {t: read_table(data) for t, data in zip(names, found) if data is not None}
             cameras = camera_names(tables)

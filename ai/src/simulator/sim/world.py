@@ -395,6 +395,22 @@ def name_items(scene: Scene, scenario: Scenario, items: list[Item], groups: list
         object.__setattr__(item, "name", names[id(item)])
 
 
+def check_keypoints(item: Solid) -> None:
+    points = item.keypoints
+    if points is None:
+        return
+    example = 'keypoints={"corner": [(x, y, z), ...]}'
+    if not isinstance(points, dict):
+        raise ValueError(f"{item.name}: keypoints are named lists of points, like {example}")
+    for name, found in points.items():
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"{item.name}: name each class of keypoints, like {example}")
+        shape = np.shape(found)
+        if len(shape) != 2 or shape[1] != 3 or not shape[0]:
+            raise ValueError(f"{item.name}: keypoints {name!r} should be a list of (x, y, z) points, "
+                             f"like {example}")
+
+
 def check(world: World) -> None:
     """Catch mistakes before anything is simulated."""
     items = set(map(id, world.items))
@@ -418,6 +434,8 @@ def check(world: World) -> None:
             raise ValueError(f"{prop.name}: props are static. GamePiece is the kind that moves.")
         if not prop.scale > 0:
             raise ValueError(f"{prop.name}: scale must be above 0")
+    for solid in world.solids:
+        check_keypoints(solid)
     if len(world.of_type(Background)) > 1:
         raise ValueError("There can be only one Background")
     s = world.scenario

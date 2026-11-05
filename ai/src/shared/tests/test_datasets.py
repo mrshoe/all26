@@ -23,9 +23,11 @@ from shared.logger import Logger
 BUCKET = "test-project-wildhat"
 
 
-def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1, box=(1, 1, 5, 5)) -> None:
+def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1, box=(1, 1, 5, 5),
+                   full=None) -> None:
     """A small simulated episode: cameras, a labeled ball, a box in every
-    frame of every camera, and a preview video."""
+    frame of every camera, and a preview video. `full` is the full box
+    (x0, y0, x1, y1, pixels), for episodes simulated since there were any."""
     log = Logger(folder, {"scenario": "test"})
     ids = {}
     for i, cam in enumerate(cameras, start=1):
@@ -41,9 +43,12 @@ def episode_folder(folder: Path, frames=4, cameras=("front",), boxes_per_frame=1
         for cam, cid in ids.items():
             log.image(frame, cid, cam, frame * 0.1, image, mask)
             for _ in range(boxes_per_frame):
-                log.add("boxes", {"frame": frame, "camera": cid, "object": ball, "label": "ball",
-                                  "x0": box[0], "y0": box[1], "x1": box[2], "y1": box[3],
-                                  "pixels": (box[2] - box[0]) * (box[3] - box[1]), "source": "truth"})
+                row = {"frame": frame, "camera": cid, "object": ball, "label": "ball",
+                       "x0": box[0], "y0": box[1], "x1": box[2], "y1": box[3],
+                       "pixels": (box[2] - box[0]) * (box[3] - box[1]), "source": "truth"}
+                if full:
+                    row.update(zip(("full_x0", "full_y0", "full_x1", "full_y1", "full_pixels"), full))
+                log.add("boxes", row)
     log.finish()
     (folder / "preview").mkdir()
     (folder / "preview" / "front.mp4").write_bytes(b"video")
@@ -372,10 +377,10 @@ class TestOldFormat(DatasetTestCase):
 class TestYolo(DatasetTestCase):
     RUN, OTHER = "20261102-0019-w22f", "20261106-0900-p7tz"
 
-    def dataset(self, validation=0.5) -> Dataset:
+    def dataset(self, validation=0.5, full=None) -> Dataset:
         # Enough episodes that both train and validation get some.
-        self.cloud.add_run(self.RUN, ["succeeded"] * 6, frames=3)
-        self.cloud.add_run(self.OTHER, ["succeeded"], frames=3)
+        self.cloud.add_run(self.RUN, ["succeeded"] * 6, frames=3, full=full)
+        self.cloud.add_run(self.OTHER, ["succeeded"], frames=3, full=full)
         return Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = {validation}\n'
                                        f'[test]\nruns = ["{self.OTHER}"]\n')).fetch(self.cloud, self.say)
 
@@ -421,6 +426,29 @@ class TestYolo(DatasetTestCase):
             self.assertEqual(texts, {""})
         self.assertIn("  ! No training boxes labeled fuel. Is that the right label?", self.said)
 
+    def test_full_boxes(self):
+        # Seen: x 1-5, y 1-5 (16 pixels). Whole: x 1-9, y 1-5 (32 pixels), so half seen.
+        ds = self.dataset(full=(1, 1, 9, 5, 32))
+        stem = f"{self.OTHER}_0_front_000001"
+        visible = ds.yolo(["ball"], say=self.say).parent
+        full = ds.yolo(["ball"], boxes="full", say=self.say).parent
+        self.assertNotEqual(full, visible)
+        self.assertEqual((full / "labels" / "test" / f"{stem}.txt").read_text(),
+                         "0 0.156250 0.125000 0.250000 0.166667\n")
+        self.assertEqual((visible / "labels" / "test" / f"{stem}.txt").read_text(),
+                         "0 0.093750 0.125000 0.125000 0.166667\n")
+        # Half seen: kept at 0.5, left out above it.
+        for share, expected in [(0.5, "0 0.093750"), (0.6, "")]:
+            folder = ds.yolo(["ball"], min_share=share, say=self.say).parent
+            self.assertTrue((folder / "labels" / "test" / f"{stem}.txt").read_text().startswith(expected))
+
+    def test_full_boxes_need_new_episodes(self):
+        ds = self.dataset()
+        for options in [dict(boxes="full"), dict(min_share=0.5)]:
+            with self.subTest(**options), self.assertRaisesRegex(ValueError, "simulated before they were added"):
+                ds.yolo(["ball"], say=self.say, **options)
+        self.assertEqual(list((self.tmp / "cache" / "yolo").glob("*.building-*")), [])
+
     def test_two_classes(self):
         folder = self.dataset().yolo(["fuel", "ball"], say=self.say).parent
         self.assertIn('  0: "fuel"\n  1: "ball"\n', (folder / "data.yaml").read_text())
@@ -435,7 +463,9 @@ class TestYolo(DatasetTestCase):
         ds = self.dataset()
         for kwargs, message in [(dict(classes=[]), "classes must be"), (dict(classes="ball"), "classes must be"),
                                 (dict(classes=["ball", "ball"]), "in classes twice"),
-                                (dict(classes=["ball"], min_pixels=-1), "min_pixels")]:
+                                (dict(classes=["ball"], min_pixels=-1), "min_pixels"),
+                                (dict(classes=["ball"], boxes="whole"), "boxes must be"),
+                                (dict(classes=["ball"], min_share=2), "min_share")]:
             with self.subTest(**kwargs), self.assertRaisesRegex(ValueError, message):
                 ds.yolo(say=self.say, **kwargs)
         no_validation = Dataset.load(self.write(f'runs = ["{self.RUN}"]\nvalidation = 0\n'))

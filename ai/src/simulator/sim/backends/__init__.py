@@ -32,6 +32,10 @@ class Picture:
     rgb: np.ndarray  # height x width x 3, uint8
     # height x width, uint16: each pixel's object id (Item.id), 0 for none.
     ids: np.ndarray
+    # height x width, float32: how far in front of the camera each pixel's
+    # object is, in meters along the camera's axis (not along the ray), as
+    # geometry.project's depth. Infinite where there's nothing.
+    depth: Optional[np.ndarray] = None
 
 
 class Backend(Protocol):
