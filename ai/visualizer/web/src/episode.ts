@@ -306,8 +306,11 @@ export async function episodeView(runId: string, index: number, prefs: Prefs): P
       });
   const element = h("section", { class: "episode" },
     h("h1", null, `Episode ${index}`),
-    h("p", { class: "muted" }, `${info.scenario} in ${info.scene} · seed `, h("span", { class: "mono" }, String(info.seed)),
-      ` · ${info.frames} frames at ${fps} fps`),
+    info.photos_from !== undefined
+      ? h("p", { class: "muted" }, `${info.photos_from ?? "Photos"} · ${info.split ?? ""} · ${info.frames} photos, `
+          + `${fps === 1 ? "one a second" : `${fps} a second`}`)
+      : h("p", { class: "muted" }, `${info.scenario} in ${info.scene} · seed `, h("span", { class: "mono" }, String(info.seed)),
+          ` · ${info.frames} frames at ${fps} fps`),
     h("div", { class: "player" },
       h("div", { class: "viewer" },
         h("div", { class: "toolbar" }, cameraPicker, boxToggle),

@@ -87,7 +87,10 @@ class PhotosTest(unittest.TestCase):
                                    cloud=self.cloud, say=lambda *_: None)
         record = self.cloud.docs[f"runs/{run}"]
         self.assertEqual(record["photos"]["labels"], ["fuel"])
-        self.assertEqual(self.cloud.docs[f"runs/{run}/episodes/1"]["status"], "succeeded")
+        episode = self.cloud.docs[f"runs/{run}/episodes/1"]
+        self.assertEqual(episode["status"], "succeeded")
+        self.assertEqual(episode["photos"]["previews"], ["preview/photo.mp4"])
+        self.assertTrue((self.cloud.root / f"runs/kai-morales/{run}/episode-1/preview/photo.mp4").exists())
 
         model = self.tmp / "training" / "fuel_detector"
         model.mkdir(parents=True)

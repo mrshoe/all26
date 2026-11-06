@@ -9,6 +9,16 @@ export interface Me {
   handle: string;
 }
 
+/** Labeled photos imported as a run (ai/src/shared/photos.py), not simulated. */
+export interface PhotosInfo {
+  name: string;
+  url?: string;
+  license?: string;
+  credit?: string;
+  labels: string[];
+  splits: string[];
+}
+
 export interface SimInfo {
   scenario: string;
   scene: string;
@@ -19,12 +29,14 @@ export interface Run {
   id: string;
   launched_by: string;
   created_at: string;
-  command: string[];
-  cwd: string;
+  /** Not for imported photos, which ran nothing. */
+  command?: string[];
+  cwd?: string;
   episodes: number;
-  gpu: boolean;
+  gpu?: boolean;
   git?: { commit: string; branch: string; dirty: boolean };
   sim?: SimInfo;
+  photos?: PhotosInfo;
   /** Set when the job is a training run's (shared/training.py marks it). */
   training?: string;
   status_counts: Record<string, number>;
@@ -32,12 +44,13 @@ export interface Run {
 
 export interface EpisodeRecord {
   index: number;
-  seed: number;
+  seed?: number;
   status: string;
   exit_code?: number;
   started_at?: string;
   finished_at?: string;
   sim?: SimInfo & { frames: number; fps: number; cameras: string[]; labels: string[] };
+  photos?: { split: string; frames: number; fps: number; cameras: string[]; labels: string[] };
 }
 
 export interface RunDetail extends Run {
@@ -53,9 +66,13 @@ export interface EpisodeData {
   /** 1: from before the tables (only videos); 2: the tables below. */
   format: number;
   info: {
-    scenario: string;
-    scene: string;
-    seed: number;
+    // Simulations.
+    scenario?: string;
+    scene?: string;
+    seed?: number;
+    // Imported photos: where they're from, and which of its splits.
+    photos_from?: string;
+    split?: string;
     fps: number;
     frames: number;
     tables?: string[];
