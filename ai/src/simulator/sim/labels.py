@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
+from scipy.spatial import ConvexHull, QhullError
 from scipy.spatial.transform import Rotation
 
 from sim import assets
@@ -211,21 +212,14 @@ def fill(covered: np.ndarray, poly: np.ndarray) -> None:
 
 
 def hull(points: np.ndarray) -> np.ndarray:
-    """The convex hull of 2D points, in order (Andrew's monotone chain)."""
-    pts = np.unique(np.round(points, 6), axis=0)
+    """The convex hull of 2D points, counterclockwise (Qhull's, for 2D)."""
+    pts = np.asarray(points, float)
     if len(pts) < 3:
         return pts
-
-    def half(seq):
-        out = []
-        for p in seq:
-            while len(out) >= 2 and np.cross(out[-1] - out[-2], p - out[-2]) <= 0:
-                out.pop()
-            out.append(p)
-        return out
-
-    lower, upper = half(pts), half(pts[::-1])
-    return np.array(lower[:-1] + upper[:-1])
+    try:
+        return pts[ConvexHull(pts).vertices]
+    except QhullError:  # all on one line, or all one point: it has no inside
+        return pts[[pts[:, 0].argmin(), pts[:, 0].argmax()]]
 
 
 def keypoints(view: View, item: Item, defined: dict[str, np.ndarray], ids: np.ndarray,

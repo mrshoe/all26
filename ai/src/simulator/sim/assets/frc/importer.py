@@ -55,12 +55,17 @@ from sim.assets import FILES, FRC, default_cache, md5
 TRIANGLES = {"element": 100_000, "piece": 2_000}
 # Parts smaller than this across (m) are dropped: nuts, PEMs, tiny brackets.
 SMALLEST = 0.02
+# A game piece starting with its bottom higher than this (m) is held by what
+# it's on.
+HELD_ABOVE = 0.02
 # Parts thinner than this (m) have no collision: tape, vinyl, stickers.
 FLAT = 0.002
 HARDWARE = re.compile(
     r"\b(rivets?|pem|bolts?|nuts?|screws?|washers?|cable ties?|zip ties?|spacers?|standoffs?|bearings?"
     r"|shaft collars?|bushings?)\b", re.I)
-TAG_VINYL = re.compile(r"AprilTag Vinyl", re.I)
+# An AprilTag's vinyl, by name; a season's config can say otherwise
+# (2025's are "FE-00083-Vinyl_FE-00083-ID5-Vinyl").
+TAG_VINYL = r"AprilTag Vinyl"
 TAG_ID = re.compile(r"\bID\s*(\d+)")
 # The black square of an FRC tag (36h11 since 2024): 6.5 in.
 TAG_SIZE = 0.1651
@@ -79,8 +84,18 @@ def load_config(year: int) -> dict:
     config = tomllib.loads(path.read_text())
     config.setdefault("elements", {})
     config.setdefault("pieces", {})
+    config.setdefault("keypoints", {})
+    config["tag_vinyl"] = re.compile(config.get("tag_vinyl", TAG_VINYL), re.I)
+    for element, classes in config["keypoints"].items():
+        for name, rule in classes.items():
+            if "part" not in rule:
+                raise SystemExit(f"{path}: keypoints.{element}.{name} needs part = \"<the start of a CAD part's name>\"")
+            if rule.get("at", "center") not in KEYPOINT_AT:
+                raise SystemExit(f"{path}: keypoints.{element}.{name}: at must be one of {', '.join(KEYPOINT_AT)}")
     if config.get("red") not in ("-x", "+x"):
         raise SystemExit(f"{path}: red must be \"-x\" or \"+x\"")
+    if config.setdefault("up", "z") not in ("y", "z"):
+        raise SystemExit(f"{path}: up must be \"y\" or \"z\"")
     return config
 
 
@@ -96,10 +111,29 @@ def fetch(url: str, path: Path) -> Path:
     return path
 
 
-def step_to_glb(step: str, glb: str) -> None:
+def unzipped(path: Path) -> Path:
+    """The STEP itself: `path`, or the one STEP in it if it's a zip (2025's)."""
+    import zipfile
+
+    if path.suffix.lower() != ".zip":
+        return path
+    with zipfile.ZipFile(path) as z:
+        steps = [n for n in z.namelist() if n.lower().endswith((".step", ".stp"))]
+        if len(steps) != 1:
+            raise SystemExit(f"{path.name} should hold one STEP file, not {len(steps)}")
+        target = path.with_name(Path(steps[0]).name)
+        if not target.exists():
+            z.extract(steps[0], path.parent)
+            if (path.parent / steps[0]) != target:
+                (path.parent / steps[0]).replace(target)
+    return target
+
+
+def step_to_glb(step: str, glb: str, up: str = "z") -> None:
     """OpenCascade's STEP reader and glTF writer: the assembly tree, part
-    names and colors, in meters, z up. Run in a process of its own: it
-    needs a few GB for a full field."""
+    names and colors, in meters, z up. `up` is the CAD's up axis (2026's is
+    z, 2025's y). Run in a process of its own: it needs a few GB for a full
+    field."""
     from OCP.BRepMesh import BRepMesh_IncrementalMesh
     from OCP.Message import Message_ProgressRange
     from OCP.OCP.collections import IndexedDataMap_TCollection_AsciiString_TCollection_AsciiString as FileInfo
@@ -116,15 +150,68 @@ def step_to_glb(step: str, glb: str) -> None:
     if reader.ReadFile(step) != 1:
         raise RuntimeError(f"OpenCascade couldn't read {step}")
     reader.Transfer(doc)
+    name_placements(doc)
     # Meshing the whole shape meshes the document's parts too: they share faces.
     # 2 mm deviation (OpenCascade works in mm), 0.5 rad between facets.
     BRepMesh_IncrementalMesh(reader.ChangeReader().OneShape(), 2.0, False, 0.5, True)
     writer = RWGltf_CafWriter(TCollection_AsciiString(glb), True)
     converter = writer.ChangeCoordinateSystemConverter()
     converter.SetInputLengthUnit(0.001)
-    converter.SetInputCoordinateSystem(RWMesh_CoordinateSystem.RWMesh_CoordinateSystem_Zup)
+    converter.SetInputCoordinateSystem(RWMesh_CoordinateSystem.RWMesh_CoordinateSystem_Zup if up == "z"
+                                       else RWMesh_CoordinateSystem.RWMesh_CoordinateSystem_Yup)
     if not writer.Perform(doc, FileInfo(), Message_ProgressRange()):
         raise RuntimeError(f"OpenCascade couldn't write {glb}")
+
+
+# Where on each matching part a keypoint is: the middle of its bounding box,
+# the middle of its top or bottom, both ends along its longest axis (a pipe's
+# two ends), or both ends of its top or bottom edge (a trough's lip, the
+# edges of a slot between two panels).
+KEYPOINT_AT = ("center", "top", "bottom", "ends", "top_ends", "bottom_ends")
+# Vertices this close to a part's top or bottom are on that edge.
+EDGE = 0.003
+
+# STEP's own ids for a placement, when the CAD didn't name it (2025's).
+UNNAMED = re.compile(r"^NAUO\d+$")
+
+
+def name_placements(doc) -> None:
+    """Name each placement the CAD left unnamed ("NAUO36") after the part
+    or assembly it places ("GE-25300_Red"), which the config matches. 2026's
+    CAD names its placements ("GE-26300: Hub <1>"); 2025's names only its
+    parts."""
+    from OCP.TCollection import TCollection_ExtendedString
+    from OCP.TDataStd import TDataStd_Name
+    from OCP.OCP.collections import Sequence_TDF_Label as TDF_LabelSequence
+    from OCP.TDF import TDF_Label
+    from OCP.XCAFDoc import XCAFDoc_DocumentTool, XCAFDoc_ShapeTool
+
+    tool = XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())
+
+    def name(label) -> str:
+        attr = TDataStd_Name()
+        return attr.Get().ToExtString() if label.FindAttribute(TDataStd_Name.GetID_s(), attr) else ""
+
+    seen = set()
+
+    def visit(label) -> None:
+        children = TDF_LabelSequence()
+        XCAFDoc_ShapeTool.GetComponents_s(label, children, False)
+        for i in range(1, children.Length() + 1):
+            child = children.Value(i)
+            part = TDF_Label()
+            if not XCAFDoc_ShapeTool.GetReferredShape_s(child, part):
+                continue
+            if UNNAMED.match(name(child)) and name(part):
+                TDataStd_Name.Set_s(child, TCollection_ExtendedString(name(part)))
+            if part.Tag() not in seen:
+                seen.add(part.Tag())
+                visit(part)
+
+    roots = TDF_LabelSequence()
+    tool.GetFreeShapes(roots)
+    for i in range(1, roots.Length() + 1):
+        visit(roots.Value(i))
 
 
 # --- Naming (no Blender needed, so it's tested on its own) ------------------
@@ -191,6 +278,45 @@ def plan_assets(nodes: list[tuple[str, tuple[float, float]]], config: dict) -> t
             seen[(element, alliance)] += 1
         models[name] = {"nodes": by_name[group], **info[group]}
     return models, dict(pieces), warnings
+
+
+def assign_tags(found: list[tuple[str, int, tuple]], wpilib: dict[int, tuple]) -> tuple[dict, dict, list[str]]:
+    """Which AprilTag each of the CAD's tag vinyls is. `found` is each
+    vinyl's object name, the ID its name says, and its center; `wpilib` each
+    tag's (x, y) in WPILib's layout. The CAD can repeat a vinyl (2025's has
+    two of each, 1 cm apart) and mislabel one (2025's red PROCESSOR tag is
+    called 16; WPILib's 3 is there), so: fit the CAD to WPILib with the IDs
+    that appear in one place only, then give every vinyl the ID of the
+    WPILib tag where it is. Returns the fit, {object name: ID, or None for a
+    repeat to leave out}, and warnings."""
+    import numpy as np
+
+    ids: dict[str, int | None] = {}
+    places: list[tuple[str, int, np.ndarray]] = []  # one per distinct tag
+    for name, labeled, center in found:
+        center = np.asarray(center, float)
+        if any(i == labeled and np.linalg.norm(c - center) < 0.03 for _, i, c in places):
+            ids[name] = None
+            continue
+        places.append((name, labeled, center))
+    once = Counter(i for _, i, _ in places)
+    fit = fit_wpilib({i: tuple(c) for _, i, c in places if once[i] == 1}, wpilib)
+    turn = math.radians(fit["yaw"])
+    rot = np.array([[math.cos(turn), -math.sin(turn)], [math.sin(turn), math.cos(turn)]])
+    warnings, corrected = [], {}
+    for name, labeled, center in places:
+        at = rot @ center[:2] + fit["offset"]
+        nearest = min(wpilib, key=lambda i: np.linalg.norm(np.subtract(wpilib[i], at)))
+        if np.linalg.norm(np.subtract(wpilib[nearest], at)) > 0.15:
+            warnings.append(f"the CAD's tag {labeled} at {np.round(center[:2], 2).tolist()} isn't near any "
+                            "tag in WPILib's layout; keeping its ID")
+            nearest = labeled
+        elif nearest != labeled:
+            warnings.append(f"the CAD calls the tag at {np.round(center[:2], 2).tolist()} {labeled}, but WPILib's "
+                            f"{nearest} is there; using {nearest}")
+        ids[name] = nearest
+        corrected[nearest] = tuple(center)
+    return fit_wpilib(corrected, wpilib), ids, warnings
 
 
 def fit_wpilib(cad: dict[int, tuple], wpilib: dict[int, tuple]) -> dict:
@@ -441,7 +567,7 @@ def collision_parts(parts: list[dict], origin, pool) -> list:
     for part in parts:
         v = part["verts"] - origin
         extent = v.max(0) - v.min(0)
-        if extent.min() < FLAT:
+        if extent.min() < FLAT or part.get("seen_only"):
             continue
         try:
             hull = ConvexHull(v)
@@ -485,11 +611,80 @@ def export(obj, folder: Path, parts: list) -> None:
     np.savez_compressed(folder / "collision.npz", **{f"part{i}": p for i, p in enumerate(parts)})
 
 
-def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path, pool) -> dict:
+def find_keypoints(objects: list, rules: dict) -> tuple[dict, list[str]]:
+    """Each keypoint class's points in world coordinates, from the parts
+    its rule names (see KEYPOINT_AT), and warnings for rules that match
+    nothing. Points go around the element counterclockwise from +x, as seen
+    from above, then bottom to top, so index i is the same point in every
+    copy of an element."""
+    import numpy as np
+
+    found, warnings = {}, []
+    for label, rule in rules.items():
+        points = []
+        for obj in objects:
+            if obj.type != "MESH" or not base_name(obj.name).startswith(prefixes(rule["part"])):
+                continue
+            verts = world_mesh(obj)[0]
+            if not len(verts):
+                continue
+            lo, hi = verts.min(0), verts.max(0)
+            mid = (lo + hi) / 2
+            if "z" in rule and not rule["z"][0] <= mid[2] < rule["z"][1]:
+                continue
+            at = rule.get("at", "center")
+            if at == "ends":
+                points += pipe_ends(verts)
+            elif at == "top_ends":
+                points += pipe_ends(verts[verts[:, 2] >= hi[2] - EDGE])
+            elif at == "bottom_ends":
+                points += pipe_ends(verts[verts[:, 2] <= lo[2] + EDGE])
+            else:
+                points.append(np.array([mid[0], mid[1], {"center": mid[2], "top": hi[2], "bottom": lo[2]}[at]]))
+        if not points:
+            warnings.append(f"keypoints {label}: no part starting with {' or '.join(prefixes(rule['part']))}"
+                            + (f" between z {rule['z'][0]} and {rule['z'][1]}" if "z" in rule else ""))
+            continue
+        found[label] = points
+    if found:
+        middle = np.mean([p for ps in found.values() for p in ps], axis=0)
+        for label, points in found.items():
+            found[label] = sorted(points, key=lambda p: (round(math.atan2(p[1] - middle[1], p[0] - middle[0]) % (2 * math.pi), 3),
+                                                         p[2]))
+    return found, warnings
+
+
+def prefixes(part) -> tuple[str, ...]:
+    """A rule's `part`: one name's start, or a list of them (2025's red and
+    blue CAGEs are GE-25201 and its mirror, GE-25202)."""
+    return (part,) if isinstance(part, str) else tuple(part)
+
+
+def pipe_ends(verts) -> list:
+    """The middles of a pipe's two end faces: its vertices within 2 mm of
+    each end along its longest axis, averaged."""
+    import numpy as np
+
+    center = verts.mean(0)
+    axis = np.linalg.svd(verts - center, full_matrices=False)[2][0]
+    along = (verts - center) @ axis
+    return [verts[along <= along.min() + 0.002].mean(0), verts[along >= along.max() - 0.002].mean(0)]
+
+
+def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path, pool,
+               keypoints: dict | None = None, tag_ids: dict | None = None, seen_only: set | None = None) -> dict:
     """One model from these CAD mesh objects: drop, simplify, tag, center,
-    save. Returns its catalog entry (and "position": where it goes)."""
+    save. `keypoints` are its keypoints' rules (find_keypoints); `tag_ids`
+    says which objects are AprilTag vinyls, and which tag (assign_tags);
+    `seen_only` names objects that get no collision (pieces stored behind a
+    wall).
+    Returns its catalog entry (and "position": where it goes)."""
     import bpy
     import numpy as np
+
+    points, point_warnings = find_keypoints(objects, keypoints or {})
+    for w in point_warnings:
+        print(f"WARNING: {name}: {w}", flush=True)
 
     dropped = Counter()
     parts, tags = [], []
@@ -497,9 +692,13 @@ def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path,
         verts, tris, materials = world_mesh(obj)
         if not len(tris):
             continue
-        part = {"name": obj.name, "verts": verts, "tris": tris, "materials": materials}
-        if TAG_VINYL.search(obj.name) and tag_id(obj) is not None:
-            tags.append((part, tag_id(obj)))
+        part = {"name": obj.name, "verts": verts, "tris": tris, "materials": materials,
+                "seen_only": obj.name in (seen_only or ())}
+        if obj.name in (tag_ids or {}):
+            if tag_ids[obj.name] is None:
+                dropped["repeated tag"] += 1
+            else:
+                tags.append((part, tag_ids[obj.name]))
         elif HARDWARE.search(obj.name):
             dropped["hardware"] += 1
         elif kind == "element" and float((verts.max(0) - verts.min(0)).max()) < SMALLEST:
@@ -542,6 +741,8 @@ def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path,
         "parts": len(hulls),
         "dropped": dict(dropped),
         "tags": sorted(i for _, i in tags),
+        **({"keypoints": {label: [[round(float(v), 4) for v in p - origin] for p in ps]
+                          for label, ps in points.items()}} if points else {}),
         "files": {f: md5(folder / f) for f in FILES},
         "position": [round(float(x), 5) for x in origin],
     }
@@ -551,6 +752,15 @@ def _translation(offset):
     from mathutils import Matrix, Vector
 
     return Matrix.Translation(Vector(tuple(float(x) for x in offset)))
+
+
+def node_bounds(group: list):
+    """The lowest and highest corners of everything in these nodes."""
+    import numpy as np
+    from mathutils import Vector
+
+    corners = np.array([np.array(m.matrix_world @ Vector(c)) for n in group for m in descendants(n) for c in m.bound_box])
+    return corners.min(0), corners.max(0)
 
 
 def node_center(node) -> tuple[float, float]:
@@ -582,14 +792,16 @@ def import_field(glb: Path, config: dict, layout: dict, out: Path, only: set[str
     print(f"Loaded {len(nodes)} top-level nodes in {time.time() - started:.0f}s", flush=True)
 
     # AprilTags: where the CAD has them, matched to WPILib's layout.
-    cad_tags = defaultdict(list)
+    found = []
     for obj in bpy.context.scene.objects:
-        if obj.type == "MESH" and TAG_VINYL.search(obj.name) and tag_id(obj) is not None:
+        if obj.type == "MESH" and config["tag_vinyl"].search(obj.name) and tag_id(obj) is not None:
             v, _, _ = world_mesh(obj)
-            cad_tags[tag_id(obj)].append((v.min(0) + v.max(0)) / 2)
-    cad_centers = {i: tuple(np.mean(c, axis=0)) for i, c in cad_tags.items()}
+            found.append((obj.name, tag_id(obj), tuple((v.min(0) + v.max(0)) / 2)))
     wpilib = {t["ID"]: t["pose"] for t in layout["field-tags"]}
-    fit = fit_wpilib(cad_centers, {i: (p["translation"]["x"], p["translation"]["y"]) for i, p in wpilib.items()})
+    fit, tag_ids, tag_warnings = assign_tags(found, {i: (p["translation"]["x"], p["translation"]["y"])
+                                                     for i, p in wpilib.items()})
+    for w in tag_warnings:
+        print(f"WARNING: {w}", flush=True)
     print(f"CAD -> WPILib: turn {fit['yaw']} deg, offset {fit['offset']}, {fit['tags']} tags within "
           f"{fit['error'] * 100:.1f} cm", flush=True)
     if fit["error"] > 0.05:
@@ -604,6 +816,27 @@ def import_field(glb: Path, config: dict, layout: dict, out: Path, only: set[str
     models, pieces, warnings = plan_assets([(n.name, node_center(n)) for n in nodes], config)
     for w in warnings:
         print(f"WARNING: {w}", flush=True)
+    # Pieces stored in an element (2025's CORAL in their racks) are part of
+    # that element's model: seen, but not simulated.
+    for piece, spec in config["pieces"].items():
+        holder = spec.get("stored_in")
+        if not holder or piece not in pieces:
+            continue
+        boxes = {name: node_bounds([nodes[i] for i in m["nodes"]]) for name, m in models.items() if m["element"] == holder}
+        if not boxes:
+            raise SystemExit(f"pieces.{piece}.stored_in: there's no element called {holder!r}")
+        kept = []
+        for i in pieces[piece]:
+            lo, hi = node_bounds([nodes[i]])
+            middle = (lo + hi) / 2
+            inside = [name for name, (blo, bhi) in boxes.items() if np.all(middle >= blo) and np.all(middle <= bhi)]
+            if inside:
+                models[inside[0]]["nodes"].append(i)
+                models[inside[0]].setdefault("stored", []).append(i)
+            else:
+                kept.append(i)
+        print(f"{piece}: {len(pieces[piece]) - len(kept)} stored in {holder}, {len(kept)} on the field", flush=True)
+        pieces[piece] = kept
     year = config["year"]
     catalog = {"source": f"frc/{year}", "year": year, "game": config.get("game", ""),
                "step": {"url": config["field"]},
@@ -617,7 +850,9 @@ def import_field(glb: Path, config: dict, layout: dict, out: Path, only: set[str
             continue
         started = time.time()
         objects = [m for i in model["nodes"] for m in descendants(nodes[i])]
-        entry = make_model(name, "element", objects, tag_facing, out, pool)
+        stored = {m.name for i in model.get("stored", []) for m in descendants(nodes[i])}
+        entry = make_model(name, "element", objects, tag_facing, out, pool,
+                           config["keypoints"].get(model["element"]), tag_ids, stored)
         position = entry.pop("position")
         catalog["assets"][name] = {"label": model["label"], "category": f"frc/{year}/element",
                                    "element": model["element"], "alliance": model["alliance"], **entry}
@@ -634,12 +869,16 @@ def import_field(glb: Path, config: dict, layout: dict, out: Path, only: set[str
             starts.append([round(float(x), 5) for x in ((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, lo[2])])
         if only and name not in only:
             continue
-        entry = make_model(name, "piece", descendants(nodes[indexes[0]]), tag_facing, out, pool)
+        entry = make_model(name, "piece", descendants(nodes[indexes[0]]), tag_facing, out, pool,
+                           config["keypoints"].get(name), tag_ids)
         entry.pop("position")
         catalog["assets"][name] = {"label": spec.get("label", name), "category": f"frc/{year}/piece",
                                    "element": name, "alliance": None, **entry,
                                    "physics": {k: spec[k] for k in ("mass", "bounciness", "friction")}}
-        catalog["pieces"][name] = {"asset": name, "start": starts}
+        # Pieces that start on something rather than on the carpet (2025's
+        # ALGAE on the REEF and on CORAL) are held there: a real one is soft
+        # and squeezed in place, a rigid one would roll off.
+        catalog["pieces"][name] = {"asset": name, "start": starts, "held": [s[2] > HELD_ABOVE for s in starts]}
         print(f"{name}: a game piece, {entry['triangles']} triangles, {len(starts)} starting positions", flush=True)
     return catalog
 
@@ -712,7 +951,7 @@ def main(argv=None) -> int:
 
     config = load_config(args.year)
     work = Path(args.work) / str(args.year)
-    step = fetch(config["field"], work / Path(config["field"]).name)
+    step = unzipped(fetch(config["field"], work / Path(config["field"]).name))
     layout = json.loads(fetch(config["layout"], work / Path(config["layout"]).name).read_text())
     step_md5 = md5(step)
     glb = work / "field.glb"
@@ -720,7 +959,7 @@ def main(argv=None) -> int:
     if not glb.exists() or not stamp.exists() or stamp.read_text() != step_md5:
         started = time.time()
         with ProcessPoolExecutor(1) as pool:
-            pool.submit(step_to_glb, str(step), str(glb)).result()
+            pool.submit(step_to_glb, str(step), str(glb), config["up"]).result()
         stamp.write_text(step_md5)
         print(f"Converted {step.name} to glTF in {time.time() - started:.0f}s", flush=True)
 

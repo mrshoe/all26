@@ -1,0 +1,1680 @@
+{
+ "assets": {
+  "algae": {
+   "alliance": null,
+   "category": "frc/2025/piece",
+   "dropped": {},
+   "element": "algae",
+   "files": {
+    "collision.npz": "78f1c4efccb471f1a7b0eefff8346498",
+    "model.glb": "21f97bb59320348039d64232484165ae"
+   },
+   "kind": "piece",
+   "label": "algae",
+   "parts": 1,
+   "physics": {
+    "bounciness": 0.6,
+    "friction": 0.8,
+    "mass": 0.6
+   },
+   "size": [
+    0.4128,
+    0.4128,
+    0.4128
+   ],
+   "source_triangles": 1134,
+   "tags": [],
+   "triangles": 1134
+  },
+  "alliance_wall_blue": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 12
+   },
+   "element": "alliance_wall",
+   "files": {
+    "collision.npz": "78256d302abd6fffc395c07dd431b35e",
+    "model.glb": "23f1859f47f8bc60cf9741c3e6d05e1f"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 182,
+   "size": [
+    0.6049,
+    5.5961,
+    1.9844
+   ],
+   "source_triangles": 114224,
+   "tags": [],
+   "triangles": 100000
+  },
+  "alliance_wall_feet_blue": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "alliance_wall_feet",
+   "files": {
+    "collision.npz": "839d09585a66bc357fabf0050c913163",
+    "model.glb": "e84dff76ac9a67184b5cc5d2a219e45b"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 9,
+   "size": [
+    0.1365,
+    4.2418,
+    0.0508
+   ],
+   "source_triangles": 756,
+   "tags": [],
+   "triangles": 756
+  },
+  "alliance_wall_feet_red": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "alliance_wall_feet",
+   "files": {
+    "collision.npz": "f99378837e542cf751fe6ceb9293392c",
+    "model.glb": "4171e42013230ccc4968f08df9655ab5"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 9,
+   "size": [
+    0.1365,
+    4.2418,
+    0.0508
+   ],
+   "source_triangles": 756,
+   "tags": [],
+   "triangles": 756
+  },
+  "alliance_wall_red": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 12
+   },
+   "element": "alliance_wall",
+   "files": {
+    "collision.npz": "bb1c4dce5ce090a617f097bb3a5ab54d",
+    "model.glb": "25cd99a4b447c827903282992086ecc3"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 182,
+   "size": [
+    0.6049,
+    5.5961,
+    1.9844
+   ],
+   "source_triangles": 114224,
+   "tags": [],
+   "triangles": 100000
+  },
+  "barge": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hardware": 10,
+    "hidden": 102,
+    "repeated tag": 4,
+    "small": 116
+   },
+   "element": "barge",
+   "files": {
+    "collision.npz": "f5f55b02cfe03bedf3c246e178f29573",
+    "model.glb": "4817c22aa7f170a310570de15333cf9a"
+   },
+   "keypoints": {
+    "cage_bottom": [
+     [
+      0.0,
+      3.2337,
+      0.0921
+     ],
+     [
+      0.0,
+      1.0525,
+      0.0921
+     ],
+     [
+      0.0,
+      2.1431,
+      0.7779
+     ],
+     [
+      -0.0,
+      -1.0525,
+      0.0921
+     ],
+     [
+      -0.0,
+      -3.2337,
+      0.0921
+     ],
+     [
+      -0.0,
+      -2.1431,
+      0.7779
+     ]
+    ],
+    "cage_top": [
+     [
+      0.0,
+      1.0525,
+      0.6763
+     ],
+     [
+      0.0,
+      3.2337,
+      0.6763
+     ],
+     [
+      0.0,
+      2.1431,
+      1.3621
+     ],
+     [
+      -0.0,
+      -1.0525,
+      0.6763
+     ],
+     [
+      -0.0,
+      -3.2337,
+      0.6763
+     ],
+     [
+      -0.0,
+      -2.1431,
+      1.3621
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "barge",
+   "parts": 571,
+   "size": [
+    1.8293,
+    8.8964,
+    2.5653
+   ],
+   "source_triangles": 504270,
+   "tags": [
+    4,
+    5,
+    14,
+    15
+   ],
+   "triangles": 100000
+  },
+  "carpet": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "carpet",
+   "files": {
+    "collision.npz": "8dcf3e1f057394ca73460945cce3c623",
+    "model.glb": "68923e5a4b07d1fcd59f7bbf5cffe5b3"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 30,
+   "size": [
+    22.5552,
+    10.3736,
+    0.2948
+   ],
+   "source_triangles": 704,
+   "tags": [],
+   "triangles": 704
+  },
+  "coral": {
+   "alliance": null,
+   "category": "frc/2025/piece",
+   "dropped": {},
+   "element": "coral",
+   "files": {
+    "collision.npz": "c6f30c4209f31d5feb8f345777a68d22",
+    "model.glb": "c6c87871eb69d580667eebf52c723917"
+   },
+   "keypoints": {
+    "end": [
+     [
+      0.0,
+      0.0,
+      0.3016
+     ],
+     [
+      -0.0,
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   "kind": "piece",
+   "label": "coral",
+   "parts": 8,
+   "physics": {
+    "bounciness": 0.2,
+    "friction": 0.5,
+    "mass": 0.65
+   },
+   "size": [
+    0.1135,
+    0.1143,
+    0.3016
+   ],
+   "source_triangles": 208,
+   "tags": [],
+   "triangles": 208
+  },
+  "coral_rack_blue_0": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "coral_rack",
+   "files": {
+    "collision.npz": "76bc10fc2dee19579d32542275efe1ef",
+    "model.glb": "47c9ef1328d2df47f478d3fc7f32ca98"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 5,
+   "size": [
+    1.0241,
+    0.9173,
+    0.9268
+   ],
+   "source_triangles": 14244,
+   "tags": [],
+   "triangles": 14244
+  },
+  "coral_rack_blue_1": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "coral_rack",
+   "files": {
+    "collision.npz": "95df5cf2df00ed44c783c18329ed7b36",
+    "model.glb": "a34b03d7500b5253831dc341a5d76e45"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 5,
+   "size": [
+    1.0241,
+    0.9173,
+    0.9268
+   ],
+   "source_triangles": 14244,
+   "tags": [],
+   "triangles": 14244
+  },
+  "coral_rack_red_0": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "coral_rack",
+   "files": {
+    "collision.npz": "8992f6aa8d3a58e0a89bbde0c3ed5e0a",
+    "model.glb": "b4795d357b8df1191a93107e632a7b2a"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 5,
+   "size": [
+    1.0241,
+    0.9173,
+    0.9268
+   ],
+   "source_triangles": 14244,
+   "tags": [],
+   "triangles": 14244
+  },
+  "coral_rack_red_1": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "coral_rack",
+   "files": {
+    "collision.npz": "836dd2dbaa59f06db6e7ad3ac7230fb8",
+    "model.glb": "d0919fc013eae637760e335da1c9fed9"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 5,
+   "size": [
+    1.0241,
+    0.9173,
+    0.9268
+   ],
+   "source_triangles": 14244,
+   "tags": [],
+   "triangles": 14244
+  },
+  "coral_station_blue_0": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 2,
+    "repeated tag": 1,
+    "small": 66
+   },
+   "element": "coral_station",
+   "files": {
+    "collision.npz": "ed4db08accfdb0a9faee7d6ef7366c88",
+    "model.glb": "1402e537a2c400d121d2c46f54b9f6bf"
+   },
+   "keypoints": {
+    "chute_bottom": [
+     [
+      -0.7111,
+      0.7575,
+      0.9321
+     ],
+     [
+      0.9249,
+      -0.4306,
+      0.9321
+     ]
+    ],
+    "chute_top": [
+     [
+      -0.7111,
+      0.7575,
+      1.1322
+     ],
+     [
+      0.9249,
+      -0.4306,
+      1.1322
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "coral_station",
+   "parts": 159,
+   "size": [
+    1.9404,
+    1.5725,
+    1.6993
+   ],
+   "source_triangles": 94674,
+   "tags": [
+    12
+   ],
+   "triangles": 94674
+  },
+  "coral_station_blue_1": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 2,
+    "repeated tag": 1,
+    "small": 66
+   },
+   "element": "coral_station",
+   "files": {
+    "collision.npz": "cb67c8829f96023ac8a57e381c3af8cd",
+    "model.glb": "271aadfdd8b421d50a5e21d4cc2fd2b6"
+   },
+   "keypoints": {
+    "chute_bottom": [
+     [
+      0.9253,
+      0.4307,
+      0.9321
+     ],
+     [
+      -0.7107,
+      -0.7574,
+      0.9321
+     ]
+    ],
+    "chute_top": [
+     [
+      0.9253,
+      0.4307,
+      1.1322
+     ],
+     [
+      -0.7107,
+      -0.7574,
+      1.1322
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "coral_station",
+   "parts": 165,
+   "size": [
+    1.9412,
+    1.5726,
+    1.6993
+   ],
+   "source_triangles": 94674,
+   "tags": [
+    13
+   ],
+   "triangles": 94674
+  },
+  "coral_station_red_0": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 2,
+    "repeated tag": 1,
+    "small": 66
+   },
+   "element": "coral_station",
+   "files": {
+    "collision.npz": "ed40128ebdf408e7643f837fc8a1c957",
+    "model.glb": "9834ee53a3c62e12a486509177cbf8d6"
+   },
+   "keypoints": {
+    "chute_bottom": [
+     [
+      0.7107,
+      0.7574,
+      0.9321
+     ],
+     [
+      -0.9253,
+      -0.4307,
+      0.9321
+     ]
+    ],
+    "chute_top": [
+     [
+      0.7107,
+      0.7574,
+      1.1322
+     ],
+     [
+      -0.9253,
+      -0.4307,
+      1.1322
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "coral_station",
+   "parts": 161,
+   "size": [
+    1.9412,
+    1.5726,
+    1.7055
+   ],
+   "source_triangles": 94674,
+   "tags": [
+    1
+   ],
+   "triangles": 94674
+  },
+  "coral_station_red_1": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 2,
+    "repeated tag": 1,
+    "small": 66
+   },
+   "element": "coral_station",
+   "files": {
+    "collision.npz": "714d76a22f64b4675d3c49042bb8efc5",
+    "model.glb": "3a4787500151c408cbf1e48a98202809"
+   },
+   "keypoints": {
+    "chute_bottom": [
+     [
+      -0.9249,
+      0.4306,
+      0.9321
+     ],
+     [
+      0.7111,
+      -0.7575,
+      0.9321
+     ]
+    ],
+    "chute_top": [
+     [
+      -0.9249,
+      0.4306,
+      1.1322
+     ],
+     [
+      0.7111,
+      -0.7575,
+      1.1322
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "coral_station",
+   "parts": 164,
+   "size": [
+    1.9404,
+    1.5725,
+    1.6993
+   ],
+   "source_triangles": 94674,
+   "tags": [
+    2
+   ],
+   "triangles": 94674
+  },
+  "fence_0": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {},
+   "element": "fence",
+   "files": {
+    "collision.npz": "e7a6063a068e3a85cfecd3d88bea6b57",
+    "model.glb": "0d5a4eba4f600cae900fab1045041f67"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 2,
+   "size": [
+    1.835,
+    0.0421,
+    0.616
+   ],
+   "source_triangles": 3600,
+   "tags": [],
+   "triangles": 3600
+  },
+  "fence_1": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {},
+   "element": "fence",
+   "files": {
+    "collision.npz": "10572650395353a210f802ed5ea31d3e",
+    "model.glb": "82fcbc001629c233e4288e8fd2e66dde"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 2,
+   "size": [
+    1.835,
+    0.0421,
+    0.616
+   ],
+   "source_triangles": 3600,
+   "tags": [],
+   "triangles": 3600
+  },
+  "processor_signs": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "processor_signs",
+   "files": {
+    "collision.npz": "ada5dd633eb79bc737e39b00fb0ca336",
+    "model.glb": "a24d85c7c24f3948d2fb00caeb89fe89"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 4,
+   "size": [
+    3.9357,
+    9.1544,
+    0.2918
+   ],
+   "source_triangles": 3752,
+   "tags": [],
+   "triangles": 3752
+  },
+  "reef_blue": {
+   "alliance": "blue",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 106,
+    "repeated tag": 6,
+    "small": 744
+   },
+   "element": "reef",
+   "files": {
+    "collision.npz": "96fd925822b04482e4ecf9c2c5abe590",
+    "model.glb": "3f135159ca196b5dedc1b6413235344b"
+   },
+   "keypoints": {
+    "branch_l2": [
+     [
+      0.778,
+      0.1643,
+      0.7921
+     ],
+     [
+      0.5307,
+      0.5906,
+      0.7921
+     ],
+     [
+      0.2467,
+      0.7559,
+      0.7921
+     ],
+     [
+      -0.2461,
+      0.7549,
+      0.7921
+     ],
+     [
+      -0.5313,
+      0.5916,
+      0.7921
+     ],
+     [
+      -0.7769,
+      0.1643,
+      0.7921
+     ],
+     [
+      -0.778,
+      -0.1643,
+      0.7921
+     ],
+     [
+      -0.5307,
+      -0.5906,
+      0.7921
+     ],
+     [
+      -0.2467,
+      -0.7559,
+      0.7921
+     ],
+     [
+      0.2461,
+      -0.7549,
+      0.7921
+     ],
+     [
+      0.5313,
+      -0.5916,
+      0.7921
+     ],
+     [
+      0.7769,
+      -0.1643,
+      0.7921
+     ]
+    ],
+    "branch_l3": [
+     [
+      0.778,
+      0.1643,
+      1.1952
+     ],
+     [
+      0.5307,
+      0.5906,
+      1.1952
+     ],
+     [
+      0.2467,
+      0.7559,
+      1.1952
+     ],
+     [
+      -0.2461,
+      0.7549,
+      1.1952
+     ],
+     [
+      -0.5313,
+      0.5916,
+      1.1952
+     ],
+     [
+      -0.7769,
+      0.1643,
+      1.1952
+     ],
+     [
+      -0.778,
+      -0.1643,
+      1.1952
+     ],
+     [
+      -0.5307,
+      -0.5906,
+      1.1952
+     ],
+     [
+      -0.2467,
+      -0.7559,
+      1.1952
+     ],
+     [
+      0.2461,
+      -0.7549,
+      1.1952
+     ],
+     [
+      0.5313,
+      -0.5916,
+      1.1952
+     ],
+     [
+      0.7769,
+      -0.1643,
+      1.1952
+     ]
+    ],
+    "branch_l4": [
+     [
+      0.7808,
+      0.1643,
+      1.8271
+     ],
+     [
+      0.5321,
+      0.593,
+      1.8271
+     ],
+     [
+      0.2481,
+      0.7583,
+      1.8271
+     ],
+     [
+      -0.2475,
+      0.7573,
+      1.8271
+     ],
+     [
+      -0.5327,
+      0.594,
+      1.8271
+     ],
+     [
+      -0.7796,
+      0.1643,
+      1.8271
+     ],
+     [
+      -0.7808,
+      -0.1643,
+      1.8271
+     ],
+     [
+      -0.5321,
+      -0.593,
+      1.8271
+     ],
+     [
+      -0.2481,
+      -0.7583,
+      1.8271
+     ],
+     [
+      0.2475,
+      -0.7573,
+      1.8271
+     ],
+     [
+      0.5327,
+      -0.594,
+      1.8271
+     ],
+     [
+      0.7796,
+      -0.1643,
+      1.8271
+     ]
+    ],
+    "trough": [
+     [
+      0.8254,
+      0.4696,
+      0.4559
+     ],
+     [
+      0.8194,
+      0.48,
+      0.4559
+     ],
+     [
+      0.006,
+      0.9496,
+      0.4559
+     ],
+     [
+      -0.006,
+      0.9496,
+      0.4559
+     ],
+     [
+      -0.8194,
+      0.48,
+      0.4559
+     ],
+     [
+      -0.8254,
+      0.4696,
+      0.4559
+     ],
+     [
+      -0.8254,
+      -0.4696,
+      0.4559
+     ],
+     [
+      -0.8194,
+      -0.48,
+      0.4559
+     ],
+     [
+      -0.006,
+      -0.9496,
+      0.4559
+     ],
+     [
+      0.006,
+      -0.9496,
+      0.4559
+     ],
+     [
+      0.8194,
+      -0.48,
+      0.4559
+     ],
+     [
+      0.8254,
+      -0.4696,
+      0.4559
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "reef",
+   "parts": 684,
+   "size": [
+    1.6697,
+    1.9111,
+    1.8278
+   ],
+   "source_triangles": 250722,
+   "tags": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+   ],
+   "triangles": 100000
+  },
+  "reef_red": {
+   "alliance": "red",
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 102,
+    "repeated tag": 6,
+    "small": 744
+   },
+   "element": "reef",
+   "files": {
+    "collision.npz": "067070d4bb9d050af3791354fd38d364",
+    "model.glb": "82f7e50594ecd74d7f18fd85b87c965c"
+   },
+   "keypoints": {
+    "branch_l2": [
+     [
+      0.778,
+      0.1643,
+      0.7921
+     ],
+     [
+      0.5307,
+      0.5906,
+      0.7921
+     ],
+     [
+      0.2467,
+      0.7559,
+      0.7921
+     ],
+     [
+      -0.2461,
+      0.7549,
+      0.7921
+     ],
+     [
+      -0.5313,
+      0.5916,
+      0.7921
+     ],
+     [
+      -0.7769,
+      0.1643,
+      0.7921
+     ],
+     [
+      -0.778,
+      -0.1643,
+      0.7921
+     ],
+     [
+      -0.5307,
+      -0.5906,
+      0.7921
+     ],
+     [
+      -0.2467,
+      -0.7559,
+      0.7921
+     ],
+     [
+      0.2461,
+      -0.7549,
+      0.7921
+     ],
+     [
+      0.5313,
+      -0.5916,
+      0.7921
+     ],
+     [
+      0.7769,
+      -0.1643,
+      0.7921
+     ]
+    ],
+    "branch_l3": [
+     [
+      0.778,
+      0.1643,
+      1.1952
+     ],
+     [
+      0.5307,
+      0.5906,
+      1.1952
+     ],
+     [
+      0.2467,
+      0.7559,
+      1.1952
+     ],
+     [
+      -0.2461,
+      0.7549,
+      1.1952
+     ],
+     [
+      -0.5313,
+      0.5916,
+      1.1952
+     ],
+     [
+      -0.7769,
+      0.1643,
+      1.1952
+     ],
+     [
+      -0.778,
+      -0.1643,
+      1.1952
+     ],
+     [
+      -0.5307,
+      -0.5906,
+      1.1952
+     ],
+     [
+      -0.2467,
+      -0.7559,
+      1.1952
+     ],
+     [
+      0.2461,
+      -0.7549,
+      1.1952
+     ],
+     [
+      0.5313,
+      -0.5916,
+      1.1952
+     ],
+     [
+      0.7769,
+      -0.1643,
+      1.1952
+     ]
+    ],
+    "branch_l4": [
+     [
+      0.7808,
+      0.1643,
+      1.8271
+     ],
+     [
+      0.5321,
+      0.593,
+      1.8271
+     ],
+     [
+      0.2481,
+      0.7583,
+      1.8271
+     ],
+     [
+      -0.2475,
+      0.7573,
+      1.8271
+     ],
+     [
+      -0.5327,
+      0.594,
+      1.8271
+     ],
+     [
+      -0.7796,
+      0.1643,
+      1.8271
+     ],
+     [
+      -0.7808,
+      -0.1643,
+      1.8271
+     ],
+     [
+      -0.5321,
+      -0.593,
+      1.8271
+     ],
+     [
+      -0.2481,
+      -0.7583,
+      1.8271
+     ],
+     [
+      0.2475,
+      -0.7573,
+      1.8271
+     ],
+     [
+      0.5327,
+      -0.594,
+      1.8271
+     ],
+     [
+      0.7796,
+      -0.1643,
+      1.8271
+     ]
+    ],
+    "trough": [
+     [
+      0.8254,
+      0.4696,
+      0.4559
+     ],
+     [
+      0.8194,
+      0.48,
+      0.4559
+     ],
+     [
+      0.006,
+      0.9496,
+      0.4559
+     ],
+     [
+      -0.006,
+      0.9496,
+      0.4559
+     ],
+     [
+      -0.8194,
+      0.48,
+      0.4559
+     ],
+     [
+      -0.8254,
+      0.4696,
+      0.4559
+     ],
+     [
+      -0.8254,
+      -0.4696,
+      0.4559
+     ],
+     [
+      -0.8194,
+      -0.48,
+      0.4559
+     ],
+     [
+      -0.006,
+      -0.9496,
+      0.4559
+     ],
+     [
+      0.006,
+      -0.9496,
+      0.4559
+     ],
+     [
+      0.8194,
+      -0.48,
+      0.4559
+     ],
+     [
+      0.8254,
+      -0.4696,
+      0.4559
+     ]
+    ]
+   },
+   "kind": "element",
+   "label": "reef",
+   "parts": 698,
+   "size": [
+    1.6697,
+    1.9111,
+    1.8278
+   ],
+   "source_triangles": 263225,
+   "tags": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "triangles": 100000
+  },
+  "scoring_table": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {},
+   "element": "scoring_table",
+   "files": {
+    "collision.npz": "165fb852f90a784bbcf9a5c1d38fadea",
+    "model.glb": "87ef33ef5c3c456f7186b649955516c5"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 1,
+   "size": [
+    6.096,
+    0.762,
+    0.9208
+   ],
+   "source_triangles": 3568,
+   "tags": [],
+   "triangles": 3568
+  },
+  "side_wall_0": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 1,
+    "repeated tag": 1,
+    "small": 120
+   },
+   "element": "side_wall",
+   "files": {
+    "collision.npz": "f957fa37e0f6f635782780843363e1bb",
+    "model.glb": "b3a50f1ef6bc75083f352f0984edcd34"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 374,
+   "size": [
+    14.2156,
+    0.5826,
+    1.443
+   ],
+   "source_triangles": 158354,
+   "tags": [
+    16
+   ],
+   "triangles": 100000
+  },
+  "side_wall_1": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 3,
+    "repeated tag": 1,
+    "small": 120
+   },
+   "element": "side_wall",
+   "files": {
+    "collision.npz": "51c8b2fb6093dfe6de6042e67369085c",
+    "model.glb": "c953059863c65544c90e32f76d6b560f"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 363,
+   "size": [
+    14.2156,
+    0.5826,
+    1.443
+   ],
+   "source_triangles": 153570,
+   "tags": [
+    3
+   ],
+   "triangles": 100000
+  },
+  "wall_brackets": {
+   "alliance": null,
+   "category": "frc/2025/element",
+   "dropped": {
+    "hidden": 0
+   },
+   "element": "wall_brackets",
+   "files": {
+    "collision.npz": "6a1452f791e59ed23e3f38ff77c91958",
+    "model.glb": "d4d2d9f5898554309c8ec24ca936b914"
+   },
+   "kind": "element",
+   "label": null,
+   "parts": 16,
+   "size": [
+    17.705,
+    8.1564,
+    0.5239
+   ],
+   "source_triangles": 4512,
+   "tags": [],
+   "triangles": 4512
+  }
+ },
+ "field": {
+  "layout": "https://raw.githubusercontent.com/wpilibsuite/allwpilib/main/fields/src/main/native/resources/org/wpilib/fields/frc/2025-reefscape-welded.json",
+  "length": 17.548,
+  "width": 8.052,
+  "wpilib": {
+   "error": 0.0036,
+   "offset": [
+    8.77414,
+    4.02598
+   ],
+   "tags": 22,
+   "yaw": -0.0039
+  }
+ },
+ "game": "REEFSCAPE",
+ "layout": [
+  {
+   "asset": "alliance_wall_blue",
+   "position": [
+    -9.06229,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "alliance_wall_red",
+   "position": [
+    9.06229,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "alliance_wall_feet_blue",
+   "position": [
+    -8.8626,
+    -0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "alliance_wall_feet_red",
+   "position": [
+    8.8626,
+    -0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_station_blue_0",
+   "position": [
+    -8.03598,
+    -3.54232,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_station_blue_1",
+   "position": [
+    -8.0364,
+    3.54227,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_station_red_0",
+   "position": [
+    8.0364,
+    -3.54227,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_station_red_1",
+   "position": [
+    8.03598,
+    3.54232,
+    0.0
+   ]
+  },
+  {
+   "asset": "fence_0",
+   "position": [
+    -1.0567,
+    -4.1126,
+    0.0
+   ]
+  },
+  {
+   "asset": "fence_1",
+   "position": [
+    1.0567,
+    4.1126,
+    0.0
+   ]
+  },
+  {
+   "asset": "processor_signs",
+   "position": [
+    0.0,
+    -0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "reef_blue",
+   "position": [
+    -4.28479,
+    -2e-05,
+    0.0
+   ]
+  },
+  {
+   "asset": "reef_red",
+   "position": [
+    4.28479,
+    -2e-05,
+    0.0
+   ]
+  },
+  {
+   "asset": "scoring_table",
+   "position": [
+    0.0,
+    -5.8674,
+    0.0
+   ]
+  },
+  {
+   "asset": "side_wall_0",
+   "position": [
+    0.0,
+    -4.28987,
+    0.0
+   ]
+  },
+  {
+   "asset": "side_wall_1",
+   "position": [
+    0.0,
+    4.28987,
+    0.0
+   ]
+  },
+  {
+   "asset": "wall_brackets",
+   "position": [
+    -0.00708,
+    0.00244,
+    0.0
+   ]
+  },
+  {
+   "asset": "barge",
+   "position": [
+    0.0,
+    -0.0,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_rack_red_0",
+   "position": [
+    8.08631,
+    -3.59808,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_rack_blue_0",
+   "position": [
+    -8.08631,
+    -3.59808,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_rack_blue_1",
+   "position": [
+    -8.08631,
+    3.59808,
+    0.0
+   ]
+  },
+  {
+   "asset": "coral_rack_red_1",
+   "position": [
+    8.08631,
+    3.59808,
+    0.0
+   ]
+  },
+  {
+   "asset": "carpet",
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "pieces": {
+  "algae": {
+   "asset": "algae",
+   "held": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "start": [
+    [
+     -7.55492,
+     0.0,
+     0.29083
+    ],
+    [
+     -3.9451,
+     -0.58833,
+     1.1068
+    ],
+    [
+     -4.62444,
+     -0.58836,
+     0.70294
+    ],
+    [
+     -3.60545,
+     0.0,
+     0.70294
+    ],
+    [
+     -4.62448,
+     0.58829,
+     0.70294
+    ],
+    [
+     -3.94526,
+     0.58831,
+     1.1068
+    ],
+    [
+     -4.96412,
+     -5e-05,
+     1.1068
+    ],
+    [
+     -7.55492,
+     -1.8288,
+     0.29083
+    ],
+    [
+     -7.55492,
+     1.8288,
+     0.29083
+    ],
+    [
+     7.55492,
+     0.0,
+     0.29083
+    ],
+    [
+     7.55492,
+     1.8288,
+     0.29083
+    ],
+    [
+     7.55492,
+     -1.8288,
+     0.29083
+    ],
+    [
+     4.96412,
+     5e-05,
+     1.1068
+    ],
+    [
+     3.94526,
+     -0.58831,
+     1.1068
+    ],
+    [
+     4.62448,
+     -0.58829,
+     0.70294
+    ],
+    [
+     3.60545,
+     0.0,
+     0.70294
+    ],
+    [
+     4.62444,
+     0.58836,
+     0.70294
+    ],
+    [
+     3.9451,
+     0.58833,
+     1.1068
+    ]
+   ]
+  },
+  "coral": {
+   "asset": "coral",
+   "held": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "start": [
+    [
+     -7.55492,
+     0.0,
+     -0.0
+    ],
+    [
+     -7.55492,
+     -1.8288,
+     -0.0
+    ],
+    [
+     -7.55492,
+     1.8288,
+     -0.0
+    ],
+    [
+     7.55492,
+     0.0,
+     -0.0
+    ],
+    [
+     7.55492,
+     1.8288,
+     -0.0
+    ],
+    [
+     7.55492,
+     -1.8288,
+     -0.0
+    ]
+   ]
+  }
+ },
+ "source": "frc/2025",
+ "step": {
+  "md5": "ce780083986203678249e5b8e9f35d52",
+  "url": "https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025Field-STEP.zip"
+ },
+ "year": 2025
+}

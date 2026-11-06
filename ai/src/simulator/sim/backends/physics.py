@@ -22,6 +22,9 @@ from sim.world import World
 # How long a bounce's contact lasts, in seconds: about 5 physics steps at
 # 240 Hz. Shorter sinks things into the floor less, but needs more steps.
 CONTACT_TIME = 0.02
+# Physics steps spent pulling apart things that start overlapping, before the
+# episode starts (see settle()).
+SETTLE_STEPS = 24
 
 
 def damping_ratio(bounciness: float) -> float:
@@ -65,9 +68,29 @@ class Physics:
             joint = self.model.body_jntadr[self.model.body(name).id]
             self.qpos[item_id] = self.model.jnt_qposadr[joint]
             self.qvel[item_id] = self.model.jnt_dofadr[joint]
+        mujoco.mj_forward(self.model, self.data)
+        self.settle()
         for item in world.moving():
             self.set_velocity(item, item.velocity)
         mujoco.mj_forward(self.model, self.data)
+
+    def settle(self) -> None:
+        """Pull apart things that start overlapping, before the episode
+        starts, without giving them speed. A contact pushes overlapping
+        things apart with a force that grows with the overlap, so a ball
+        starting 2 cm inside another thing (as FIRST's CAD squeezes 2025's
+        ALGAE into the REEF) would otherwise fly off at several m/s. Here
+        each step's push moves them, then their speed is thrown away, so the
+        overlap shrinks by about half each step and nothing is launched.
+        Gravity is off meanwhile, so things not overlapping don't move."""
+        gravity = self.model.opt.gravity.copy()
+        self.model.opt.gravity[:] = 0
+        for _ in range(SETTLE_STEPS):
+            self.data.qvel[:] = 0
+            mujoco.mj_step(self.model, self.data)
+        self.model.opt.gravity[:] = gravity
+        self.data.qvel[:] = 0
+        self.data.time = 0.0
 
     def _add(self, spec, item: Solid) -> None:
         position, quat = list(map(float, item.position)), list(quat_from_euler(item.rotation))

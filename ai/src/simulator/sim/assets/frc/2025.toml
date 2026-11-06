@@ -1,0 +1,100 @@
+# FIRST's official field for 2025 REEFSCAPE, for `python -m sim.assets.frc 2025`.
+# Imported after the season, to practice on a field with plenty of keypoints,
+# and to find what the importer needs from one season's CAD to the next.
+
+year = 2025
+game = "REEFSCAPE"
+
+# The full field's STEP, zipped, from FIRST's playing field page (updated Jan
+# 10, 2025: ALGAE resized, CORAL holders added).
+field = "https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025Field-STEP.zip"
+
+# WPILib's layout for the welded field (AndyMark fields' tags differ a little).
+layout = "https://raw.githubusercontent.com/wpilibsuite/allwpilib/main/fields/src/main/native/resources/org/wpilib/fields/frc/2025-reefscape-welded.json"
+
+red = "+x"
+# This CAD is y-up (2026's is z-up).
+up = "y"
+# Its tags' vinyl: "FE-00083-Vinyl_FE-00083-ID5-Vinyl", and the BARGE's
+# "GE-25209-Vinyl" under "GE-25220_GE-25220-ID14".
+tag_vinyl = "Vinyl"
+
+# Game pieces. Masses from the manual (5.7) where it gives one; bounciness
+# and friction are guesses to tune against video.
+[pieces.coral]
+part = "GE-25500"
+label = "coral"
+mass = 0.65           # kg; the manual: 1.1-1.8 lb (0.5-0.8 kg)
+bounciness = 0.2
+friction = 0.5
+# 120 of the CAD's 126 CORAL wait in the human players' racks behind the
+# CORAL STATIONs: part of the racks' models, not simulated. The other 6 are
+# staged on the field, under ALGAE.
+stored_in = "coral_rack"
+
+[pieces.algae]
+part = "GE-25501"
+label = "algae"
+mass = 0.6            # kg; a guess: the manual gives only its size (16.25 in)
+bounciness = 0.6
+friction = 0.8
+
+# Field elements, by the start of their name in the CAD (2025's names its
+# parts by number only).
+[elements]
+"GE-25300" = { name = "reef", label = "reef" }
+"GE-25200" = { name = "barge", label = "barge", alliance = false }    # with its CAGEs and NETs
+"GE-25000" = { name = "coral_station", label = "coral_station" }
+"GE-25410" = { name = "coral_rack" }                                   # behind each CORAL STATION
+"FE-2025-02" = { name = "side_wall", alliance = false }                # with a PROCESSOR in each
+"FE-2025-03" = { name = "alliance_wall" }
+"fence 2x6" = { name = "fence", alliance = false }
+"Scoring Table" = { name = "scoring_table", alliance = false }
+"FE-00070" = { name = "alliance_wall_feet", merge = true }
+"MirrorFE-00070" = { name = "alliance_wall_feet", merge = true }
+"FE-00003" = { name = "wall_brackets", alliance = false, merge = true }
+"GE-25121" = { name = "processor_signs", alliance = false, merge = true }
+"GE-25122" = { name = "processor_signs", alliance = false, merge = true }
+"FE-2024-01" = { name = "carpet", alliance = false, merge = true }
+"tape_" = { name = "carpet", alliance = false, merge = true }
+"Processor Tape" = { name = "carpet", alliance = false, merge = true }
+"Processor Trip Tape" = { name = "carpet", alliance = false, merge = true }
+"HP Tape" = { name = "carpet", alliance = false, merge = true }
+"Game Piece Tape" = { name = "carpet", alliance = false, merge = true }
+
+# Keypoints, by element: each class is every part whose name starts with
+# `part` (anywhere in the element), optionally only those whose middle is
+# between z[0] and z[1], at its center (default), top, bottom, or both ends.
+# Points are numbered around the element counterclockwise from +x, seen from
+# above, then bottom to top.
+#
+# REEF BRANCHes: each of the 12 branch assemblies (GE-25301) has a cap
+# (GE-25301-03) on the end of its L2 and L3 pipes and on top of its L4 pipe.
+# The manual puts their highest points at 81, 121 and 183 cm; the caps'
+# middles are at 79, 120 and 183 cm.
+[keypoints.reef]
+branch_l2 = { part = "GE-25301-03", z = [0.6, 1.0] }
+branch_l3 = { part = "GE-25301-03", z = [1.0, 1.5] }
+branch_l4 = { part = "GE-25301-03", z = [1.5, 2.0] }
+# The L1 trough: the two ends of each face's front lip (GE-25302 is a face's
+# trough; its highest edge is the lip, 46 cm up, as in the manual).
+trough = { part = "GE-25302", at = "top_ends" }
+
+# CORAL STATION: the corners of the slot CORAL comes out of, between the
+# lower panel's top edge (GE-25008) and the upper panel's bottom edge
+# (GE-25009).
+[keypoints.coral_station]
+chute_bottom = { part = "GE-25008", at = "top_ends" }
+chute_top = { part = "GE-25009", at = "bottom_ends" }
+
+# CAGEs (in the BARGE): the middles of each cage's top and bottom plates,
+# so where it hangs and which way it swings. Red's are GE-25201, blue's its
+# mirror, GE-25202.
+[keypoints.barge]
+cage_top = { part = ["GE-25201-02", "GE-25202-02"] }
+cage_bottom = { part = ["GE-25201-01", "GE-25202-01"] }
+
+# CORAL: the middles of its two open ends, so a model can tell which way it
+# points.
+[keypoints.coral]
+end = { part = "GE-25500", at = "ends" }

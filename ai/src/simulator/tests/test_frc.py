@@ -53,13 +53,17 @@ def fake_season(folder: Path) -> Library:
                         "category": f"frc/{YEAR}/element", "element": element, "size": size,
                         "files": {f: md5(where / f) for f in FILES}}
     models["ball"]["physics"] = {"mass": 0.2, "bounciness": 0.5, "friction": 0.8}
+    # The importer finds keypoints from the CAD, in each model's coordinates.
+    models["hub_red"]["keypoints"] = models["hub_blue"]["keypoints"] = {"top": [[0.5, 0, 1.8], [-0.5, 0, 1.8]]}
     catalog = {
         "source": f"frc/{YEAR}", "year": YEAR,
         "field": {"length": 16.0, "width": 8.0, "wpilib": {"yaw": 180.0, "offset": [8.0, 4.0], "error": 0, "tags": 3}},
         "assets": models,
         "layout": [{"asset": "carpet", "position": [0, 0, 0]}, {"asset": "hub_red", "position": [-4, 0, 0]},
                    {"asset": "hub_blue", "position": [4, 0, 0]}],
-        "pieces": {"ball": {"asset": "ball", "start": [[0, -1, 0], [0, 0, 0], [0, 1, 0]]}},
+        # The middle ball starts on something (on a hub, say), so it's held.
+        "pieces": {"ball": {"asset": "ball", "start": [[0, -1, 0], [0, 0, 0], [0, 1, 0]],
+                            "held": [False, True, False]}},
     }
     return Library(catalog, folder, source=f"frc/{YEAR}")
 
@@ -153,7 +157,8 @@ class TestFrcField(FieldTestCase):
 
         world = run(Drop, 1, "physics").world
         for ball in world.scenario.field.ball:
-            self.assertAlmostEqual(ball.position[2], 0, delta=0.02)  # its base on the floor
+            if not ball.static:  # the held one stays where it started
+                self.assertAlmostEqual(ball.position[2], 0, delta=0.02)  # its base on the floor
         self.assertAlmostEqual(world.scenario.field.hub[0].position[2], 1)  # static
 
     def test_a_game_piece_needs_its_physics(self):
@@ -162,6 +167,27 @@ class TestFrcField(FieldTestCase):
         with self.assertRaisesRegex(ValueError, "doesn't say its mass, bounciness, friction"):
             GamePiece(asset=f"frc/{YEAR}/ball")
         GamePiece(asset=f"frc/{YEAR}/ball", mass=0.1, bounciness=0.2, friction=0.5)
+
+    def test_held_pieces_stay_put(self):
+        class WithField(Scenario[Arena]):
+            def setup(self, rng):
+                self.field = self.add(FrcField(year=YEAR))
+
+        world = build(WithField, 0)
+        self.assertEqual([p.static for p in world.scenario.field.ball], [False, True, False])
+
+    def test_keypoints_come_from_the_catalog(self):
+        from sim import labels
+
+        class WithField(Scenario[Arena]):
+            def setup(self, rng):
+                self.field = self.add(FrcField(year=YEAR))
+
+        world = build(WithField, 0)
+        hub = names(world)["field.hub.0"]
+        np.testing.assert_allclose(labels.keypoints_of(hub)["top"], [[0.5, 0, 1.8], [-0.5, 0, 1.8]])
+        # The carpet has none.
+        self.assertEqual(labels.keypoints_of(names(world)["field.carpet.0"]), {})
 
     def test_asset_ids(self):
         self.assertEqual(assets.info(f"frc/{YEAR}/carpet")["element"], "carpet")
@@ -217,6 +243,46 @@ class TestImporter(unittest.TestCase):
         np.testing.assert_allclose(fit["offset"], (8.27, 4.03), atol=1e-4)
         self.assertLess(fit["error"], 1e-4)
         self.assertEqual(fit["tags"], 4)
+
+    def test_tags_by_where_they_are(self):
+        # WPILib's frame is the CAD's moved by (8, 4). The CAD has tag 1 twice
+        # (its vinyl repeated, 1 cm apart), and calls the tag where WPILib's
+        # 3 is "2", so 2 appears twice.
+        wpilib = {1: (9.0, 6.0), 2: (5.0, 4.5), 3: (13.0, 2.0), 4: (8.0, 4.0), 5: (10.0, 1.0)}
+        found = [("vinyl 1", 1, (1.0, 2.0, 1.0)), ("vinyl 1.001", 1, (1.0, 2.01, 1.0)),
+                 ("vinyl 2", 2, (-3.0, 0.5, 1.0)), ("vinyl 2.001", 2, (5.0, -2.0, 1.0)),
+                 ("vinyl 4", 4, (0.0, 0.0, 1.0)), ("vinyl 5", 5, (2.0, -3.0, 1.0))]
+        fit, ids, warnings = importer.assign_tags(found, wpilib)
+        self.assertEqual(ids, {"vinyl 1": 1, "vinyl 1.001": None, "vinyl 2": 2, "vinyl 2.001": 3, "vinyl 4": 4,
+                               "vinyl 5": 5})
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("WPILib's 3 is there", warnings[0])
+        np.testing.assert_allclose(fit["offset"], (8, 4), atol=1e-6)
+        self.assertEqual(fit["tags"], 5)
+
+    def test_pipe_ends(self):
+        # A pipe 0.3 m long from (1, 2, 0) up along a slant: its end faces'
+        # middles, whichever way round.
+        axis = np.array([0.0, 0.6, 0.8])
+        ring = [np.array([np.cos(a), 0, 0]) * 0.05 + np.array([0, -0.8, 0.6]) * np.sin(a) * 0.05
+                for a in np.linspace(0, 2 * np.pi, 16, endpoint=False)]
+        start = np.array([1.0, 2.0, 0.0])
+        verts = np.array([start + r + axis * t for t in (0.0, 0.3) for r in ring])
+        ends = sorted(importer.pipe_ends(verts), key=lambda p: p[2])
+        np.testing.assert_allclose(ends[0], start, atol=1e-9)
+        np.testing.assert_allclose(ends[1], start + axis * 0.3, atol=1e-9)
+
+    def test_a_zipped_step(self):
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            with zipfile.ZipFile(folder / "field.zip", "w") as z:
+                z.writestr("inside/FE-2099.STEP", "ISO-10303-21;")
+            step = importer.unzipped(folder / "field.zip")
+            self.assertEqual(step, folder / "FE-2099.STEP")
+            self.assertEqual(step.read_text(), "ISO-10303-21;")
+            self.assertEqual(importer.unzipped(step), step)  # not a zip: itself
 
 
 if __name__ == "__main__":
