@@ -21,6 +21,14 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
     `train.toml` names its dataset and the checkpoints it starts from; a run
     that stopped can be resumed. `wildhat training` lists, shows, tags and
     downloads them. Needs wildhat 0.6.0 on your computer.
+  - `predictions.py` and `score.py`: scoring a model the same way for
+    everyone. Write its boxes and keypoints on a split's pictures with
+    `Predictions(folder, model="fuel_detector", classes=["fuel"])`, then
+    `python -m shared.score <folder>` prints AP, AP50 and AP75 per class and
+    by object size, the score threshold with the best F1, and for keypoints
+    the share found within 2, 4 and 8 pixels, by seen and hidden. Objects
+    under `--min-pixels` or `--min-share` are ignored, not misses.
+    `metrics(score(...), "test")` gives flat numbers for `run.final(...)`.
   - `cloud.py`: reading and writing the bucket and Firestore, as you, the
     same way on your computer (through `wildhat login`; needs wildhat 0.4.0)
     and in a cloud job.
