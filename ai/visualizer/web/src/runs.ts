@@ -8,8 +8,10 @@ const FILTERS = "wildhat.filters";
 
 function what(run: Run): (Node | string)[] {
   if (run.sim) return [`${run.sim.scenario.split(":").pop()} in ${run.sim.scene}`];
-  if (run.training) return [trainingBadge(run.training), " ", run.command.join(" ")];
-  return [run.command.join(" ")];
+  if (run.photos) return [h("span", { class: "tag", title: "Labeled photos, not simulated" }, "photos"), " ", run.photos.name];
+  const command = (run.command ?? []).join(" ");
+  if (run.training) return [trainingBadge(run.training), " ", command];
+  return [command];
 }
 
 /** A job that ran a training run: a badge linking to it. */
@@ -115,10 +117,17 @@ export async function runView(id: string): Promise<RunView> {
 
   function drawFacts() {
     const rows: [string, Node | string][] = [
-      ["Launched by", run.launched_by],
+      [run.photos ? "Imported by" : "Launched by", run.launched_by],
       ["When", when(run.created_at)],
-      ["Command", h("code", null, run.command.join(" "))],
     ];
+    if (run.command) rows.push(["Command", h("code", null, run.command.join(" "))]);
+    if (run.photos) {
+      const p = run.photos;
+      rows.push(["Photos", p.url ? h("a", { href: p.url, target: "_blank", rel: "noopener" }, p.name) : p.name]);
+      if (p.credit) rows.push(["Credit", p.credit]);
+      if (p.license) rows.push(["License", p.license]);
+      rows.push(["Labels", p.labels.join(", ")]);
+    }
     if (run.sim) rows.push(["Backend", run.sim.backend]);
     if (run.git) rows.push(["Code", `${run.git.branch} at ${run.git.commit.slice(0, 7)}${run.git.dirty ? ", with uncommitted changes" : ""}`]);
     if (run.gpu) rows.push(["GPU", "yes"]);
@@ -137,7 +146,9 @@ export async function runView(id: string): Promise<RunView> {
             h("span", { class: "ep-name" }, `Episode ${ep.index}`),
             h("span", { class: `status ${ep.status}` }, ep.status),
             h("span", { class: "ep-meta" },
-              h("span", { class: "mono" }, `seed ${ep.seed}`),
+              ep.photos
+                ? h("span", null, `${ep.photos.split} · ${ep.photos.frames} photos`)
+                : h("span", { class: "mono" }, `seed ${ep.seed}`),
               duration(ep.started_at, ep.finished_at) && ` · ${duration(ep.started_at, ep.finished_at)}`),
           ),
         ),
@@ -157,7 +168,7 @@ export async function runView(id: string): Promise<RunView> {
 
   async function select(index: number | null) {
     if (index === null) {
-      const first = run.episodes_detail.find((ep) => ep.sim) ?? run.episodes_detail[0];
+      const first = run.episodes_detail.find((ep) => ep.sim || ep.photos) ?? run.episodes_detail[0];
       if (!first) {
         pane.replaceChildren(h("p", { class: "muted" }, "This run has no episodes."));
         return;

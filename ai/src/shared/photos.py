@@ -11,7 +11,8 @@ under [test]) and the scorer can score a model on it.
 It reads a folder in ultralytics YOLO's format (data.yaml, and
 <split>/images, <split>/labels, as Roboflow exports them), writes one
 episode per split (each photo a frame of the camera "photo"), uploads them
-under runs/<you>/<run>/, and records the run in Firestore with `photos` in
+under runs/<you>/<run>/ with a slideshow video for the visualizer
+(preview/photo.mp4, a photo a second), and records the run in Firestore with `photos` in
 place of `sim`. It prints the run's ID.
 
 What photos don't have, next to a simulation: masks, object ids, poses,
@@ -41,11 +42,14 @@ from PIL import Image, ImageOps
 
 from shared.cloud import Cloud
 from shared.logger import Logger, schema
+from shared.postprocess import PostProcessor
 
 CAMERA = "photo"
 IMAGES = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
 UPLOADS = 8
 ORIENTATION = 0x0112  # EXIF
+# The preview video, a slideshow the visualizer plays: one photo a second.
+FPS = 1
 PHOTOS = {"photos": schema(("frame", pa.int32()), ("file", pa.string()), ("split", pa.string()), key=("frame",))}
 
 
@@ -111,7 +115,9 @@ def write_episode(folder: Path, out: Path, split: str, labels: dict[int, str], i
         log.add("objects", {"object": camera, "name": camera_name(camera), "type": "Camera", "label": None,
                             "static": True, "settings": "{}"})
         log.add("cameras", {"object": camera, "width": width, "height": height})
-    return log.finish({"photos": len(images), "labels": dict(counts)})
+    episode = log.finish({"photos": len(images), "labels": dict(counts)})
+    episode["previews"] = PostProcessor(out).run()
+    return episode
 
 
 def camera_name(camera: int) -> str:
@@ -148,7 +154,7 @@ def import_photos(folder, splits: list[str], labels: dict[str, str], about: dict
     with tempfile.TemporaryDirectory() as tmp:
         for index, split in enumerate(splits):
             out = Path(tmp) / f"episode-{index}"
-            episode = write_episode(folder, out, split, ids, {"photos_from": about.get("name")})
+            episode = write_episode(folder, out, split, ids, {"photos_from": about.get("name"), "fps": FPS})
             n = upload(cloud, out, f"{prefix}episode-{index}/")
             say(f"Episode {index}: {split}, {episode['photos']} photos, "
                 + ", ".join(f"{k} {v}" for k, v in sorted(episode["labels"].items())) + f" ({n} files)")
@@ -162,7 +168,7 @@ def import_photos(folder, splits: list[str], labels: dict[str, str], about: dict
             "index": index, "status": "succeeded", "outputs": f"{outputs}episode-{index}/",
             "started_at": now, "finished_at": now,
             "photos": {"split": split, "frames": episode["photos"], "labels": sorted(episode["labels"]),
-                       "cameras": [CAMERA]}})
+                       "cameras": [CAMERA], "fps": FPS, "previews": episode["previews"]}})
     return run
 
 
