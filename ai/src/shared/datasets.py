@@ -45,7 +45,8 @@ How it splits:
   never moves an episode that's already in the dataset.
 - [test] runs are always "test", whole.
 
-Only simulation runs can be in a dataset (not, say, a training job), and only
+Only simulation runs, and labeled photos imported with shared.photos (real
+pictures, e.g. under [test]), can be in a dataset (not, say, a training job), and only
 their episodes that succeeded are used. A run that's still going is fetched
 as far as it has got, with a warning, and the dataset grows as it finishes,
 so list runs once they're done.
@@ -238,7 +239,7 @@ class Dataset:
                 say(f"✗ {run}: there's no such run")
                 ok = False
                 continue
-            if "sim" not in record:
+            if not is_dataset_run(record):
                 say(f"✗ {run}: {not_a_simulation(record)}")
                 ok = False
                 continue
@@ -444,7 +445,7 @@ class Dataset:
                 lines: dict[tuple[int, int], list[str]] = {}
                 if "boxes" in ep.info["tables"]:
                     for r in ep.table("boxes").to_pylist():
-                        if r["source"] != "truth" or r["label"] not in ids or (r["pixels"] or 0) < min_pixels:
+                        if r["source"] != "truth" or r["label"] not in ids or box_pixels(r) < min_pixels:
                             continue
                         if (full or min_share) and r.get("full_pixels") is None:
                             shutil.rmtree(building, ignore_errors=True)
@@ -506,10 +507,24 @@ def _median(values: list[float]) -> float:
     return ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) / 2
 
 
+def is_dataset_run(record: dict) -> bool:
+    """A simulation run, or labeled photos (shared.photos)."""
+    return "sim" in record or "photos" in record
+
+
 def not_a_simulation(record: dict) -> str:
     if record.get("training"):
         return f"it's a training job (training run {record['training']}), not a simulation"
     return "it isn't a simulation run, so it has nothing to train on"
+
+
+def box_pixels(box) -> float:
+    """How many pixels a true box's object shows: `pixels`, or for photos
+    (which don't count them) the box's area. A row or a Box."""
+    get = box.get if isinstance(box, dict) else lambda k: getattr(box, k)
+    if get("pixels") is not None:
+        return get("pixels")
+    return max(0.0, get("x1") - get("x0")) * max(0.0, get("y1") - get("y0"))
 
 
 def _yolo_line(class_id: int, box: dict, width: int, height: int) -> str | None:
@@ -539,7 +554,7 @@ def fetch_run(cloud: Cloud, run: str, say) -> None:
     record = cloud.document(f"runs/{run}")
     if record is None:
         raise CloudError(f"There's no run {run}.")
-    if "sim" not in record:
+    if not is_dataset_run(record):
         raise CloudError(f"{run}: {not_a_simulation(record)}. Take it out of the dataset.")
     statuses = {int(e.get("index", i)): e.get("status") for i, e in cloud.documents(f"runs/{run}/episodes").items()}
     unfinished = sorted(i for i, s in statuses.items() if s in ("pending", "running"))

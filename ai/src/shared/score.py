@@ -19,7 +19,8 @@ recall; average precision (AP) is the area under that curve, as COCO
 computes it (101 recall points). AP50 uses IoU 0.5; AP averages IoU 0.5 to
 0.95, so it also rewards tight boxes. Objects showing fewer than
 `min_pixels` pixels, or less than `min_share` of themselves, are ignored:
-missing one isn't a miss, and finding one isn't a false alarm.
+missing one isn't a miss, and finding one isn't a false alarm. (Photos
+don't count pixels: for them, min_pixels compares with the box's area.)
 
 **Keypoints.** The same, with distance in place of overlap: a predicted
 point is a hit if it's within r pixels of an unclaimed true point of its
@@ -45,7 +46,7 @@ from typing import Optional
 import numpy as np
 
 from shared import predictions as preds_io
-from shared.datasets import SPLITS, Dataset
+from shared.datasets import SPLITS, Dataset, box_pixels
 
 IOUS = tuple(round(0.5 + 0.05 * i, 2) for i in range(10))  # 0.5, 0.55, ... 0.95
 RADII = (2, 4, 8)
@@ -210,7 +211,7 @@ def _score_boxes(sample, predicted, classes, min_pixels, min_share, mode, result
             raise ValueError(f"{sample.run} episode {sample.index} has no full boxes: it was simulated before "
                              "they were added. Score its visible boxes, or simulate it again.")
         coords = np.array([b.full if mode == "full" else (b.x0, b.y0, b.x1, b.y1) for b in truth], float).reshape(-1, 4)
-        ignored = np.array([(b.pixels or 0) < min_pixels or (min_share > 0 and (b.share or 0) < min_share)
+        ignored = np.array([box_pixels(b) < min_pixels or (min_share > 0 and (b.share or 0) < min_share)
                             for b in truth], bool)
         mine = [r for r in predicted if r["label"] == label]
         scores = [r["score"] for r in mine]
