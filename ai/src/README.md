@@ -29,6 +29,11 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
     the share found within 2, 4 and 8 pixels, by seen and hidden. Objects
     under `--min-pixels` or `--min-share` are ignored, not misses.
     `metrics(score(...), "test")` gives flat numbers for `run.final(...)`.
+  - `photos.py`: labeled real photos (e.g. a Roboflow export in YOLO's
+    format) as a run of episodes, so a `dataset.toml` can list it under
+    `[test]` and the scorer can score a model on real pictures:
+    `python -m shared.photos import <folder> --splits valid test
+    --labels Fuel=fuel --name "..."`.
   - `cloud.py`: reading and writing the bucket and Firestore, as you, the
     same way on your computer (through `wildhat login`; needs wildhat 0.4.0)
     and in a cloud job.

@@ -14,6 +14,7 @@ an object too.
 
     objects  one row per object: object, name, type, label, static, settings
     cameras  one row per camera: object, width, height, fx, fy, cx, cy, fov
+             (the intrinsics may be empty, e.g. for photos)
     sim      one row per frame: frame, time, and how long each part took
     poses    one row per object per frame (static objects: frame 0 only):
              position, rotation, linear and angular velocity
@@ -75,7 +76,7 @@ SCHEMAS: dict[str, pa.Schema] = {
         key=("object",)),
     "cameras": schema(
         ("object", i32), ("width", i32), ("height", i32),
-        ("fx", f64), ("fy", f64), ("cx", f64), ("cy", f64), ("fov", f64),
+        ("fx", f64, "null"), ("fy", f64, "null"), ("cx", f64, "null"), ("cy", f64, "null"), ("fov", f64, "null"),
         key=("object",)),
     "sim": schema(
         ("frame", i32), ("time", f64),
