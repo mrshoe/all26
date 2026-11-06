@@ -205,10 +205,21 @@ self.field.to_wpilib(self.cam.position, yaw=90)   # where robot code would say i
 - **Choosing parts**: `elements=("hub", "carpet")` keeps only those.
 - **Placing it**: its `position` is the field's center, with the carpet at
   z = 0, so a Scene's floor stays under it.
+- **Seasons**: 2026 (REBUILT) and 2025 (REEFSCAPE: REEFs, BARGE, CORAL
+  STATIONs; CORAL and ALGAE). `scenarios/reef_approach.py` drives toward a
+  REEF.
+- **Keypoints** come with the field: the season's config defines them from
+  FIRST's CAD parts, e.g. 2025's REEF has `branch_l2`, `branch_l3`,
+  `branch_l4` (the end of each branch at that level) and `trough` (the ends
+  of each L1 lip); CORAL STATIONs have their chute's corners, the BARGE each
+  CAGE's top and bottom, and each CORAL its two ends. They're recorded like
+  any object's (Keypoints and full boxes, above), and the config's comments
+  say where each comes from.
 - **Models** are `frc/<year>/<name>` in the asset catalog
   (`assets.info("frc/2026/hub_red")`), from `sim/assets/frc/<year>.json`.
   An admin imports a new season on kickoff day with
-  `python -m sim.assets.frc <year>`; see `sim/assets/frc/importer.py`.
+  `python -m sim.assets.frc <year>`; see `sim/assets/frc/importer.py`, and
+  `sim/assets/frc/2025.toml` for a config with keypoints.
 
 ## Running it
 

@@ -10,7 +10,9 @@ or Scenario.
 
 Its models come from FIRST's CAD (sim/assets/frc). Each element is a static
 Prop named after what it is (`field.hub.0`), labeled if the season's config
-gives it a label. Game pieces are GamePieces, which physics moves. The
+gives it a label. Game pieces are GamePieces, which physics moves, except
+those starting on something other than the carpet (2025's ALGAE on the REEF
+or on CORAL), which stay put, as squeezed real ones do. The
 field's center is the Group's position; its carpet is at z = 0, so a Scene
 with a floor keeps its floor under it.
 """
@@ -62,8 +64,11 @@ class FrcField(Group):
         if self.starting_pieces:
             for name, piece in catalog["pieces"].items():
                 model = library.info(piece["asset"])
+                # Pieces held by what they're on (2025's ALGAE on the REEF)
+                # stay put: nothing here knocks them loose.
+                held = piece.get("held") or [False] * len(piece["start"])
                 found[name] += [GamePiece(asset=f"frc/{self.year}/{piece['asset']}", label=model.get("label"),
-                                          position=tuple(p)) for p in piece["start"]]
+                                          position=tuple(p), static=h) for p, h in zip(piece["start"], held)]
         for name, items in found.items():
             setattr(self, f"{name}_" if name in reserved else name, self.add(items))
 

@@ -118,6 +118,32 @@ class TestPhysics(unittest.TestCase):
         np.testing.assert_allclose(quat_from_euler(rotation), quat, atol=1e-9)
         self.assertGreater(max(abs(a) for a in rotation), 1)
 
+    def test_things_starting_inside_each_other_are_pulled_apart_gently(self):
+        # Two balls 10 cm apart that should be 20 cm apart, one 3 cm into
+        # the floor. Without settling, the contacts fire them off at 10 m/s;
+        # settled, one drops back the centimeter or two it was lifted.
+        class Overlap(Scenario[Empty]):
+            duration, fps = 1.0, 10
+
+            def setup(self, rng):
+                self.a = self.add(Sphere(radius=0.1, position=(0, 0, 0.07), bounciness=0.6))
+                self.b = self.add(Sphere(radius=0.1, position=(0.1, 0, 0.1), bounciness=0.6))
+
+        speeds = []
+
+        class Speeds:
+            def __init__(self, world):
+                self.world = world
+
+            def frame(self, index, t, cameras, pictures, timing):
+                speeds.append(max(np.linalg.norm(s.velocity) for s in self.world.moving()))
+
+        episode = runner.run(Overlap, 0, "physics", Speeds)
+        self.assertLess(max(speeds), 1.5)
+        a, b = episode.world.scenario.a, episode.world.scenario.b
+        self.assertGreater(np.linalg.norm(np.subtract(a.position, b.position)), 0.19)
+        self.assertGreater(a.position[2], 0.09)
+
     def test_static_things_cant_move(self):
         class MoveWall(drop(0.0)):
             def setup(self, rng):
