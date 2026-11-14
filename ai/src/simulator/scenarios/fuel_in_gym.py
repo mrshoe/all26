@@ -1,18 +1,17 @@
-"""A yellow ball tossed across the gym floor, seen by a camera at robot
-height that follows it: training data for a ball detector."""
+"""A bunch of fuel on the gym floor"""
 
-from sim import Camera, Range, Scenario, Sphere
+from sim import Camera, Range, Scenario, GamePiece
 from scenes.gym import Gym
 
 
 class YellowBall(Scenario[Gym]):
-    duration = 0.5  # seconds per episode
-    fps = 24
+    duration = 2.0  # seconds per episode
+    fps = 15
 
     def setup(self, rng):
         self.scene.overhead.intensity = Range(500, 6000)  # sometimes dimmer than usual
-        self.balls = [self.add(Sphere(
-            radius=0.09, color=Range.color("yellow"), label="ball", roughness=Range(0.3, 0.8),
+        self.fuel = [self.add(GamePiece(
+            asset="frc/2026/fuel", label="fuel",
             position=(rng.uniform(-2, 2), rng.uniform(1.5, 5), rng.uniform(0.1, 1.2)),
             velocity=(rng.uniform(-1.5, 1.5), rng.uniform(-1, 1), rng.uniform(0, 2)),
         )) for _ in range(50)]
