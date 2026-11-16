@@ -65,7 +65,11 @@ class YellowBall(Scenario[Gym]):
 - **What's available**: `Sphere`, `Box`, `Floor` (textures in
   `Floor.TEXTURES`), `Wall` (and `Wall.around(floor)`), `Light` (`sun`,
   `area`, `point`, `spot`), `Camera`, `Background`, `Prop`, `GamePiece`,
-  `Group` and `FrcField` (below). See `sim/objects.py`.
+  `AprilTag`, `Group` and `FrcField` (below). See `sim/objects.py`.
+- **Cameras** are perfect pinholes. `shutter` (seconds open, up to a
+  frame) blurs what moves, as on a robot driving and turning. Noise,
+  brightness and color are training's augmentation, not the simulator's
+  (CAMERA-PLAN.md).
 - **Moving things in `step`**: set `position`, `rotation` or `velocity`, or
   call `push(impulse)`. Static things (`static=True`, the default for boxes,
   floors and walls) can't move.
@@ -104,6 +108,34 @@ self.goal = self.add(Box(size=(2, 0.1, 1), keypoints={"post_top": [(-1, 0, 0.5),
   and hollow if it's hidden. Chips under the video turn each on and off.
 
 `scenarios/crate_corners.py` is an example.
+
+## AprilTags
+
+`AprilTag` is a 36h11 tag (FRC's) on a white square: a thin plate that
+cameras see and physics doesn't. Its face is its own +z side, its back at
+`position`, so on a wall it stands just in front of it.
+
+```python
+from sim import AprilTag
+
+self.tag = self.add(AprilTag(tag=7, position=(0, 4, 1.2), rotation=AprilTag.facing((0, -1, 0))))
+```
+
+- **Its pattern** is the official one (AprilRobotics' images), upright when
+  its top is up. `size` is the black square's side (FRC's 6.5 in by
+  default), `vinyl` the white square's.
+- **Labels**: it's labeled `"apriltag"`, so it gets boxes. And every
+  picture's `tags` table has each tag facing the camera: its ID, its black
+  square's 4 corners in the order detectors give them (bottom left, bottom
+  right, top right, top left, as seen facing it), how many are seen, and
+  how far and how turned it is. A tag seen from behind isn't there.
+- **Reading them**: `ep.tags("front", 12)`, or `sample.tags()` from a
+  dataset. `shared/apriltags.py` runs OpenCV's detector on a dataset as a
+  baseline, and `shared/score.py` scores tags found by distance, angle and
+  size.
+- `scenarios/tag_range.py` puts tags on stands around the gym and drives a
+  camera past them with motion blur, as the robot's raw camera and as the
+  network's.
 
 ## Groups: objects that go together
 
@@ -196,8 +228,10 @@ self.field.to_wpilib(self.cam.position, yaw=90)   # where robot code would say i
 - **Its parts**: each element (HUB, TOWER, BUMP, TRENCH, OUTPOST, DEPOT,
   the perimeter, the carpet and its tape lines, the scoring table) is a
   static Prop named after what it is: `field.hub.0`. Elements the season's
-  config labels (e.g. the HUB) get boxes. AprilTags have their real
-  images, so tag detection can be trained and tested.
+  config labels (e.g. the HUB) get boxes. Its AprilTags are `AprilTag`s
+  (`field.tags`), where the CAD has them and facing the way WPILib's layout
+  says, so their corners are in every picture's `tags` table.
+  `apriltags=False` leaves them out.
 - **Game pieces** are `GamePiece`s: Props that physics moves, with mass,
   bounciness and friction from the catalog. `starting_pieces=False` leaves
   them out, and you can add your own:
@@ -263,6 +297,7 @@ wildhat launch --episodes 20 --timeout 2h -- python -m sim run scenarios/yellow_
 | `images.parquet` | Per frame, each camera's picture and mask |
 | `boxes.parquet` | One row per labeled object seen by a camera: its box in pixels and how many pixels it covers, and its full box and how many it would cover if nothing hid it |
 | `keypoints.parquet` | One row per keypoint per camera per frame: pixel, depth, in the picture or not, seen or not, and what hides it |
+| `tags.parquet` | One row per AprilTag facing a camera per frame: its ID, its 4 corners in pixels, how many are seen, distance and angle |
 | `cam/<camera>/000000.jpg` | What each camera saw, per frame |
 | `mask/<camera>/000000.png` | Which object each pixel shows (16-bit object ids, from `objects`) |
 | `preview/<camera>.mp4` | A small preview video for the visualizer, which draws the labels over it from the tables |

@@ -26,7 +26,7 @@ from scipy.spatial.transform import Rotation
 
 from sim import assets
 from sim.geometry import quat_from_euler
-from sim.objects import Background, Camera, Floor, GamePiece, Item, Light, Prop, Solid, Vec3, Wall
+from sim.objects import AprilTag, Background, Camera, Floor, GamePiece, Item, Light, Prop, Solid, Vec3, Wall
 from sim.randomness import Range, resolve
 
 T = TypeVar("T", bound=Union[Item, "Group", list])
@@ -425,6 +425,9 @@ def check(world: World) -> None:
             raise ValueError(f"{cam.name} looks at an object that isn't in the world")
         if not 1 <= cam.fov < 180:
             raise ValueError(f"{cam.name}: fov is in degrees, between 1 and 180")
+        if not 0 <= cam.shutter <= 1 / world.scenario.fps:
+            raise ValueError(f"{cam.name}: shutter is seconds the shutter is open, at most a frame "
+                             f"(1/fps = {1 / world.scenario.fps:g} s)")
     for prop in world.of_type(Prop):
         try:
             assets.info(prop.asset)
@@ -436,6 +439,15 @@ def check(world: World) -> None:
             raise ValueError(f"{prop.name}: scale must be above 0")
     for solid in world.solids:
         check_keypoints(solid)
+    for tag in world.of_type(AprilTag):
+        from sim.apriltags import CODES
+
+        if not tag.static:
+            raise ValueError(f"{tag.name}: AprilTags are static")
+        if not 0 <= int(tag.tag) < len(CODES) or int(tag.tag) != tag.tag:
+            raise ValueError(f"{tag.name}: tag is a 36h11 ID, 0 to {len(CODES) - 1}")
+        if not tag.size > 0 or tag.white() < tag.size:
+            raise ValueError(f"{tag.name}: size must be above 0, and vinyl (the white square) at least size")
     if len(world.of_type(Background)) > 1:
         raise ValueError("There can be only one Background")
     s = world.scenario

@@ -36,6 +36,17 @@ an object too.
              in_frame, visible, occluded_by (null if seen; the object's own
              id when its own far side hides it; otherwise the id of what's
              in front), score (null for ground truth), source
+    tags     one row per AprilTag facing a camera, per frame (in
+             simulation; and a detector's, as predictions): frame, camera,
+             object (null for a detector's), tag (its ID), its black
+             square's corners x0 y0 ... x3 y3 in pixels, in the order
+             detectors give them (bottom left, bottom right, top right, top
+             left, as seen facing the tag), in_frame (all 4 in the
+             picture), visible (in_frame, and none hidden), corners_seen
+             (0 to 4), distance (m) and angle (degrees off head-on) from
+             the camera, pixels (what the mask shows of it, white border
+             too), score (null for ground truth; a detector's confidence,
+             if it gives one), source
 
 A robot logs its own per-frame table (frame, time, its own columns) in place
 of `sim`: pass its schema to Logger.
@@ -105,6 +116,13 @@ SCHEMAS: dict[str, pa.Schema] = {
         ("x", f32), ("y", f32), ("depth", f32, "null"), ("in_frame", flag), ("visible", flag, "null"),
         ("occluded_by", i32, "null"), ("score", f32, "null"), ("source", text),
         key=("frame", "camera", "object", "label", "index")),
+    "tags": schema(
+        ("frame", i32), ("camera", i32), ("object", i32, "null"), ("tag", i32),
+        ("x0", f32), ("y0", f32), ("x1", f32), ("y1", f32), ("x2", f32), ("y2", f32), ("x3", f32), ("y3", f32),
+        ("in_frame", flag), ("visible", flag, "null"), ("corners_seen", i32, "null"),
+        ("distance", f32, "null"), ("angle", f32, "null"), ("pixels", i32, "null"),
+        ("score", f32, "null"), ("source", text),
+        key=("frame", "camera", "tag", "object")),
 }
 
 

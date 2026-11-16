@@ -16,7 +16,7 @@ import numpy as np
 from sim import assets
 from sim.backends import Pose
 from sim.geometry import quat_from_euler
-from sim.objects import Box, Floor, GamePiece, Prop, Solid, Sphere, Wall
+from sim.objects import AprilTag, Box, Floor, GamePiece, Prop, Solid, Sphere, Wall
 from sim.world import World
 
 # How long a bounce's contact lasts, in seconds: about 5 physics steps at
@@ -93,6 +93,8 @@ class Physics:
         self.data.time = 0.0
 
     def _add(self, spec, item: Solid) -> None:
+        if isinstance(item, AprilTag):
+            return  # thin and flat on something: only cameras see it
         position, quat = list(map(float, item.position)), list(quat_from_euler(item.rotation))
         if isinstance(item, Prop):
             self._prop(spec, item, position, quat)

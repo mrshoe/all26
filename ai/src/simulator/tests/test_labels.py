@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from sim import Box, Camera, Floor, Range, Scenario, Scene, Sphere
+from sim import AprilTag, Box, Camera, Floor, Range, Scenario, Scene, Sphere
 from sim import labels
 from sim.geometry import intrinsics, project, quat_from_euler, quat_looking_at
 from sim.world import build
@@ -154,3 +154,67 @@ class TestFullBoxes(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Tags(Scenario[Empty]):
+    def setup(self, rng):
+        # 3 m north of the camera, facing it, and one facing away.
+        self.front = self.add(AprilTag(tag=5, position=(0, 3, 0), rotation=AprilTag.facing((0, -1, 0))))
+        self.away = self.add(AprilTag(tag=6, position=(1, 3, 0), rotation=AprilTag.facing((0, 1, 0))))
+        self.turned = self.add(AprilTag(tag=7, position=(-1, 3, 0), rotation=AprilTag.facing((-1, -1, 0))))
+
+
+class TestTags(unittest.TestCase):
+    def setUp(self):
+        self.world = build(Tags, 0)
+        self.v = view()
+        self.ids = np.zeros((240, 320), np.uint16)
+        self.depth = np.full((240, 320), np.inf, np.float32)
+
+    def found(self, name):
+        return labels.tag(self.v, self.world.by_name(name), self.ids, self.depth)
+
+    def test_facing_puts_the_top_up(self):
+        tag = self.world.by_name("front")
+        turn = labels.pose(tag)[1]
+        np.testing.assert_allclose(turn.apply([0, 0, 1]), [0, -1, 0], atol=1e-9)
+        np.testing.assert_allclose(turn.apply([0, 1, 0]), [0, 0, 1], atol=1e-9)
+        # Seen from the front, its +x (the tag's right) is the viewer's right: +x here.
+        np.testing.assert_allclose(turn.apply([1, 0, 0]), [1, 0, 0], atol=1e-9)
+
+    def test_corners_go_bottom_left_bottom_right_top_right_top_left(self):
+        found = self.found("front")
+        c = found.corners
+        self.assertEqual(found.tag, 5)
+        self.assertLess(c[0, 0], c[1, 0])  # left of
+        self.assertGreater(c[0, 1], c[3, 1])  # below (y down)
+        self.assertAlmostEqual(c[1, 0], c[2, 0], places=3)
+        self.assertGreater(c[1, 1], c[2, 1])
+        self.assertLess(c[3, 0], c[2, 0])
+        # 0.1651 m across at about 3 m, with fx = 160.
+        self.assertAlmostEqual(c[1, 0] - c[0, 0], 160 * 0.1651 / (3 - AprilTag.THICKNESS), places=2)
+        self.assertTrue(found.in_frame)
+        self.assertAlmostEqual(found.angle, 0, places=4)
+        self.assertAlmostEqual(found.distance, 3 - AprilTag.THICKNESS, places=4)
+
+    def test_a_tag_turned_away_isnt_there(self):
+        self.assertIsNone(self.found("away"))
+
+    def test_angle_off_head_on(self):
+        found = self.found("turned")
+        to_camera = np.array([1, -3, 0]) / np.linalg.norm([1, -3, 0])
+        expected = np.degrees(np.arccos(np.array([-1, -1, 0]) / np.sqrt(2) @ to_camera))
+        self.assertAlmostEqual(found.angle, expected, delta=0.1)
+
+    def test_corners_are_seen_where_the_mask_shows_the_tag(self):
+        tag = self.world.by_name("front")
+        self.assertEqual(self.found("front").corners_seen, 0)  # an empty mask
+        c = self.found("front").corners
+        x0, y0 = np.floor(c.min(0)).astype(int) - 2
+        x1, y1 = np.ceil(c.max(0)).astype(int) + 2
+        self.ids[y0:y1, x0:x1] = tag.id
+        self.assertEqual(self.found("front").corners_seen, 4)
+        # Something in front of its bottom-left corner.
+        bx, by = c[0].astype(int)
+        self.ids[by - 3:by + 4, bx - 3:bx + 4] = 99
+        self.assertEqual(self.found("front").corners_seen, 3)

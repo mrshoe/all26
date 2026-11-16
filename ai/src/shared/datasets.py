@@ -18,7 +18,7 @@ And from ai/src:
     ds = Dataset.load("training/fuel_detector")   # the directory, or its dataset.toml
     ds.fetch()                                    # downloads what's missing
     for sample in ds.samples("train"):            # or "validation", "test"
-        sample.image(), sample.boxes(), sample.mask(), sample.keypoints()
+        sample.image(), sample.boxes(), sample.mask(), sample.keypoints(), sample.tags()
     ds.episodes("validation")                     # shared.episodes.Episode objects
 
 Or check one, and fetch it, from the command line (also from ai/src):
@@ -80,7 +80,7 @@ from functools import cached_property
 from pathlib import Path
 
 from shared.cloud import Cloud, CloudError
-from shared.episodes import Box, Episode, Keypoint
+from shared.episodes import Box, Episode, Keypoint, Tag
 
 RUN_ID = re.compile(r"^\d{8}-\d{4}-[a-z0-9]{4}$")
 SPLITS = ("train", "validation", "test")
@@ -129,6 +129,10 @@ class Sample:
     def keypoints(self) -> list[Keypoint]:
         """Every keypoint in the picture, seen or hidden."""
         return self.episode.keypoints(self.camera, self.frame)
+
+    def tags(self) -> list[Tag]:
+        """Every AprilTag facing the camera, seen or hidden."""
+        return self.episode.tags(self.camera, self.frame)
 
 
 def split_share(run: str, index: int) -> float:

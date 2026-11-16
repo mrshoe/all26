@@ -5,6 +5,12 @@ laptop with bpy installed (pip install bpy==4.5.4, Python 3.11). Each frame,
 moving objects are put where physics says, and each camera renders a color
 image and an object-id mask. The mask comes from Cycles' object index pass,
 which isn't blended at edges, so every pixel is exactly one object's id.
+
+A camera with a `shutter` blurs what moves: each moving object, and the
+camera itself, is keyframed where it was a frame ago and where it is now,
+and Cycles' motion blur keeps the shutter open for the last `shutter`
+seconds of that. The picture's labels are where things are at the end, when
+the shutter closes.
 """
 
 from __future__ import annotations
@@ -22,13 +28,20 @@ from sim import assets
 from sim.backends import Picture
 from sim.backends.physics import Physics
 from sim.geometry import quat_from_euler, quat_looking_at
-from sim.objects import Box, Camera, Floor, Light, Prop, Solid, Sphere, Wall
+from sim import apriltags
+from sim.objects import AprilTag, Box, Camera, Floor, Light, Prop, Solid, Sphere, Wall
 from sim.world import World
 
 # With the denoiser, 16 looks the same as 32 (mean pixel difference under
 # 0.5/255) in about 55% of the time. SIM_SAMPLES overrides it.
 DEFAULT_SAMPLES = 16
 INDOOR_BACKGROUND = ((0.05, 0.05, 0.05), 1.0)
+# A printed AprilTag's black and white, as the share of light they reflect
+# (linear): ink isn't perfectly black, nor paper or vinyl perfectly white.
+TAG_BLACK, TAG_WHITE = 0.04, 0.8
+# Pixels per cell of an AprilTag's texture, which is drawn without blending
+# texels, so edges stay sharp however close the camera.
+TAG_CELL = 16
 
 
 def linear(color) -> tuple:
@@ -42,6 +55,11 @@ class Blender(Physics):
     def __init__(self, samples: int | None = None):
         self.samples = samples or int(os.environ.get("SIM_SAMPLES", DEFAULT_SAMPLES))
         self.tmp = Path(tempfile.mkdtemp(prefix="sim-blender-"))
+        # For motion blur: where each moving object and camera was in the
+        # frame before, and is in this one, by id, as (location, quat).
+        self.before: dict[int, tuple] = {}
+        self.now: dict[int, tuple] = {}
+        self.frame_time: dict[int, float] = {}
 
     def build(self, world: World) -> None:
         import _cycles  # Cycles' own module, which exists once bpy is loaded
@@ -67,8 +85,13 @@ class Blender(Physics):
         scene.render.image_settings.file_format = "PNG"
         scene.render.image_settings.color_mode = "RGB"
 
+        # Motion between a frame's two keyframes is a straight line.
+        bpy.context.preferences.edit.keyframe_new_interpolation_type = "LINEAR"
+        scene.render.motion_blur_position = "END"
+
         self._background(world)
         self.models: dict[str, bpy.types.Object] = {}  # asset id -> its first Prop's object
+        self.tag_materials: dict[tuple, tuple] = {}
         self.objects: dict[int, bpy.types.Object] = {}
         for item in world.solids:
             self.objects[item.id] = self._solid(item)
@@ -97,6 +120,8 @@ class Blender(Physics):
     def _solid(self, item: Solid) -> bpy.types.Object:
         if isinstance(item, Prop):
             return self._model(item)
+        if isinstance(item, AprilTag):
+            return self._tag(item)
         if isinstance(item, Sphere):
             bpy.ops.mesh.primitive_uv_sphere_add(radius=item.radius, segments=48, ring_count=24)
             bpy.ops.object.shade_smooth()
@@ -159,6 +184,70 @@ class Blender(Physics):
                     slot.material = tinted(material, item.tint, f"{item.name}.{material.name}")
         return obj
 
+    def _tag(self, item: AprilTag) -> bpy.types.Object:
+        """A thin plate, its back at the tag's position, the tag on its
+        face (+z) and plain white elsewhere."""
+        from mathutils import Matrix
+
+        white, thick = item.white(), AprilTag.THICKNESS
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        obj = bpy.context.object
+        obj.scale = (white, white, thick)
+        apply_scale()
+        obj.data.transform(Matrix.Translation((0, 0, thick / 2)))
+        obj.name = item.name
+        obj.location = tuple(map(float, item.position))
+        obj.rotation_mode = "QUATERNION"
+        obj.rotation_quaternion = tuple(quat_from_euler(item.rotation))
+        obj.pass_index = item.id
+        mesh = obj.data
+        face, back = self._tag_materials(int(item.tag), white / float(item.size), float(item.roughness))
+        mesh.materials.append(face)
+        mesh.materials.append(back)
+        normals = np.empty(len(mesh.polygons) * 3)
+        mesh.polygons.foreach_get("normal", normals)
+        front = normals.reshape(-1, 3)[:, 2] > 0.5
+        mesh.polygons.foreach_set("material_index", np.where(front, 0, 1).astype(np.int64))
+        # Texture coordinates from where each corner is on the face.
+        uv = mesh.uv_layers.active or mesh.uv_layers.new(name="UVMap")
+        index = np.empty(len(mesh.loops), dtype=np.int64)
+        mesh.loops.foreach_get("vertex_index", index)
+        verts = np.empty(len(mesh.vertices) * 3)
+        mesh.vertices.foreach_get("co", verts)
+        p = verts.reshape(-1, 3)[index]
+        uv.data.foreach_set("uv", np.column_stack([0.5 + p[:, 0] / white, 0.5 + p[:, 1] / white]).ravel())
+        return obj
+
+    def _tag_materials(self, tag: int, vinyl: float, roughness: float) -> tuple:
+        """The face's material (the tag on white) and the plate's, shared by
+        tags with the same ID and proportions."""
+        key = (tag, round(vinyl, 4), roughness)
+        if key in self.tag_materials:
+            return self.tag_materials[key]
+        gray = apriltags.image(tag, vinyl, TAG_CELL)[::-1]  # Blender's rows go bottom to top
+        side = gray.shape[0]
+        rgba = np.ones((side, side, 4), np.float32)
+        rgba[..., :3] = np.where(gray > 127, TAG_WHITE, TAG_BLACK)[..., None]
+        image = bpy.data.images.new(f"apriltag_{tag}", side, side, float_buffer=True)  # linear
+        image.pixels.foreach_set(rgba.ravel())
+        image.pack()
+        face = bpy.data.materials.new(f"apriltag_{tag}")
+        face.use_nodes = True
+        nodes, links = face.node_tree.nodes, face.node_tree.links
+        bsdf = nodes["Principled BSDF"]
+        bsdf.inputs["Roughness"].default_value = roughness
+        texture = nodes.new("ShaderNodeTexImage")
+        texture.image = image
+        texture.interpolation = "Closest"
+        texture.extension = "EXTEND"
+        links.new(texture.outputs["Color"], bsdf.inputs["Base Color"])
+        back = bpy.data.materials.new(f"apriltag_{tag}_back")
+        back.use_nodes = True
+        back.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (TAG_WHITE,) * 3 + (1.0,)
+        back.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = roughness
+        self.tag_materials[key] = (face, back)
+        return face, back
+
     def _material(self, item: Solid) -> bpy.types.Material:
         mat = bpy.data.materials.new(item.name)
         mat.use_nodes = True
@@ -214,15 +303,20 @@ class Blender(Physics):
     # --- Each frame ------------------------------------------------------
 
     def render(self, camera: Camera, position, quat) -> Picture:
+        blur = float(camera.shutter) > 0
+        scene = self.scene
         for item in self.world.moving():
-            obj = self.objects[item.id]
-            obj.location = tuple(map(float, item.position))
-            obj.rotation_quaternion = tuple(map(float, item.quat))
+            self._place(self.objects[item.id], item.id, item.position, item.quat, blur)
+        self._place(self.camera, camera.id, position, quat, blur)
+        scene.render.use_motion_blur = blur
+        if blur:
+            # Keyframes 1 and 2 are a frame apart, so the shutter, in
+            # frames, is its seconds times fps; it closes at keyframe 2.
+            scene.render.motion_blur_shutter = float(camera.shutter) * self.world.scenario.fps
+            scene.frame_set(2)
         width, height = camera.resolution
-        self.scene.render.resolution_x, self.scene.render.resolution_y = width, height
+        scene.render.resolution_x, scene.render.resolution_y = width, height
         self.camera.data.angle = np.radians(camera.fov)
-        self.camera.location = tuple(map(float, position))
-        self.camera.rotation_quaternion = tuple(map(float, quat))
 
         out = self.tmp / "frame"
         shutil.rmtree(out, ignore_errors=True)
@@ -238,6 +332,33 @@ class Blender(Physics):
         # Nothing there (the background): Cycles says 1e10 meters.
         depth[ids < 0.5] = np.inf
         return Picture(rgb=rgb, ids=np.rint(ids).astype(np.uint16), depth=depth)
+
+    def _place(self, obj, key: int, position, quat, blur: bool) -> None:
+        """Put an object (or the camera) where it is now. For motion blur,
+        keyframe it where it was in the frame before (keyframe 1) and where
+        it is now (keyframe 2)."""
+        now = (np.asarray(position, float).copy(), np.asarray(quat, float).copy())
+        t = float(self.data.time)
+        if self.frame_time.get(key) != t:  # a new frame: now becomes before
+            self.before[key] = self.now.get(key, now)
+            self.now[key] = now
+            self.frame_time[key] = t
+        else:
+            self.now[key] = now
+        if obj.animation_data:
+            obj.animation_data_clear()
+        if blur:
+            location, q = self.before[key]
+            if np.dot(q, now[1]) < 0:  # the short way round
+                q = -q
+            obj.location, obj.rotation_quaternion = tuple(map(float, location)), tuple(map(float, q))
+            obj.keyframe_insert("location", frame=1)
+            obj.keyframe_insert("rotation_quaternion", frame=1)
+        obj.location = tuple(map(float, now[0]))
+        obj.rotation_quaternion = tuple(map(float, now[1]))
+        if blur:
+            obj.keyframe_insert("location", frame=2)
+            obj.keyframe_insert("rotation_quaternion", frame=2)
 
     def close(self) -> None:
         shutil.rmtree(self.tmp, ignore_errors=True)

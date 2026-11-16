@@ -55,6 +55,11 @@ def fake_season(folder: Path) -> Library:
     models["ball"]["physics"] = {"mass": 0.2, "bounciness": 0.5, "friction": 0.8}
     # The importer finds keypoints from the CAD, in each model's coordinates.
     models["hub_red"]["keypoints"] = models["hub_blue"]["keypoints"] = {"top": [[0.5, 0, 1.8], [-0.5, 0, 1.8]]}
+    # An AprilTag on the red hub's +x side, toward the field's middle. The
+    # blue hub's is from an old catalog, which listed only IDs (the model had
+    # them drawn on).
+    models["hub_red"]["tags"] = [{"id": 4, "position": [0.5, 0, 1.0], "facing": [1, 0, 0], "vinyl": 0.2}]
+    models["hub_blue"]["tags"] = [7]
     catalog = {
         "source": f"frc/{YEAR}", "year": YEAR,
         "field": {"length": 16.0, "width": 8.0, "wpilib": {"yaw": 180.0, "offset": [8.0, 4.0], "error": 0, "tags": 3}},
@@ -96,7 +101,7 @@ class TestFrcField(FieldTestCase):
         items = names(build(Match, 1))
         self.assertEqual(sorted(n for n in items if n.startswith("field.")),
                          ["field.ball.0", "field.ball.1", "field.ball.2", "field.carpet.0", "field.hub.0",
-                          "field.hub.1"])
+                          "field.hub.1", "field.tags.0"])
         self.assertEqual(items["field.hub.0"].label, "hub")
         self.assertIsNone(items["field.carpet.0"].label)
         self.assertIsInstance(items["field.ball.1"], GamePiece)
@@ -116,8 +121,9 @@ class TestFrcField(FieldTestCase):
             def setup(self, rng):
                 self.field = self.add(FrcField(year=YEAR, elements=("hub",), starting_pieces=False))
 
+        # The hubs' tags come with them.
         self.assertEqual(sorted(n for n in names(build(Hubs, 1)) if n.startswith("field.")),
-                         ["field.hub.0", "field.hub.1"])
+                         ["field.hub.0", "field.hub.1", "field.tags.0"])
 
         class Typo(Scenario[Arena]):
             def setup(self, rng):
@@ -188,6 +194,29 @@ class TestFrcField(FieldTestCase):
         np.testing.assert_allclose(labels.keypoints_of(hub)["top"], [[0.5, 0, 1.8], [-0.5, 0, 1.8]])
         # The carpet has none.
         self.assertEqual(labels.keypoints_of(names(world)["field.carpet.0"]), {})
+
+    def test_apriltags_from_the_catalog(self):
+        from sim import AprilTag, labels
+
+        class Turned(Scenario[Arena]):
+            def setup(self, rng):
+                self.field = self.add(FrcField(year=YEAR, position=(1, 2, 0), rotation=(0, 0, 90)))
+
+        world = build(Turned, 0)
+        (tag,) = world.scenario.field.tags
+        self.assertIsInstance(tag, AprilTag)
+        self.assertEqual((tag.tag, tag.vinyl, tag.label), (4, 0.2, "apriltag"))
+        # The red hub is at (-4, 0) on the field, its tag 0.5 m toward the
+        # middle; the field is turned 90 degrees, so +x is the world's +y.
+        np.testing.assert_allclose(tag.position, (1, -1.5, 1.0), atol=1e-9)
+        np.testing.assert_allclose(labels.pose(tag)[1].apply([0, 0, 1]), (0, 1, 0), atol=1e-9)
+        np.testing.assert_allclose(labels.pose(tag)[1].apply([0, 1, 0]), (0, 0, 1), atol=1e-9)
+
+        class NoTags(Scenario[Arena]):
+            def setup(self, rng):
+                self.field = self.add(FrcField(year=YEAR, apriltags=False))
+
+        self.assertEqual(build(NoTags, 0).scenario.field.tags, [])
 
     def test_asset_ids(self):
         self.assertEqual(assets.info(f"frc/{YEAR}/carpet")["element"], "carpet")

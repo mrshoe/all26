@@ -17,6 +17,8 @@
     keypoints
              every object's named points (Solid.keypoints) in each camera's
              picture, seen or hidden, from the depth image (sim/labels.py)
+    tags     each AprilTag facing a camera: its ID and corners in the
+             picture, how many are seen, and how far and how turned it is
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ from shared.logger import Logger
 from sim import labels
 from sim.backends import Picture
 from sim.geometry import intrinsics, quat_from_euler, quat_looking_at, spin_between
-from sim.objects import Background, Camera, Item, Light, Solid, Wall
+from sim.objects import AprilTag, Background, Camera, Item, Light, Solid, Wall
 from sim.world import World, jsonable
 
 
@@ -129,7 +131,8 @@ class SimLogger:
             cam = named[name]
             self.log.image(index, cam.id, name, t, picture.rgb, picture.ids)
             view = labels.View(*cameras[name], intrinsics(cam.resolution, cam.fov))
-            for item, (x0, y0, x1, y1, n) in boxes(picture.ids, world.labeled()).items():
+            seen_boxes = boxes(picture.ids, world.labeled())
+            for item, (x0, y0, x1, y1, n) in seen_boxes.items():
                 row = {"frame": index, "camera": cam.id, "object": item.id, "label": item.label,
                        "x0": x0, "y0": y0, "x1": x1, "y1": y1, "pixels": n, "source": "truth"}
                 full = labels.full_box(view, item, self.shapes[item.id])
@@ -138,6 +141,7 @@ class SimLogger:
                 self.log.add("boxes", row)
             if picture.depth is not None:
                 self.keypoints(index, cam, view, picture)
+                self.tags(index, cam, view, picture, seen_boxes)
         self.log.add("sim", {"frame": index, "time": t, **timing, "log_s": time.perf_counter() - started})
 
     def keypoints(self, index: int, cam: Camera, view: labels.View, picture: Picture) -> None:
@@ -149,6 +153,20 @@ class SimLogger:
                     "frame": index, "camera": cam.id, "object": item.id, "label": p.label, "index": p.index,
                     "x": p.x, "y": p.y, "depth": p.depth, "in_frame": p.in_frame, "visible": p.visible,
                     "occluded_by": p.occluded_by, "source": "truth"})
+
+    def tags(self, index: int, cam: Camera, view: labels.View, picture: Picture, seen_boxes: dict) -> None:
+        for item in self.world.of_type(AprilTag):
+            found = labels.tag(view, item, picture.ids, picture.depth)
+            if found is None:
+                continue
+            pixels = seen_boxes[item][4] if item in seen_boxes else int(np.count_nonzero(picture.ids == item.id))
+            row = {"frame": index, "camera": cam.id, "object": item.id, "tag": found.tag,
+                   "in_frame": found.in_frame, "visible": found.in_frame and found.corners_seen == 4,
+                   "corners_seen": found.corners_seen, "distance": found.distance, "angle": found.angle,
+                   "pixels": pixels, "source": "truth"}
+            for i, (x, y) in enumerate(found.corners):
+                row[f"x{i}"], row[f"y{i}"] = float(x), float(y)
+            self.log.add("tags", row)
 
     def finish(self) -> dict:
         """Write the episode's files; return episode.json's contents."""

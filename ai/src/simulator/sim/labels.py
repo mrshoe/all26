@@ -12,6 +12,12 @@
   shape (a Prop's collision hulls), next to the box of what's seen. And
   how many pixels it would cover, so visible pixels / full pixels is the
   share of it that's seen.
+- **AprilTags**: each tag facing the camera, and where its black square's
+  4 corners are in the picture, in the order detectors give them. A
+  corner is seen if the mask shows the tag itself at its pixel or one next
+  to it. (Not the keypoints' depth test: a tag lies flat on something, and
+  a corner a centimeter inside a wall would pass it.) A tag seen from
+  behind isn't in the picture's tags at all.
 
 Every point an object has is recorded, seen or not, so whoever trains on
 them chooses which to use.
@@ -27,7 +33,7 @@ from scipy.spatial import ConvexHull, QhullError
 from scipy.spatial.transform import Rotation
 
 from sim import assets
-from sim.objects import Box, Floor, Item, Prop, Solid, Sphere, Wall
+from sim.objects import AprilTag, Box, Floor, Item, Prop, Solid, Sphere, Wall
 
 # Something drawn hides a point only if it's this much nearer: a few
 # centimeters, plus a little more further away, where a pixel covers more.
@@ -53,6 +59,16 @@ class Point:
     # The id of what hides it (the object's own id when its far side does),
     # or None if it's seen or out of the picture.
     occluded_by: Optional[int]
+
+
+@dataclass
+class TagSeen:
+    tag: int  # its ID
+    corners: np.ndarray  # 4 x 2 pixels: bottom left, bottom right, top right, top left
+    in_frame: bool  # all 4 corners are in the picture
+    corners_seen: int  # how many of the 4 are in the picture and not hidden
+    distance: float  # meters from the camera to its middle
+    angle: float  # degrees between its face's normal and the line to the camera; 0 is head on
 
 
 class View:
@@ -145,6 +161,9 @@ def shape(item: Solid) -> list[np.ndarray]:
             return [box_corners(size) + [0, 0, size[2] / 2]]
     if isinstance(item, Box):
         return [box_corners(item.size)]
+    if isinstance(item, AprilTag):
+        w = item.white()
+        return [box_corners((w, w, AprilTag.THICKNESS)) + [0, 0, AprilTag.THICKNESS / 2]]
     raise TypeError(f"There's no shape for a {type(item).__name__}")
 
 
@@ -249,3 +268,32 @@ def seen(col: int, row: int, z: float, ids: np.ndarray, depth: np.ndarray) -> tu
     if near.max() >= z - (SEEN_WITHIN_M + SEEN_WITHIN_SHARE * z):
         return True, None
     return False, int(ids[row, col])
+
+
+def shows(ids: np.ndarray, col: int, row: int, object_id: int) -> bool:
+    """Whether the mask shows this object at this pixel or one next to it."""
+    return bool((ids[max(row - 1, 0):row + 2, max(col - 1, 0):col + 2] == object_id).any())
+
+
+def tag(view: View, item: AprilTag, ids: np.ndarray, depth: np.ndarray) -> Optional[TagSeen]:
+    """An AprilTag in this picture, or None if its face is turned away from
+    the camera, a corner is behind the camera, or no corner is in the
+    picture."""
+    position, turn = pose(item)
+    normal = turn.apply([0.0, 0.0, 1.0])
+    middle = position + normal * AprilTag.THICKNESS
+    toward = view.position - middle
+    distance = float(np.linalg.norm(toward))
+    if distance < 1e-9 or normal @ toward <= 0:
+        return None
+    local = view.local(to_world(item, item.corners()))
+    z = -local[:, 2]
+    if (z < NEAR).any():
+        return None
+    corners = view.pixels(local)
+    inside = (corners[:, 0] >= 0) & (corners[:, 0] < view.width) & (corners[:, 1] >= 0) & (corners[:, 1] < view.height)
+    if not inside.any():
+        return None
+    seen_count = sum(1 for (x, y), i in zip(corners, inside) if i and shows(ids, int(x), int(y), item.id))
+    angle = float(np.degrees(np.arccos(np.clip(normal @ toward / distance, -1, 1))))
+    return TagSeen(int(item.tag), corners, bool(inside.all()), seen_count, distance, angle)

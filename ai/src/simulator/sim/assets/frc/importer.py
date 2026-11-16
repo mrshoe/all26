@@ -16,9 +16,11 @@ run this. It:
 3. drops what neither cameras nor physics need: hardware (rivets, bolts,
    ...) by name, parts under 2 cm, and parts hidden inside an element (no
    ray from them gets out), like the HUB's fuel counter;
-4. draws each AprilTag's real 36h11 image on its vinyl, facing the way
-   WPILib's layout says, and works out how the CAD's coordinates map to
-   WPILib's from the tags' positions;
+4. finds each AprilTag's vinyl, and works out how the CAD's coordinates
+   map to WPILib's from the tags' positions. The vinyls aren't in the
+   models: each is in the catalog (its ID, where its back is, which way it
+   faces, as WPILib's layout says, and its size), and sim.frc puts an
+   AprilTag object there, which has its own labels;
 5. cuts each model to TRIANGLES and gives physics one convex hull per kept
    part (CoACD for the few that are far from convex);
 6. writes each model to the cache folder (sim/assets) as model.glb and
@@ -26,9 +28,8 @@ run this. It:
    catalog, frc/<year>.json, last. --upload copies the models and the STEP
    to gs://<bucket>/assets/frc/<year>/. Commit the catalog once uploaded.
 
-Needs bpy (as for rendering), and `pip install coacd cadquery-ocp
-opencv-python-headless==4.10.0.84` (that OpenCV for numpy 1.26, which bpy
-needs). --upload needs gcloud signed in as an admin.
+Needs bpy (as for rendering), and `pip install coacd cadquery-ocp`.
+--upload needs gcloud signed in as an admin.
 """
 
 from __future__ import annotations
@@ -67,8 +68,6 @@ HARDWARE = re.compile(
 # (2025's are "FE-00083-Vinyl_FE-00083-ID5-Vinyl").
 TAG_VINYL = r"AprilTag Vinyl"
 TAG_ID = re.compile(r"\bID\s*(\d+)")
-# The black square of an FRC tag (36h11 since 2024): 6.5 in.
-TAG_SIZE = 0.1651
 # Names in the CAD end with an instance number, "<2>", and Blender adds ".001".
 INSTANCE = re.compile(r"(\s*<\d+>)?(\.\d+)?$")
 HEADERS = {"User-Agent": "wildhat-sim (FRC team 100 asset import)"}
@@ -493,67 +492,24 @@ def decimate(obj, budget: int) -> None:
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
-def tag_image(tag: int, vinyl: float, cell: int = 32):
-    """A white square `vinyl` meters across, with tag `tag` (36h11)
-    centered on it at its real size."""
-    import bpy
-    import cv2
+def tag_entry(part: dict, tag: int, facing, origin) -> dict:
+    """An AprilTag vinyl as the catalog keeps it: its ID, the middle of its
+    back (on the element's surface) relative to the model's origin, the way
+    its face points (from WPILib's layout), and its side."""
     import numpy as np
 
-    marker = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11),
-                                           tag, 8 * cell, borderBits=1)
-    side = int(round(vinyl / TAG_SIZE * 8 * cell))
-    canvas = np.full((side, side), 255, np.uint8)
-    at = (side - 8 * cell) // 2
-    canvas[at : at + 8 * cell, at : at + 8 * cell] = marker
-    rgba = np.ones((side, side, 4), np.float32)
-    # Blender's pixel rows go bottom to top.
-    rgba[..., :3] = (canvas[::-1, :, None] / 255.0)
-    image = bpy.data.images.new(f"apriltag_{tag}", side, side)
-    image.pixels.foreach_set(rgba.ravel())
-    image.pack()
-    return image
-
-
-def tag_material(tag: int, vinyl: float):
-    import bpy
-
-    mat = bpy.data.materials.new(f"apriltag_{tag}")
-    mat.use_nodes = True
-    nodes, links = mat.node_tree.nodes, mat.node_tree.links
-    bsdf = nodes["Principled BSDF"]
-    bsdf.inputs["Roughness"].default_value = 0.6
-    tex = nodes.new("ShaderNodeTexImage")
-    tex.image = tag_image(tag, vinyl)
-    tex.interpolation = "Closest"  # crisp cell edges
-    links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    return mat
-
-
-def tag_object(part: dict, tag: int, facing):
-    """The vinyl as its own object, with UVs that put the tag upright,
-    facing `facing` (a unit vector in the CAD's coordinates)."""
-    import bpy
-    import numpy as np
-
-    obj = build_mesh(f"apriltag_{tag}", [part])
     v = part["verts"]
+    n = np.asarray(facing, float)
+    n /= np.linalg.norm(n)
     center = (v.min(0) + v.max(0)) / 2
-    size = float(max(v.max(0) - v.min(0)))
     up = np.array([0.0, 0.0, 1.0])
-    right = np.cross(-np.asarray(facing, float), up)
+    right = np.cross(up, n)
     right /= np.linalg.norm(right)
-    mesh = obj.data
-    uv = mesh.uv_layers.new(name="UVMap")
-    index = np.empty(len(mesh.loops), dtype=np.int64)
-    mesh.loops.foreach_get("vertex_index", index)
-    p = v[index] - center
-    coords = np.column_stack([0.5 + p @ right / size, 0.5 + p @ up / size])
-    uv.data.foreach_set("uv", coords.ravel())
-    mesh.materials.clear()
-    mesh.materials.append(tag_material(tag, size))
-    mesh.polygons.foreach_set("material_index", np.zeros(len(mesh.polygons), dtype=np.int64))
-    return obj
+    p = v - center
+    side = max(np.ptp(p @ right), np.ptp(p @ np.cross(n, right)))
+    back = center + n * float((p @ n).min())
+    return {"id": int(tag), "position": [round(float(x), 5) for x in back - origin],
+            "facing": [round(float(x), 6) for x in n], "vinyl": round(float(side), 4)}
 
 
 def collision_parts(parts: list[dict], origin, pool) -> list:
@@ -675,7 +631,8 @@ def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path,
                keypoints: dict | None = None, tag_ids: dict | None = None, seen_only: set | None = None) -> dict:
     """One model from these CAD mesh objects: drop, simplify, tag, center,
     save. `keypoints` are its keypoints' rules (find_keypoints); `tag_ids`
-    says which objects are AprilTag vinyls, and which tag (assign_tags);
+    says which objects are AprilTag vinyls, and which tag (assign_tags):
+    they're left out of the model, and listed in its "tags";
     `seen_only` names objects that get no collision (pieces stored behind a
     wall).
     Returns its catalog entry (and "position": where it goes)."""
@@ -718,14 +675,7 @@ def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path,
     origin = np.array([(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, lo[2] if kind == "piece" else 0.0])
 
     body = build_mesh(name, parts)
-    decimate(body, TRIANGLES[kind] - sum(len(t["tris"]) for t, _ in tags))
-    pieces = [tag_object(t, i, tag_facing[i]) for t, i in tags if i in tag_facing]
-    if pieces:
-        bpy.ops.object.select_all(action="DESELECT")
-        for o in [body, *pieces]:
-            o.select_set(True)
-        bpy.context.view_layer.objects.active = body
-        bpy.ops.object.join()
+    decimate(body, TRIANGLES[kind])
     body.data.transform(_translation(-origin))
     triangles = sum(len(p.vertices) - 2 for p in body.data.polygons)
     hulls = collision_parts(parts, origin, pool)
@@ -740,7 +690,8 @@ def make_model(name: str, kind: str, objects: list, tag_facing: dict, out: Path,
         "source_triangles": source,
         "parts": len(hulls),
         "dropped": dict(dropped),
-        "tags": sorted(i for _, i in tags),
+        "tags": sorted((tag_entry(t, i, tag_facing[i], origin) for t, i in tags if i in tag_facing),
+                       key=lambda e: e["id"]),
         **({"keypoints": {label: [[round(float(v), 4) for v in p - origin] for p in ps]
                           for label, ps in points.items()}} if points else {}),
         "files": {f: md5(folder / f) for f in FILES},
@@ -858,7 +809,8 @@ def import_field(glb: Path, config: dict, layout: dict, out: Path, only: set[str
                                    "element": model["element"], "alliance": model["alliance"], **entry}
         catalog["layout"].append({"asset": name, "position": position})
         print(f"{name}: {entry['source_triangles']} -> {entry['triangles']} triangles, {entry['parts']} collision "
-              f"parts, dropped {entry['dropped']}, tags {entry['tags']} ({time.time() - started:.0f}s)", flush=True)
+              f"parts, dropped {entry['dropped']}, tags {[t['id'] for t in entry['tags']]} "
+              f"({time.time() - started:.0f}s)", flush=True)
 
     for name, indexes in pieces.items():
         spec = config["pieces"][name]

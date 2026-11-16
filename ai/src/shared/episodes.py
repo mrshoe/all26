@@ -8,7 +8,8 @@ e.g. after `wildhat download`:
     ep.mask("front", 12)        height x width uint16 object ids (simulation)
     ep.boxes("front", 12)       [Box(label="ball", name="ball", x0=..., ...)]
     ep.keypoints("front", 12)   [Keypoint(label="corner", name="crate", index=0, x=..., visible=True, ...)]
-    ep.table("poses")           a pyarrow Table; .to_pandas() if you have pandas
+    ep.tags("front", 12)        [Tag(tag=7, name="tag.0", corners=4 x 2 array, visible=True, ...)]
+    ep.table("poses")          a pyarrow Table; .to_pandas() if you have pandas
 
 Needs numpy, pillow and pyarrow.
 """
@@ -78,6 +79,42 @@ class Keypoint:
     occluded_by: Optional[str] = None
     score: Optional[float] = None
     source: str = "truth"
+
+
+@dataclass
+class Tag:
+    """An AprilTag facing the camera, in one picture: its ID, and its black
+    square's corners (4 x 2 pixels) in the order detectors give them:
+    bottom left, bottom right, top right, top left, as seen facing the tag.
+    `in_frame` if all 4 are in the picture; `visible` if they're all in it
+    and none is hidden. `distance` (m), `angle` (degrees off head-on) and
+    `pixels` (what the mask shows of it, white border too) are the
+    truth's; `score` a detector's, if it gives one."""
+
+    tag: int
+    name: Optional[str]
+    corners: np.ndarray
+    in_frame: bool
+    visible: Optional[bool] = None
+    corners_seen: Optional[int] = None
+    distance: Optional[float] = None
+    angle: Optional[float] = None
+    pixels: Optional[int] = None
+    score: Optional[float] = None
+    source: str = "truth"
+
+    @property
+    def side(self) -> float:
+        """How big it looks: the side of a square of the same area, in pixels."""
+        x, y = self.corners[:, 0], self.corners[:, 1]
+        area = 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+        return float(np.sqrt(area))
+
+
+def tag_from_row(r: dict, names: dict) -> Tag:
+    corners = np.array([[r[f"x{i}"], r[f"y{i}"]] for i in range(4)], float)
+    return Tag(r["tag"], names.get(r["object"]), corners, r["in_frame"], r.get("visible"), r.get("corners_seen"),
+               r.get("distance"), r.get("angle"), r.get("pixels"), r.get("score"), r["source"])
 
 
 class Episode:
@@ -163,3 +200,8 @@ class Episode:
             out.append(Keypoint(r["label"], self.names.get(r["object"]), r["index"], r["x"], r["y"],
                                 r["depth"], r["in_frame"], r["visible"], by, r["score"], r["source"]))
         return out
+
+    def tags(self, camera: str, frame: int, source: str = "truth") -> list[Tag]:
+        """The AprilTags facing this camera in this frame, from `source`:
+        "truth", or a detector's name. (Episodes from before tags have none.)"""
+        return [tag_from_row(r, self.names) for r in self._rows("tags", camera, frame, source)]

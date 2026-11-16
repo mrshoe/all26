@@ -1,6 +1,7 @@
 // Labels drawn over an episode's video from its tables: boxes, full boxes
 // (around the whole of a partly hidden object), keypoints (filled if seen,
-// hollow if hidden) and names, for the ground truth and for each model
+// hollow if hidden), AprilTags (each one's square and ID, a dot on its
+// first corner) and names, for the ground truth and for each model
 // whose predictions were logged. A canvas over the video, redrawn for the
 // frame on screen; a bar of chips turns each layer, label and source on
 // and off. Hovering a box or point says what it is.
@@ -8,13 +9,14 @@
 import { api, Table } from "./api";
 import { h } from "./dom";
 
-export type Layer = "boxes" | "full" | "points" | "hidden" | "names";
+export type Layer = "boxes" | "full" | "points" | "hidden" | "tags" | "names";
 
 const LAYERS: [Layer, string, string][] = [
   ["boxes", "Boxes", "Each labeled object's box: what's seen of it"],
   ["full", "Full boxes", "Dashed, around the whole of a partly hidden object"],
   ["points", "Keypoints", "Filled dots: keypoints that are seen"],
   ["hidden", "Hidden keypoints", "Hollow dots: keypoints behind something, or the object's own far side"],
+  ["tags", "AprilTags", "Each tag's square and ID, a dot on its first corner (bottom left); dashed if partly hidden"],
   ["names", "Names", "Each box's label, and a model's confidence"],
 ];
 
@@ -28,7 +30,7 @@ export interface OverlayPrefs {
 
 export const defaultOverlayPrefs = (): OverlayPrefs => ({
   on: true,
-  layers: { boxes: true, full: true, points: true, hidden: true, names: true },
+  layers: { boxes: true, full: true, points: true, hidden: true, tags: true, names: true },
   hiddenLabels: [],
   hiddenSources: [],
 });
@@ -64,6 +66,18 @@ interface PointRow {
   source: string;
 }
 
+interface TagRow {
+  object: number | null;
+  tag: number;
+  corners: [number, number][];
+  visible: boolean | null;
+  cornersSeen: number | null;
+  distance: number | null;
+  angle: number | null;
+  score: number | null;
+  source: string;
+}
+
 /** Rows of a column table, grouped by frame. */
 function byFrame<T>(table: Table | undefined, keep: (i: number) => boolean, row: (i: number) => T): Map<number, T[]> {
   const out = new Map<number, T[]>();
@@ -91,6 +105,7 @@ export class Overlay {
   private sizes = new Map<number, [number, number]>();
   private boxes = new Map<number, BoxRow[]>();
   private points = new Map<number, PointRow[]>();
+  private tagRows = new Map<number, TagRow[]>();
   private loaded = new Map<string, Promise<void>>();
   private camera = "";
   private frame = 0;
@@ -123,6 +138,9 @@ export class Overlay {
       this.labels = [...new Set(b.label as string[])];
       this.sources = [...new Set(b.source as string[])];
     }
+    for (const s of (tables.tags?.source ?? []) as string[]) {
+      if (!this.sources.includes(s)) this.sources.push(s);
+    }
     this.stage = h("div", { class: "stage" }, video, this.canvas, this.tip);
     this.bar = h("div", { class: "layers" });
     new ResizeObserver(() => this.redraw()).observe(this.stage);
@@ -137,6 +155,7 @@ export class Overlay {
     this.camera = camera;
     const id = this.cameraIds.get(camera);
     this.boxes = byFrame(this.tables.boxes, (i) => this.tables.boxes.camera[i] === id, (i) => this.boxRow(i));
+    this.tagRows = byFrame(this.tables.tags, (i) => this.tables.tags.camera[i] === id, (i) => this.tagRow(i));
     this.points = new Map();
     this.loadPoints();
     this.renderBar();
@@ -158,6 +177,17 @@ export class Overlay {
       object: num(t.object[i]), label: t.label[i] as string,
       x0: Number(t.x0[i]), y0: Number(t.y0[i]), x1: Number(t.x1[i]), y1: Number(t.y1[i]),
       full, pixels: num(t.pixels?.[i]), fullPixels: num(t.full_pixels?.[i]), score: num(t.score?.[i]),
+      source: t.source[i] as string,
+    };
+  }
+
+  private tagRow(i: number): TagRow {
+    const t = this.tables.tags;
+    return {
+      object: num(t.object[i]), tag: Number(t.tag[i]),
+      corners: [0, 1, 2, 3].map((k) => [Number(t[`x${k}`][i]), Number(t[`y${k}`][i])] as [number, number]),
+      visible: t.visible?.[i] as boolean | null, cornersSeen: num(t.corners_seen?.[i]),
+      distance: num(t.distance?.[i]), angle: num(t.angle?.[i]), score: num(t.score?.[i]),
       source: t.source[i] as string,
     };
   }
@@ -214,6 +244,7 @@ export class Overlay {
       full: this.hasFull,
       points: this.hasPoints,
       hidden: this.hasPoints,
+      tags: !!this.tables.tags,
       names: !!this.tables.boxes,
     };
     const master = h("label", { class: "check", title: "Show labels over the video (L)" },
@@ -286,6 +317,13 @@ export class Overlay {
       && (r.visible === false ? p.layers.hidden : p.layers.points));
   }
 
+  private shownTags(): TagRow[] {
+    const p = this.prefs;
+    if (!p.layers.tags) return [];
+    return (this.tagRows.get(this.frame) ?? []).filter((r) => !p.hiddenSources.includes(r.source)
+      && !p.hiddenLabels.includes("apriltag"));
+  }
+
   /** Points belong to objects, not labels; an object's label is its boxes'. */
   private objectHidden(object: number): boolean {
     const objects = this.tables.objects;
@@ -347,6 +385,39 @@ export class Overlay {
         }
       }
     }
+    for (const r of this.shownTags()) {
+      const pts = r.corners.map(([x, y]) => [x * sx, y * sy] as [number, number]);
+      const color = this.color(r.source);
+      ctx.setLineDash(r.visible === false ? [4, 3] : []);
+      for (const [width, stroke] of [[4, OUTLINE], [2, color]] as [number, string][]) {
+        ctx.beginPath();
+        pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.closePath();
+        ctx.lineWidth = width;
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      // The first corner, so a tag read turned shows it.
+      ctx.beginPath();
+      ctx.arc(pts[0][0], pts[0][1], 3, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      if (p.layers.names) {
+        const text = `${r.tag}`;
+        ctx.font = "600 11px system-ui, sans-serif";
+        ctx.textBaseline = "middle";
+        const w = ctx.measureText(text).width + 8;
+        const cx = pts.reduce((a, [x]) => a + x, 0) / 4, cy = pts.reduce((a, [, y]) => a + y, 0) / 4;
+        ctx.fillStyle = color;
+        ctx.fillRect(cx - w / 2, cy - 8, w, 16);
+        ctx.fillStyle = "#000";
+        ctx.fillText(text, cx - w / 2 + 4, cy);
+      }
+    }
     if (p.layers.names && (p.layers.boxes || p.layers.full)) {
       ctx.font = "600 11px system-ui, sans-serif";
       ctx.textBaseline = "bottom";
@@ -389,6 +460,17 @@ export class Overlay {
           .filter(Boolean).join(" · ");
       }
     }
+    if (!text) {
+      const r = this.shownTags().find((t) => inside(mx, my, t.corners.map(([x, y]) => [x * sx, y * sy])));
+      if (r) {
+        text = r.source === "truth"
+          ? [`tag ${r.tag}`, name(r.object), r.distance !== null ? `${r.distance.toFixed(1)} m` : "",
+              r.angle !== null ? `${Math.round(r.angle)}° off head-on` : "",
+              r.cornersSeen !== null ? `${r.cornersSeen}/4 corners seen` : ""].filter(Boolean).join(" · ")
+          : [`${r.source} · tag ${r.tag}`, r.score !== null ? `score ${r.score.toFixed(2)}` : ""]
+            .filter(Boolean).join(" · ");
+      }
+    }
     if (!text && (p.layers.boxes || p.layers.full)) {
       const inside = this.shownBoxes().filter((b) => {
         const [x0, y0, x1, y1] = p.layers.full && b.full ? b.full : [b.x0, b.y0, b.x1, b.y1];
@@ -415,6 +497,18 @@ export class Overlay {
     this.tip.style.left = `${Math.max(0, left)}px`;
     this.tip.style.top = `${top}px`;
   }
+}
+
+/** Whether a point is inside a convex polygon, either way round. */
+function inside(x: number, y: number, poly: number[][]): boolean {
+  let pos = false, neg = false;
+  poly.forEach(([ax, ay], k) => {
+    const [bx, by] = poly[(k + 1) % poly.length];
+    const c = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (c > 0) pos = true;
+    if (c < 0) neg = true;
+  });
+  return !(pos && neg);
 }
 
 /** A full box worth drawing: more than a pixel from the box seen. */

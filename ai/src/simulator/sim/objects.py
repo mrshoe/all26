@@ -135,6 +135,62 @@ class Box(Solid):
 
 
 @dataclass(eq=False, kw_only=True)
+class AprilTag(Solid):
+    """An AprilTag (36h11, FRC's family) printed on a white square: a thin
+    plate that cameras see and physics doesn't. Its face is its own +z
+    side, the top of the tag toward its own +y; its back is at `position`,
+    so on a wall the plate stands just in front of it. Each picture's
+    `tags` table says where its corners are (sim/labels.py).
+
+        AprilTag(tag=7, position=(0, 4, 1.2), rotation=AprilTag.facing((0, -1, 0)))
+    """
+
+    # Its ID: 0 to 586.
+    tag: int = 0
+    # The black square's side, in meters; FRC's is 6.5 in.
+    size: Number = 0.1651
+    # The white square's side, in meters; by default one cell (an eighth of
+    # `size`) of white all around.
+    vinyl: Number = None
+    label: Optional[str] = "apriltag"
+    roughness: Number = 0.6
+
+    THICKNESS: ClassVar[float] = 0.001
+
+    def white(self) -> float:
+        """The white square's side, in meters."""
+        return float(self.size) * 1.25 if self.vinyl is None else float(self.vinyl)
+
+    @staticmethod
+    def facing(direction: Vec3, up: Vec3 = (0.0, 0.0, 1.0)) -> tuple:
+        """The rotation that turns a tag's face toward `direction` (a vector
+        in the world), with its top as near `up` as it can be: for
+        `rotation=`."""
+        from scipy.spatial.transform import Rotation
+
+        n = np.asarray(direction, float)
+        n = n / np.linalg.norm(n)
+        up = np.asarray(up, float)
+        right = np.cross(up, n)
+        if np.linalg.norm(right) < 1e-6:  # facing straight up or down: its top toward +y
+            right = np.cross((0.0, 1.0, 0.0), n)
+        right /= np.linalg.norm(right)
+        matrix = np.column_stack([right, np.cross(n, right), n])
+        return tuple(float(a) for a in Rotation.from_matrix(matrix).as_euler("xyz", degrees=True))
+
+    def corners(self) -> np.ndarray:
+        """The black square's 4 corners in its own coordinates, in the order
+        AprilTag detectors give them (WPILib's getCorner(0) to (3)): bottom
+        left, bottom right, top right, top left, as seen facing the tag."""
+        h, z = float(self.size) / 2, self.THICKNESS
+        return np.array([(-h, -h, z), (h, -h, z), (h, h, z), (-h, h, z)])
+
+    def settings(self) -> dict:
+        unused = ("color", "static", "mass", "velocity", "bounciness", "friction")
+        return {k: v for k, v in super().settings().items() if k not in unused}
+
+
+@dataclass(eq=False, kw_only=True)
 class Prop(Solid):
     """A model from the asset catalog (sim/assets), e.g. a chair. `position`
     is the middle of its base, so z = 0 stands it on the floor. Its own
@@ -267,6 +323,11 @@ class Camera(Item):
     # Horizontal field of view, in degrees.
     fov: Number = 70.0
     look_at: Any = None
+    # Seconds the shutter is open for each picture, up to a frame (1/fps):
+    # things moving across the picture meanwhile blur, as they do on a
+    # robot's camera. 0 is a perfectly sharp picture. (The blender backend
+    # takes the motion from the frame before.)
+    shutter: Number = 0.0
 
     LIVE: ClassVar[tuple[str, ...]] = ("position", "rotation", "look_at")
 

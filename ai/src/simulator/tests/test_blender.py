@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from sim import Box, Camera, Floor, Light, Scenario, Scene, Sphere
+from sim import AprilTag, Box, Camera, Floor, Light, Scenario, Scene, Sphere
 from sim import labels
 from sim.geometry import intrinsics, project
 from sim.logger import boxes as logger_boxes
@@ -162,3 +162,113 @@ class TestKeypointsAndFullBoxes(unittest.TestCase):
         self.assertAlmostEqual(full_pixels / pixels, 1, delta=0.05)
         self.assertLess(seen[4] / full_pixels, 0.8)  # the post hides some
         self.assertLess(seen[2] - seen[0], x1 - x0)
+
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+
+class Tagged(Scenario[Lit]):
+    def setup(self, rng):
+        self.wall = self.add(Box(size=(3, 0.1, 2), position=(0, 3.05, 1), color=(0.5, 0.5, 0.5)))
+        self.head_on = self.add(AprilTag(tag=1, position=(-0.4, 3.0, 1.0), rotation=AprilTag.facing((0, -1, 0))))
+        self.turned = self.add(AprilTag(tag=7, position=(0.5, 2.7, 0.9), rotation=AprilTag.facing((-0.5, -1, 0.2))))
+        self.away = self.add(AprilTag(tag=12, position=(0, 2.0, 0.5), rotation=AprilTag.facing((0, 1, 0))))
+        self.cam = self.add(Camera(position=(0.1, 1.0, 1.1), look_at=(0, 3, 1.0), resolution=(640, 480), fov=60))
+
+
+@unittest.skipIf(Blender is None or cv2 is None, "bpy or OpenCV (opencv-python-headless) isn't installed")
+class TestAprilTags(unittest.TestCase):
+    """Rendered tags are real 36h11 tags: OpenCV's detector reads their
+    IDs, and finds their corners where the labels say, in the same order."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.world = build(Tagged, 0)
+        backend = Blender(samples=8)
+        backend.build(cls.world)
+        read_poses(cls.world, backend)
+        cam = cls.world.cameras[0]
+        pose = camera_pose(cam)
+        cls.picture = backend.render(cam, *pose)
+        backend.close()
+        view = labels.View(*pose, intrinsics(cam.resolution, cam.fov))
+        cls.truth = {t.name: labels.tag(view, t, cls.picture.ids, cls.picture.depth)
+                     for t in cls.world.of_type(AprilTag)}
+
+    def test_only_tags_facing_the_camera_are_labeled(self):
+        self.assertIsNone(self.truth["away"])
+        self.assertEqual(self.truth["head_on"].corners_seen, 4)
+        self.assertEqual(self.truth["turned"].corners_seen, 4)
+
+    def test_opencv_finds_them_where_the_labels_say(self):
+        from shared.apriltags import detect
+
+        found = {tag: corners for tag, corners in detect(self.picture.rgb)}
+        self.assertEqual(set(found), {1, 7})
+        for name in ("head_on", "turned"):
+            truth = self.truth[name]
+            error = np.linalg.norm(found[truth.tag] - truth.corners, axis=1)
+            self.assertLess(error.max(), 1.0, f"{name}: corners {error.round(2)} px off")
+
+    def test_the_mask_holds_the_tags(self):
+        ids = set(np.unique(self.picture.ids).tolist())
+        self.assertIn(self.world.by_name("head_on").id, ids)
+
+
+class Gray(Scene):
+    def setup(self, rng):
+        self.floor = self.add(Floor(size=(10, 10), color=(0.4, 0.4, 0.4)))
+        self.sun = self.add(Light(kind="sun", intensity=4, direction=(0.3, 0.5, -1)))
+
+
+class Passing(Scenario[Gray]):
+    fps = 10
+
+    def setup(self, rng):
+        self.ball = self.add(Sphere(radius=0.15, color=(1, 0.85, 0), position=(-1, 3, 0.15), velocity=(8, 0, 0)))
+        self.sharp = self.add(Camera(position=(0, 0, 0.6), look_at=(0, 3, 0.2), resolution=(160, 120), fov=60))
+        self.blurred = self.add(Camera(position=(0, 0, 0.6), look_at=(0, 3, 0.2), resolution=(160, 120), fov=60,
+                                       shutter=0.05))
+
+
+@unittest.skipIf(Blender is None, "bpy isn't installed")
+class TestMotionBlur(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        world = build(Passing, 0)
+        backend = Blender(samples=8)
+        backend.build(world)
+        cls.pictures = []
+        # Two frames, so the second has a frame before it to blur from.
+        for frame in range(2):
+            if frame:
+                backend.step(0.1)
+            read_poses(world, backend)
+            cls.pictures.append({cam.name: backend.render(cam, *camera_pose(cam)) for cam in world.cameras})
+        backend.close()
+        cls.ball = world.by_name("ball")
+
+    def yellow_width(self, rgb):
+        r, g, b = (rgb[..., i].astype(float) for i in range(3))
+        cols = np.nonzero(((r - b > 60) & (g - b > 40)).any(0))[0]
+        return cols.max() - cols.min() + 1 if len(cols) else 0
+
+    def test_a_shutter_blurs_what_moves(self):
+        now = self.pictures[1]
+        sharp, blurred = self.yellow_width(now["sharp"].rgb), self.yellow_width(now["blurred"].rgb)
+        # 8 m/s for 0.05 s is 0.4 m, more than the ball's width again.
+        self.assertGreater(blurred, sharp * 1.5)
+        # The first frame has nothing before it: no blur.
+        first = self.pictures[0]
+        self.assertAlmostEqual(self.yellow_width(first["blurred"].rgb), self.yellow_width(first["sharp"].rgb), delta=2)
+
+    def test_the_labels_are_where_it_is_when_the_shutter_closes(self):
+        sharp, blurred = self.pictures[1]["sharp"].ids, self.pictures[1]["blurred"].ids
+        xs = np.nonzero(sharp == self.ball.id)[1]
+        self.assertGreater(len(xs), 0)
+        # The blurred mask is from somewhere in the shutter's time: never ahead of the sharp one.
+        bxs = np.nonzero(blurred == self.ball.id)[1]
+        self.assertLessEqual(bxs.max(), xs.max() + 1)

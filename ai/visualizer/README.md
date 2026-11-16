@@ -5,9 +5,11 @@ simulation episodes, each camera's video next to plots of the episode's
 signals, with a playhead that follows the video. Over the video it draws
 the episode's labels from its tables, frame by frame: boxes, full boxes
 (dashed, around partly hidden objects), keypoints (filled if seen, hollow
-if hidden) and names, for the ground truth and any model's predictions.
-Chips under the video turn each kind, label and source on and off (L
-turns them all), and hovering a box or point says what it is.
+if hidden), AprilTags (each one's square and ID, with a dot on its first
+corner; dashed if partly hidden) and names, for the ground truth and any
+model's predictions. Chips under the video turn each kind, label and
+source on and off (L turns them all), and hovering a box, point or tag
+says what it is.
 
 And training runs (`ai/src/shared/training.py` records them): the list,
 filtered by model or person; each run's code, dataset, the checkpoints it

@@ -26,7 +26,9 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
     `Predictions(folder, model="fuel_detector", classes=["fuel"])`, then
     `python -m shared.score <folder>` prints AP, AP50 and AP75 per class and
     by object size, the score threshold with the best F1, and for keypoints
-    the share found within 2, 4 and 8 pixels, by seen and hidden. Objects
+    the share found within 2, 4 and 8 pixels, by seen and hidden; for
+    AprilTags (`preds.tag(sample, id, corners)`), the share found by
+    distance, angle and size, and how far off their corners are. Objects
     under `--min-pixels` or `--min-share` are ignored, not misses.
     `metrics(score(...), "test")` gives flat numbers for `run.final(...)`.
   - `photos.py`: labeled real photos (e.g. a Roboflow export in YOLO's
@@ -34,6 +36,11 @@ Nothing outside it is uploaded, so plans, notes, docs and tooling stay out.
     `[test]` and the scorer can score a model on real pictures:
     `python -m shared.photos import <folder> --splits valid test
     --labels Fuel=fuel --name "..."`.
+  - `apriltags.py`: OpenCV's AprilTag detector over a dataset's split, as
+    predictions to score against the `tags` table:
+    `python -m shared.apriltags detect training/<model> --split test --out preds/opencv`,
+    then `python -m shared.score preds/opencv`. A yardstick, not the robot's
+    detector.
   - `cloud.py`: reading and writing the bucket and Firestore, as you, the
     same way on your computer (through `wildhat login`; needs wildhat 0.4.0)
     and in a cloud job.

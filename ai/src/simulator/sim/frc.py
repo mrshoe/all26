@@ -6,13 +6,17 @@ or Scenario.
     self.field = self.add(FrcField(year=2026, rotation=(0, 0, Range(-2, 2))))
     self.field.hub          # [hub_blue, hub_red]: Props
     self.field.fuel         # the game pieces at their starting spots
+    self.field.tags         # its AprilTags, by WPILib's IDs
     self.remove(self.field.outpost[0])
 
 Its models come from FIRST's CAD (sim/assets/frc). Each element is a static
 Prop named after what it is (`field.hub.0`), labeled if the season's config
 gives it a label. Game pieces are GamePieces, which physics moves, except
 those starting on something other than the carpet (2025's ALGAE on the REEF
-or on CORAL), which stay put, as squeezed real ones do. The
+or on CORAL), which stay put, as squeezed real ones do. Each element's
+AprilTags are AprilTag objects (labeled "apriltag"), where the CAD has
+their vinyls and facing the way WPILib's layout says, so every picture's
+`tags` table has their corners. The
 field's center is the Group's position; its carpet is at z = 0, so a Scene
 with a floor keeps its floor under it.
 """
@@ -29,7 +33,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from sim import assets
-from sim.objects import GamePiece, Prop
+from sim.objects import AprilTag, GamePiece, Prop
 from sim.world import Group
 
 
@@ -41,6 +45,8 @@ class FrcField(Group):
     starting_pieces: bool = True
     # Which elements to include, by name (e.g. ("hub", "carpet")); all if None.
     elements: Any = None
+    # The elements' AprilTags.
+    apriltags: bool = True
 
     def build(self, rng):
         library = assets.frc_library(int(self.year))
@@ -53,6 +59,7 @@ class FrcField(Group):
                                  f"Its elements: {', '.join(sorted(known))}")
         reserved = {f.name for f in dataclasses.fields(self)} | set(dir(type(self)))
         found: dict[str, list] = defaultdict(list)
+        tags = []
         for entry in catalog["layout"]:
             model = library.info(entry["asset"])
             if keep is not None and model["element"] not in keep:
@@ -61,6 +68,12 @@ class FrcField(Group):
                 asset=f"frc/{self.year}/{entry['asset']}", label=model.get("label"),
                 position=tuple(entry["position"]),
             ))
+            # Catalogs from before tags were objects list only their IDs:
+            # those models have the tags drawn on.
+            for t in model.get("tags", []) if self.apriltags else []:
+                if isinstance(t, dict):
+                    tags.append(AprilTag(tag=t["id"], vinyl=t["vinyl"], rotation=AprilTag.facing(t["facing"]),
+                                         position=tuple(np.add(entry["position"], t["position"]))))
         if self.starting_pieces:
             for name, piece in catalog["pieces"].items():
                 model = library.info(piece["asset"])
@@ -71,6 +84,7 @@ class FrcField(Group):
                                           position=tuple(p), static=h) for p, h in zip(piece["start"], held)]
         for name, items in found.items():
             setattr(self, f"{name}_" if name in reserved else name, self.add(items))
+        self.tags = self.add(sorted(tags, key=lambda t: t.tag))
 
     def to_wpilib(self, position, yaw: float = 0.0) -> tuple[float, float, float, float]:
         """A point in the world (and a heading about z, in degrees) in

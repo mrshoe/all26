@@ -1,5 +1,5 @@
 """A model's predictions on a dataset's pictures, written as episode tables
-(the same `boxes` and `keypoints` schemas as the ground truth, with
+(the same `boxes`, `keypoints` and `tags` schemas as the ground truth, with
 `source` the model's name), for `shared.score` to compare with the truth.
 
     from shared.datasets import Dataset
@@ -22,6 +22,7 @@ Folder:
                                           which pictures it was run on
     <run>/episode-<n>/boxes.parquet       its boxes, in the episode's pictures
     <run>/episode-<n>/keypoints.parquet   its keypoints
+    <run>/episode-<n>/tags.parquet        its AprilTags
 """
 
 from __future__ import annotations
@@ -32,10 +33,13 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from shared.logger import SCHEMAS, plain
+
+TABLES = ("boxes", "keypoints", "tags")
 
 
 class Predictions:
@@ -88,6 +92,26 @@ class Predictions:
             "visible": visible, "score": _number(score), "source": self.model})
         self.pictures.add((*episode, camera, frame))
 
+    def tag(self, sample, tag: int, corners, score: Optional[float] = None) -> None:
+        """An AprilTag found: its ID and its black square's 4 corners
+        (pixels), in the truth's order: bottom left, bottom right, top
+        right, top left, as seen facing the tag. `score` if the detector
+        gives a confidence."""
+        corners = np.asarray(corners, float)
+        if corners.shape != (4, 2) or not np.isfinite(corners).all():
+            raise ValueError(f"A tag needs 4 corners, each (x, y): {corners.tolist()}")
+        if score is not None and not math.isfinite(_number(score)):
+            raise ValueError(f"A tag's score must be a number: {score}")
+        episode, camera, frame = self._where(sample)
+        width, height = _size(sample)
+        row = {"frame": frame, "camera": camera, "tag": int(tag),
+               "in_frame": bool(((corners >= 0) & (corners < (width, height))).all()),
+               "score": None if score is None else _number(score), "source": self.model}
+        for i, (x, y) in enumerate(corners):
+            row[f"x{i}"], row[f"y{i}"] = float(x), float(y)
+        self.rows[episode]["tags"].append(row)
+        self.pictures.add((*episode, camera, frame))
+
     def done(self, sample) -> None:
         """Say the model looked at this picture, even if it found nothing:
         then the scorer counts what it missed there."""
@@ -101,14 +125,14 @@ class Predictions:
         for run, index in episodes:
             where = self.folder / run / f"episode-{index}"
             where.mkdir(parents=True, exist_ok=True)
-            for table in ("boxes", "keypoints"):
+            for table in TABLES:
                 rows = self.rows[(run, index)][table]
                 path = where / f"{table}.parquet"
                 if not rows:
                     path.unlink(missing_ok=True)
                     continue
                 schema = SCHEMAS[table]
-                rows = sorted(rows, key=lambda r: (r["frame"], r["camera"], -r["score"]))
+                rows = sorted(rows, key=lambda r: (r["frame"], r["camera"], -(r["score"] or 0)))
                 pq.write_table(pa.Table.from_pylist([{c: plain(r.get(c)) for c in schema.names} for r in rows],
                                                     schema=schema), path, compression="zstd")
         info = {
@@ -120,6 +144,7 @@ class Predictions:
             "pictures": [list(p) for p in sorted(self.pictures)],
             "boxes": sum(len(t["boxes"]) for t in self.rows.values()),
             "keypoints": sum(len(t["keypoints"]) for t in self.rows.values()),
+            "tags": sum(len(t["tags"]) for t in self.rows.values()),
         }
         (self.folder / "predictions.json").write_text(json.dumps(info) + "\n")
         return self.folder
@@ -141,15 +166,15 @@ def _size(sample) -> tuple[int, int]:
 
 def load(folder) -> tuple[dict, dict]:
     """A predictions folder: its predictions.json, and {(run, index):
-    {"boxes": [...], "keypoints": [...]}} as rows."""
+    {"boxes": [...], "keypoints": [...], "tags": [...]}} as rows."""
     folder = Path(folder)
     info_path = folder / "predictions.json"
     if not info_path.exists():
         raise ValueError(f"{folder} has no predictions.json: write it with Predictions(...).finish()")
     info = json.loads(info_path.read_text())
-    rows: dict = defaultdict(lambda: {"boxes": [], "keypoints": []})
+    rows: dict = defaultdict(lambda: {t: [] for t in TABLES})
     for run, index in {tuple(p[:2]) for p in info["pictures"]}:
-        for table in ("boxes", "keypoints"):
+        for table in TABLES:
             path = folder / run / f"episode-{index}" / f"{table}.parquet"
             if path.exists():
                 rows[(run, index)][table] = pq.read_table(path).to_pylist()

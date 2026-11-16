@@ -13,3 +13,6 @@ pillow
 imageio-ffmpeg==0.7.0
 # Rendering: about 1 GB, and only for Python 3.11.
 bpy==4.5.4
+# OpenCV, for reading rendered AprilTags in tests and shared/apriltags.py
+# (the cloud image has it through ultralytics). This one works with numpy 1.26.
+opencv-python-headless==4.10.0.84

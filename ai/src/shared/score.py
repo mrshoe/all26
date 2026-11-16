@@ -30,8 +30,20 @@ model isn't expected to find a corner behind the REEF); `--all-points`
 counts hidden ones too. Either way, the breakdown says how many of each kind
 were found: seen, hidden by the object itself, hidden by something else.
 
+**AprilTags.** A detected tag finds a true one in the same picture with the
+same ID whose middle is within half its side of the detection's middle.
+Reported: the share of true tags found, how far off their corners are
+(the median, and the share within 1, 2 and 4 pixels), how many were found
+turned (the corners right, but starting at the wrong one: the pose would
+come out rotated), and per picture, misread tags (a detection on a true tag
+with another ID) and false ones (on no tag). By default only tags fully in
+the picture with all 4 corners seen count; `--all-tags` counts partly
+hidden ones too. Tags partly out of the picture never count. Found, by
+distance, angle off head-on, and size (the side of the square, in pixels).
+
 **Breakdowns** matter more than the headline: boxes by size (small, under
-32 x 32 pixels; medium, under 96 x 96; large), keypoints by visibility.
+32 x 32 pixels; medium, under 96 x 96; large), keypoints by visibility,
+tags by distance, angle and size.
 """
 
 from __future__ import annotations
@@ -54,6 +66,11 @@ RECALLS = np.linspace(0, 1, 101)
 # COCO's object sizes, by box area in pixels.
 SIZES = {"small": (0, 32 ** 2), "medium": (32 ** 2, 96 ** 2), "large": (96 ** 2, float("inf"))}
 SEEN, SELF, OTHER = "seen", "hidden by itself", "hidden by something else"
+TAG_RADII = (1, 2, 4)
+# Bins for tags found: (name, low, high).
+TAG_DISTANCES = (("0-2 m", 0, 2), ("2-4 m", 2, 4), ("4-6 m", 4, 6), ("6+ m", 6, float("inf")))
+TAG_ANGLES = (("0-30°", 0, 30), ("30-60°", 30, 60), ("60-90°", 60, 90.01))
+TAG_SIZES = (("under 16 px", 0, 16), ("16-32 px", 16, 32), ("32-64 px", 32, 64), ("64+ px", 64, float("inf")))
 
 
 # --- Matching ---------------------------------------------------------------
@@ -127,12 +144,14 @@ def best_f1(results: list[tuple[float, Optional[bool]]], truths: int) -> Optiona
 
 
 def score(folder, dataset=None, split: Optional[str] = None, min_pixels: int = 0, min_share: float = 0.0,
-          boxes: str = "visible", all_points: bool = False, classes: Optional[list[str]] = None) -> dict:
+          boxes: str = "visible", all_points: bool = False, classes: Optional[list[str]] = None,
+          all_tags: bool = False) -> dict:
     """Score a predictions folder against the truth. `dataset`, `split` and
     `classes` (what the model finds; other labels in the truth aren't
     scored) default to the ones its predictions.json names. `boxes` is
     "visible" (what's seen of each object) or "full" (all of it, hidden
-    parts too), whichever the model was trained to find."""
+    parts too), whichever the model was trained to find. `all_tags` counts
+    partly hidden AprilTags too."""
     info, predicted = preds_io.load(folder)
     if dataset is None:
         if not info.get("dataset"):
@@ -147,10 +166,11 @@ def score(folder, dataset=None, split: Optional[str] = None, min_pixels: int = 0
         raise ValueError('boxes must be "visible" or "full"')
     looked = {tuple(p) for p in info["pictures"]}
     classes = set(classes if classes is not None else info.get("classes") or [])
-    # What the model predicts: boxes, keypoints or both (a box detector
-    # isn't scored on keypoints). One that found nothing at all is scored on
-    # both.
-    kinds = {k for k in ("boxes", "keypoints") if info.get(k)} or {"boxes", "keypoints"}
+    # What the model predicts: boxes, keypoints, tags (a box detector isn't
+    # scored on keypoints). One that found nothing at all is scored on boxes
+    # and keypoints, and on tags if it was to find "apriltag"s.
+    kinds = {k for k in ("boxes", "keypoints", "tags") if info.get(k)} or \
+        {"boxes", "keypoints", *(["tags"] if "apriltag" in classes else [])}
     samples = dataset.samples(split)
     if not samples:
         raise ValueError(f"The dataset's {split} split has no pictures")
@@ -168,11 +188,12 @@ def score(folder, dataset=None, split: Optional[str] = None, min_pixels: int = 0
     kinds_found = defaultdict(lambda: defaultdict(int))  # radius -> kind -> found
     kinds_total = defaultdict(int)
     false_points = defaultdict(int)  # radius -> false points
+    tags = TagTally()
     pictures = 0
 
-    by_picture: dict[tuple, dict[str, list]] = defaultdict(lambda: {"boxes": [], "keypoints": []})
+    by_picture: dict[tuple, dict[str, list]] = defaultdict(lambda: {t: [] for t in preds_io.TABLES})
     for (run, index), tables in predicted.items():
-        for table in ("boxes", "keypoints"):
+        for table in preds_io.TABLES:
             for r in tables[table]:
                 by_picture[(run, index, r["camera"], r["frame"])][table].append(r)
 
@@ -182,22 +203,27 @@ def score(folder, dataset=None, split: Optional[str] = None, min_pixels: int = 0
         if key not in looked:
             continue
         pictures += 1
-        mine = by_picture.get(key, {"boxes": [], "keypoints": []})
+        mine = by_picture.get(key, {t: [] for t in preds_io.TABLES})
         if "boxes" in kinds:
             _score_boxes(s, mine["boxes"], classes, min_pixels, min_share, boxes, box_results, box_truths,
                          size_results, size_truths)
         if "keypoints" in kinds:
             _score_points(s, mine["keypoints"], classes, all_points, point_results, point_truths, kinds_found,
                           kinds_total, false_points)
+        if "tags" in kinds:
+            tags.picture(s.tags(), mine["tags"], all_tags, min_pixels)
 
     result = {"model": info["model"], "dataset": str(dataset.path), "split": split, "pictures": pictures,
               "not_predicted": len(missing), "classes": sorted(classes),
-              "options": {"min_pixels": min_pixels, "min_share": min_share, "boxes": boxes, "all_points": all_points}}
+              "options": {"min_pixels": min_pixels, "min_share": min_share, "boxes": boxes, "all_points": all_points,
+                          "all_tags": all_tags}}
     if box_truths or box_results:
         result["boxes"] = _box_summary(box_results, box_truths, size_results, size_truths)
     if point_truths or point_results:
         result["keypoints"] = _point_summary(point_results, point_truths, kinds_found, kinds_total, false_points,
                                              pictures)
+    if "tags" in kinds and (tags.truth or tags.predicted):
+        result["tags"] = tags.summary(pictures)
     return result
 
 
@@ -276,6 +302,92 @@ def _claimed(scores, closeness, radius) -> set[int]:
     return set(np.nonzero(claimed)[0].tolist())
 
 
+def _inside(point, quad) -> bool:
+    """Whether a point is inside a convex quadrilateral (either winding)."""
+    signs = [np.cross(b - a, point - a) for a, b in zip(quad, np.roll(quad, -1, axis=0))]
+    return all(s >= 0 for s in signs) or all(s <= 0 for s in signs)
+
+
+class TagTally:
+    """AprilTags found and missed, over every picture."""
+
+    def __init__(self):
+        self.truth = self.found = self.predicted = 0
+        self.errors: list[float] = []  # each corner of each counted tag found, in pixels
+        self.rotated = self.misread = self.false = 0
+        self.hidden = [0, 0]  # tags partly hidden (in the picture): how many, how many found
+        self.bins = {kind: defaultdict(lambda: [0, 0]) for kind in ("distance", "angle", "size")}
+
+    def picture(self, truth, predicted_rows, all_tags: bool, min_pixels: int) -> None:
+        from shared.episodes import tag_from_row
+
+        preds = [tag_from_row(r, {}) for r in predicted_rows]
+        self.predicted += len(preds)
+        counted = [t.in_frame and (all_tags or bool(t.visible)) and (t.pixels is None or t.pixels >= min_pixels)
+                   for t in truth]
+        claimed = [False] * len(truth)
+        for p in sorted(preds, key=lambda p: -(p.score or 0)):
+            middle = p.corners.mean(0)
+            best = None
+            for j, t in enumerate(truth):
+                if t.tag != p.tag or claimed[j]:
+                    continue
+                d = float(np.linalg.norm(t.corners.mean(0) - middle))
+                if d <= 0.5 * max(t.side, 1.0) and (best is None or d < best[0]):
+                    best = (d, j)
+            if best is not None:
+                j = best[1]
+                claimed[j] = True
+                if counted[j]:
+                    self.errors += np.linalg.norm(p.corners - truth[j].corners, axis=1).tolist()
+                    # The right square, but its corners start at another one.
+                    shifts = [np.linalg.norm(np.roll(p.corners, k, 0) - truth[j].corners, axis=1).mean()
+                              for k in range(4)]
+                    self.rotated += int(np.argmin(shifts)) != 0
+                continue
+            on = [t for t in truth if _inside(middle, t.corners)]
+            if any(t.tag != p.tag for t in on):
+                self.misread += 1
+            else:  # on no tag, or a second detection of one already found
+                self.false += 1
+        for j, t in enumerate(truth):
+            if t.in_frame and not t.visible:
+                self.hidden[0] += 1
+                self.hidden[1] += claimed[j]
+            if not counted[j]:
+                continue
+            self.truth += 1
+            self.found += claimed[j]
+            for kind, bins, value in (("distance", TAG_DISTANCES, t.distance), ("angle", TAG_ANGLES, t.angle),
+                                      ("size", TAG_SIZES, t.side)):
+                if value is None:
+                    continue
+                for name, lo, hi in bins:
+                    if lo <= value < hi:
+                        self.bins[kind][name][0] += 1
+                        self.bins[kind][name][1] += claimed[j]
+
+    def summary(self, pictures: int) -> dict:
+        e = np.array(self.errors)
+        share = lambda found, total: _rounded(found / total if total else None)
+        return {
+            "truth": self.truth, "found": self.found, "predicted": self.predicted,
+            "found_rate": share(self.found, self.truth),
+            "corner_error": {"median": _rounded(float(np.median(e)) if len(e) else None),
+                             "mean": _rounded(float(e.mean()) if len(e) else None),
+                             **{f"within@{r}": share(int((e <= r).sum()), len(e)) for r in TAG_RADII}},
+            "rotated": self.rotated,
+            "misread": self.misread, "false": self.false,
+            "misread_per_picture": share(self.misread, pictures), "false_per_picture": share(self.false, pictures),
+            "partly_hidden": {"truth": self.hidden[0], "found": self.hidden[1],
+                              "found_rate": share(self.hidden[1], self.hidden[0])},
+            **{f"by_{kind}": {name: {"truth": self.bins[kind][name][0], "found": self.bins[kind][name][1],
+                                     "found_rate": share(self.bins[kind][name][1], self.bins[kind][name][0])}
+                              for name, _, _ in bins if self.bins[kind][name][0]}
+               for kind, bins in (("distance", TAG_DISTANCES), ("angle", TAG_ANGLES), ("size", TAG_SIZES))},
+        }
+
+
 def _rounded(v):
     return None if v is None else round(v, 4)
 
@@ -336,6 +448,11 @@ def metrics(result: dict, prefix: str = "val") -> dict[str, float]:
             value = result.get("keypoints", {}).get(key)
             if value is not None:
                 out[f"{prefix}_kp_{key.replace('@', '')}"] = value
+    tags = result.get("tags", {})
+    if tags.get("found_rate") is not None:
+        out[f"{prefix}_tag_found"] = tags["found_rate"]
+    if tags.get("corner_error", {}).get("median") is not None:
+        out[f"{prefix}_tag_corner_px"] = tags["corner_error"]["median"]
     return out
 
 
@@ -379,6 +496,24 @@ def report(result: dict) -> str:
         lines.append("  found, by kind: " + "; ".join(
             f"{kind} ({v['truth']}): " + ", ".join(f"{_pct(v[f'found@{r}']).strip()} @{r}" for r in RADII)
             for kind, v in k["by_visibility"].items() if v["truth"]))
+    if "tags" in result:
+        t = result["tags"]
+        c = t["corner_error"]
+        lines += ["", f"AprilTags ({'all in the picture' if o.get('all_tags') else 'fully seen'})",
+                  f"  found {_pct(t['found_rate']).strip()} ({t['found']} of {t['truth']}), {t['predicted']} detected",
+                  f"  corners: median {c['median']} px off, "
+                  + ", ".join(f"{_pct(c[f'within@{r}']).strip()} within {r} px" for r in TAG_RADII)
+                  + (f"; {t['rotated']} found turned (corners starting at the wrong one)" if t["rotated"] else ""),
+                  f"  per picture: {_pct(t['misread_per_picture']).strip()} misread (another ID), "
+                  f"{_pct(t['false_per_picture']).strip()} false"]
+        if t["partly_hidden"]["truth"]:
+            h = t["partly_hidden"]
+            lines.append(f"  partly hidden: found {_pct(h['found_rate']).strip()} ({h['found']} of {h['truth']})")
+        for kind in ("distance", "angle", "size"):
+            bins = t[f"by_{kind}"]
+            if bins:
+                lines.append(f"  by {kind}: " + ", ".join(
+                    f"{name} {_pct(b['found_rate']).strip()} ({b['truth']})" for name, b in bins.items()))
     return "\n".join(lines)
 
 
@@ -393,12 +528,13 @@ def main(argv=None) -> int:
     parser.add_argument("--boxes", choices=["visible", "full"], default="visible",
                         help="the truth to compare with: what's seen of each object, or all of it")
     parser.add_argument("--all-points", action="store_true", help="count hidden keypoints too")
+    parser.add_argument("--all-tags", action="store_true", help="count partly hidden AprilTags too")
     parser.add_argument("--classes", nargs="+", metavar="LABEL",
                         help="score these labels and keypoint classes (default: the ones predictions.json names)")
     args = parser.parse_args(argv)
     try:
         result = score(args.predictions, args.dataset, args.split, args.min_pixels, args.min_share, args.boxes,
-                       args.all_points, args.classes)
+                       args.all_points, args.classes, args.all_tags)
     except (ValueError, KeyError) as e:
         print(f"score: {e.args[0] if e.args else e}", file=sys.stderr)
         return 1

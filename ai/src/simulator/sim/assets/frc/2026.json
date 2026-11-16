@@ -197,12 +197,13 @@
    "dropped": {
     "hardware": 762,
     "hidden": 70,
+    "repeated tag": 8,
     "small": 50
    },
    "element": "hub",
    "files": {
     "collision.npz": "1a2d01814a48ce0dece647862bbe21c2",
-    "model.glb": "1c7adb7f6c65f56aaea5669aa4a91da5"
+    "model.glb": "8527f1ed0f41d470023cf64a4b01a64d"
    },
    "kind": "element",
    "label": "hub",
@@ -212,24 +213,120 @@
     1.4844,
     3.0572
    ],
-   "source_triangles": 219716,
+   "source_triangles": 217796,
    "tags": [
-    18,
-    18,
-    19,
-    19,
-    20,
-    20,
-    21,
-    21,
-    24,
-    24,
-    25,
-    25,
-    26,
-    26,
-    27,
-    27
+    {
+     "facing": [
+      4.5e-05,
+      1.0,
+      0.0
+     ],
+     "id": 18,
+     "position": [
+      0.12921,
+      0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 19,
+     "position": [
+      -0.46784,
+      0.3556,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 20,
+     "position": [
+      -0.47409,
+      -0.0,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -4.5e-05,
+      -1.0,
+      0.0
+     ],
+     "id": 21,
+     "position": [
+      0.12921,
+      -0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -4.5e-05,
+      -1.0,
+      0.0
+     ],
+     "id": 24,
+     "position": [
+      0.48481,
+      -0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 25,
+     "position": [
+      0.72646,
+      -0.3556,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 26,
+     "position": [
+      0.72646,
+      0.0,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      4.5e-05,
+      1.0,
+      0.0
+     ],
+     "id": 27,
+     "position": [
+      0.48481,
+      0.60314,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    }
    ],
    "triangles": 100000
   },
@@ -239,12 +336,13 @@
    "dropped": {
     "hardware": 762,
     "hidden": 70,
+    "repeated tag": 8,
     "small": 50
    },
    "element": "hub",
    "files": {
     "collision.npz": "771cac5af1545a33c1ba5e236e34ed31",
-    "model.glb": "1c5a4de300424e9751c61e6b833bb528"
+    "model.glb": "4da53d1dc5ff9adae679d2b72a138db7"
    },
    "kind": "element",
    "label": "hub",
@@ -254,24 +352,120 @@
     1.4844,
     3.0572
    ],
-   "source_triangles": 219716,
+   "source_triangles": 217796,
    "tags": [
-    2,
-    2,
-    3,
-    3,
-    4,
-    4,
-    5,
-    5,
-    8,
-    8,
-    9,
-    9,
-    10,
-    10,
-    11,
-    11
+    {
+     "facing": [
+      -4.5e-05,
+      -1.0,
+      0.0
+     ],
+     "id": 2,
+     "position": [
+      -0.12921,
+      -0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 3,
+     "position": [
+      0.46784,
+      -0.3556,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 4,
+     "position": [
+      0.47409,
+      0.0,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      4.5e-05,
+      1.0,
+      0.0
+     ],
+     "id": 5,
+     "position": [
+      -0.12921,
+      0.60314,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      4.5e-05,
+      1.0,
+      0.0
+     ],
+     "id": 8,
+     "position": [
+      -0.48481,
+      0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 9,
+     "position": [
+      -0.72645,
+      0.3556,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 10,
+     "position": [
+      -0.7327,
+      -0.0,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -4.5e-05,
+      -1.0,
+      0.0
+     ],
+     "id": 11,
+     "position": [
+      -0.48481,
+      -0.59689,
+      1.12395
+     ],
+     "vinyl": 0.2667
+    }
    ],
    "triangles": 100000
   },
@@ -280,12 +474,13 @@
    "category": "frc/2026/element",
    "dropped": {
     "hardware": 107,
-    "hidden": 0
+    "hidden": 0,
+    "repeated tag": 2
    },
    "element": "outpost",
    "files": {
     "collision.npz": "dac4d8f897f74e747b6c5377f7fdc186",
-    "model.glb": "c1da9d6cf90b6fee31250683aa2949ee"
+    "model.glb": "615071d87f61992d20461e0bea950ceb"
    },
    "kind": "element",
    "label": null,
@@ -295,26 +490,51 @@
     1.4319,
     1.9875
    ],
-   "source_triangles": 38062,
+   "source_triangles": 37582,
    "tags": [
-    29,
-    29,
-    30,
-    30
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 29,
+     "position": [
+      -0.47644,
+      -0.09049,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 30,
+     "position": [
+      -0.47019,
+      -0.52229,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    }
    ],
-   "triangles": 38062
+   "triangles": 37102
   },
   "outpost_red": {
    "alliance": "red",
    "category": "frc/2026/element",
    "dropped": {
     "hardware": 107,
-    "hidden": 0
+    "hidden": 0,
+    "repeated tag": 2
    },
    "element": "outpost",
    "files": {
     "collision.npz": "81487e51bcde0bbaa0b7ef28b8e5dffd",
-    "model.glb": "3d6b123ae4754966adf19acd8e952368"
+    "model.glb": "883c3c8b93524461f6dcc82d145e6dbe"
    },
    "kind": "element",
    "label": null,
@@ -324,14 +544,38 @@
     1.4319,
     1.9875
    ],
-   "source_triangles": 38062,
+   "source_triangles": 37582,
    "tags": [
-    13,
-    13,
-    14,
-    14
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 13,
+     "position": [
+      0.47644,
+      0.09049,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 14,
+     "position": [
+      0.47019,
+      0.52229,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    }
    ],
-   "triangles": 38062
+   "triangles": 37102
   },
   "perimeter": {
    "alliance": null,
@@ -383,12 +627,13 @@
    "category": "frc/2026/element",
    "dropped": {
     "hardware": 158,
-    "hidden": 0
+    "hidden": 0,
+    "repeated tag": 2
    },
    "element": "tower",
    "files": {
     "collision.npz": "f240c53b1eb844b6fa09c8dbe12dc919",
-    "model.glb": "a26076cd8edcae217dc31c5015e82f2e"
+    "model.glb": "a12e2b581cbaca170770728828c4512a"
    },
    "kind": "element",
    "label": "tower",
@@ -398,26 +643,51 @@
     1.2509,
     1.9875
    ],
-   "source_triangles": 49782,
+   "source_triangles": 49302,
    "tags": [
-    31,
-    31,
-    32,
-    32
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 31,
+     "position": [
+      0.54611,
+      -0.0,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 32,
+     "position": [
+      0.54611,
+      -0.4318,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    }
    ],
-   "triangles": 49782
+   "triangles": 48822
   },
   "tower_red": {
    "alliance": "red",
    "category": "frc/2026/element",
    "dropped": {
     "hardware": 158,
-    "hidden": 0
+    "hidden": 0,
+    "repeated tag": 2
    },
    "element": "tower",
    "files": {
     "collision.npz": "86da4135d770b6dda2eb4250e75656a2",
-    "model.glb": "b67e19ab1ab0236cd5dc2ed370abc3e7"
+    "model.glb": "9d645db367051cf3da0a6475ee284947"
    },
    "kind": "element",
    "label": "tower",
@@ -427,14 +697,38 @@
     1.2509,
     1.9875
    ],
-   "source_triangles": 49782,
+   "source_triangles": 49302,
    "tags": [
-    15,
-    15,
-    16,
-    16
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 15,
+     "position": [
+      -0.53986,
+      0.0,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 16,
+     "position": [
+      -0.53986,
+      0.4318,
+      0.55245
+     ],
+     "vinyl": 0.2667
+    }
    ],
-   "triangles": 49782
+   "triangles": 48822
   },
   "trench_blue": {
    "alliance": "blue",
@@ -442,12 +736,13 @@
    "dropped": {
     "hardware": 295,
     "hidden": 1,
+    "repeated tag": 4,
     "small": 2
    },
    "element": "trench",
    "files": {
     "collision.npz": "c7aa2ef9ed20ac0015c1ff7aec46e009",
-    "model.glb": "d2938c4bc4c61562a589ba8b66e5996e"
+    "model.glb": "5734fe045bb6cd78d7be648a1570e1d9"
    },
    "kind": "element",
    "label": null,
@@ -457,18 +752,66 @@
     8.3717,
     1.0192
    ],
-   "source_triangles": 104632,
+   "source_triangles": 103672,
    "tags": [
-    17,
-    17,
-    22,
-    22,
-    23,
-    23,
-    28,
-    28
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 17,
+     "position": [
+      -0.03095,
+      3.32148,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 22,
+     "position": [
+      -0.03095,
+      -3.4588,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 23,
+     "position": [
+      0.0372,
+      -3.4588,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 28,
+     "position": [
+      0.0372,
+      3.32148,
+      0.889
+     ],
+     "vinyl": 0.2667
+    }
    ],
-   "triangles": 99999
+   "triangles": 100000
   },
   "trench_red": {
    "alliance": "red",
@@ -476,12 +819,13 @@
    "dropped": {
     "hardware": 295,
     "hidden": 1,
+    "repeated tag": 4,
     "small": 2
    },
    "element": "trench",
    "files": {
     "collision.npz": "b633baa27d918a979727a4cd2503883e",
-    "model.glb": "9dcd7ecce36c6e2e4c1a3edb4d78c853"
+    "model.glb": "896f2808dfafbfe41036acefe40e0994"
    },
    "kind": "element",
    "label": null,
@@ -491,16 +835,64 @@
     8.3717,
     1.0192
    ],
-   "source_triangles": 104632,
+   "source_triangles": 103672,
    "tags": [
-    1,
-    1,
-    6,
-    6,
-    7,
-    7,
-    12,
-    12
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 1,
+     "position": [
+      0.0372,
+      -3.4588,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      1.0,
+      -4.5e-05,
+      0.0
+     ],
+     "id": 6,
+     "position": [
+      0.0372,
+      3.32148,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 7,
+     "position": [
+      -0.03095,
+      3.32148,
+      0.889
+     ],
+     "vinyl": 0.2667
+    },
+    {
+     "facing": [
+      -1.0,
+      4.5e-05,
+      0.0
+     ],
+     "id": 12,
+     "position": [
+      -0.03095,
+      -3.4588,
+      0.889
+     ],
+     "vinyl": 0.2667
+    }
    ],
    "triangles": 100000
   }
@@ -510,10 +902,10 @@
   "length": 16.541,
   "width": 8.069,
   "wpilib": {
-   "error": 0.0032,
+   "error": 0.0048,
    "offset": [
-    8.27052,
-    4.03464
+    8.2715,
+    4.03503
    ],
    "tags": 32,
    "yaw": -179.9974
@@ -661,6 +1053,464 @@
  "pieces": {
   "fuel": {
    "asset": "fuel",
+   "held": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
    "start": [
     [
      8.04193,
