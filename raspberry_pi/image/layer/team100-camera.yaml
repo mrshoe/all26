@@ -104,6 +104,36 @@ mmdebstrap:
     # growpart, for team100-growroot
     - cloud-guest-utils
   customize-hooks:
+    # Pin the kernel.  The GMSL camera driver ships prebuilt modules for
+    # specific kernel versions only, and apt only offers the newest kernel.
+    # The older .debs stay in Raspberry Pi's pool, so fetch them directly
+    # (checked against these hashes, since apt's signatures don't cover them).
+    # Remove the stock kernel first: raspi-firmware only copies a kernel to
+    # /boot/firmware/kernel_2712.img if it is the newest one installed.
+    # To change versions: pick one the GMSL driver has modules for, download
+    # both .debs from the pool and update the version and hashes here.
+    - |-
+      set -eu
+      kver=6.18.50
+      pool=https://archive.raspberrypi.com/debian/pool/main/l/linux
+      mkdir -p $1/tmp/kernel
+      while read -r sha deb; do
+        curl -fsSL -o "$1/tmp/kernel/$deb" "$pool/$deb"
+        echo "$sha  $1/tmp/kernel/$deb" | sha256sum -c -
+      done <<EOF
+      41a73543781af93f591adddcbf1e2fcc478450784ba2a27be2f07af84ce2bbb6 linux-image-${kver}+rpt-rpi-2712_${kver}-1+rpt1_arm64.deb
+      5c46e42abccc850c209b67fb89faf0483da6db36337578e3b9c60823acce7e10 linux-base-${kver}+rpt-rpi-2712_${kver}-1+rpt1_arm64.deb
+      EOF
+      old=$(chroot $1 dpkg-query -W -f '${db:Status-Abbrev} ${Package}\n' \
+        'linux-image-*' 'linux-base-[0-9]*' | awk '$1 == "ii" {print $2}')
+      chroot $1 env DEBIAN_FRONTEND=noninteractive apt-get purge -y $old
+      chroot $1 env DEBIAN_FRONTEND=noninteractive \
+        apt-get install -y --no-install-recommends \
+        /tmp/kernel/linux-base-${kver}+rpt-rpi-2712_${kver}-1+rpt1_arm64.deb \
+        /tmp/kernel/linux-image-${kver}+rpt-rpi-2712_${kver}-1+rpt1_arm64.deb
+      rm -rf $1/tmp/kernel
+      # Fail the build unless this kernel is the one that will boot.
+      cmp $1/boot/vmlinuz-${kver}+rpt-rpi-2712 $1/boot/firmware/kernel_2712.img
     - printf '%s:%s\n' "$IGconf_device_user1" "$IGconf_team100_password" | chroot $1 chpasswd
     # FRC prohibits the radios.
     - |-

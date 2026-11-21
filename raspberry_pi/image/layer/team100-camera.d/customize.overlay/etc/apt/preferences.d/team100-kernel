@@ -1,0 +1,6 @@
+# Team 100: the kernel is pinned to a version the GMSL camera driver
+# supports (see layer/team100-camera.yaml).  Never install the meta-packages
+# that would pull in the newest kernel.
+Package: linux-image-rpi-2712 linux-headers-rpi-2712
+Pin: version *
+Pin-Priority: -1
