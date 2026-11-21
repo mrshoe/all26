@@ -66,6 +66,32 @@ mmdebstrap:
     - uhubctl           # USB port power control (power-cycle a wedged camera)
     - i2c-tools
     - v4l-utils         # v4l2-ctl
+    # More from stock Raspberry Pi OS Lite (pi-gen stage2).
+    - unzip
+    - zip
+    - python-is-python3 # `python`, as doc/pi_setup.md uses
+    - psmisc            # killall, pstree, fuser
+    - strace
+    - ncdu
+    - rpicam-apps-lite  # rpicam-hello --list-cameras
+    - rpi-eeprom        # bootloader updates
+    - pciutils          # lspci
+    - ethtool
+    - parted
+    - dosfstools        # mkfs.vfat
+    - gpiod             # gpioinfo, gpioset
+    - avahi-daemon      # reach the Pi as <hostname>.local
+    - build-essential   # for pip packages that compile
+    - pkg-config
+    - gdb
+    # Not in Lite, but useful on the robot.
+    - tcpdump
+    - iperf3
+    - jq
+    - tree
+    - git
+    - xz-utils
+    - p7zip-full
     - libcamera-dev
     - python3-picamera2
     - python3-venv
